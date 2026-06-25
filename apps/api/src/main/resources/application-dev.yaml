@@ -107,6 +107,7 @@ vfqc:
     refresh-expiration: 10080
     jwt:
       secret-key: ${JWT_SECRET_KEY}
+    encryption-key: ${ENCRYPTION_KEY:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
     cookie:
       secure: false
       same-site: lax

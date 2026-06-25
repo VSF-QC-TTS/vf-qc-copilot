@@ -130,6 +130,88 @@ public enum ErrorCode {
       "Project Already Deleted",
       "The project has already been deleted."),
 
+  // Target Config
+  TARGET_CONFIG_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "target-config-not-found",
+      "Target Config Not Found",
+      "No target API configuration found for this project."),
+
+  INVALID_CURL(
+      HttpStatus.BAD_REQUEST,
+      "invalid-curl",
+      "Invalid cURL Command",
+      "The provided cURL command could not be parsed."),
+
+  TARGET_TEST_FAILED(
+      HttpStatus.BAD_GATEWAY,
+      "target-test-failed",
+      "Target Test Failed",
+      "The test request to the target API failed."),
+
+  // Judge Config
+  JUDGE_CONFIG_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "judge-config-not-found",
+      "Judge Config Not Found",
+      "No LLM judge configuration found for this project."),
+
+  JUDGE_CONNECTION_FAILED(
+      HttpStatus.BAD_GATEWAY,
+      "judge-connection-failed",
+      "Judge Connection Failed",
+      "Failed to connect to the LLM judge provider."),
+
+  UNSUPPORTED_LLM_PROVIDER(
+      HttpStatus.BAD_REQUEST,
+      "unsupported-llm-provider",
+      "Unsupported LLM Provider",
+      "The specified LLM provider is not supported."),
+
+  // Dataset Schema
+  DATASET_SCHEMA_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "dataset-schema-not-found",
+      "Dataset Schema Not Found",
+      "No dataset schema found for this project."),
+
+  DUPLICATE_COLUMN_NAME(
+      HttpStatus.CONFLICT,
+      "duplicate-column-name",
+      "Duplicate Column Name",
+      "A column with this name already exists in the schema."),
+
+  COLUMN_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "column-not-found",
+      "Column Not Found",
+      "The specified column was not found."),
+
+  // Verification Config
+  VERIFICATION_CONFIG_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "verification-config-not-found",
+      "Verification Config Not Found",
+      "No verification configuration found for this project."),
+
+  MISSING_TARGET_CONFIG(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "missing-target-config",
+      "Missing Target Config",
+      "Verification requires a configured Target API."),
+
+  MISSING_JUDGE_CONFIG(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "missing-judge-config",
+      "Missing Judge Config",
+      "LLM-based verification requires a configured LLM Judge."),
+
+  MISSING_DATASET_SCHEMA(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "missing-dataset-schema",
+      "Missing Dataset Schema",
+      "Verification requires a configured Dataset Schema."),
+
   VALIDATION_ERROR(
       HttpStatus.BAD_REQUEST, "validation-error", "Validation error", "Request validation failed."),
 
