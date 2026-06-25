@@ -1,0 +1,20 @@
+{
+  "loading": "Đang tải…",
+  "error": {
+    "unknown": "Đã xảy ra lỗi. Vui lòng thử lại.",
+    "validation": "Dữ liệu không hợp lệ.",
+    "badRequest": "Yêu cầu không hợp lệ.",
+    "unauthorized": "Vui lòng đăng nhập.",
+    "forbidden": "Bạn không có quyền truy cập.",
+    "notFound": "Không tìm thấy tài nguyên.",
+    "serverError": "Lỗi máy chủ. Vui lòng thử lại sau.",
+    "userNotFound": "Tài khoản không tồn tại."
+  },
+  "action": {
+    "retry": "Thử lại",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "save": "Lưu",
+    "back": "Quay lại"
+  }
+}

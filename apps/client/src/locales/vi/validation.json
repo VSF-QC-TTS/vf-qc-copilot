@@ -1,0 +1,26 @@
+{
+  "validation.user.email.required": "Email là bắt buộc.",
+  "validation.user.email.invalid": "Email không hợp lệ.",
+  "validation.user.email.max": "Email quá dài.",
+  "validation.user.password.required": "Mật khẩu là bắt buộc.",
+  "validation.user.password.size": "Mật khẩu phải từ 8 đến 128 ký tự.",
+  "validation.user.display-name.max": "Tên hiển thị quá dài.",
+  "validation.auth.email-verification-token.required": "Token xác nhận email là bắt buộc.",
+  "validation.auth.email-verification-token.max": "Token xác nhận email quá dài.",
+  "validation.auth.password-reset-token.required": "Token đặt lại mật khẩu là bắt buộc.",
+  "validation.auth.password-reset-token.max": "Token đặt lại mật khẩu quá dài.",
+  "validation.user.new-password.required": "Mật khẩu mới là bắt buộc.",
+  "validation.user.new-password.size": "Mật khẩu mới phải từ 8 đến 128 ký tự.",
+
+  "email.required": "Email là bắt buộc.",
+  "email.invalid": "Email không hợp lệ.",
+  "password.required": "Mật khẩu là bắt buộc.",
+  "password.min_8": "Mật khẩu phải có ít nhất 8 ký tự.",
+  "password.max_128": "Mật khẩu tối đa 128 ký tự.",
+  "displayName.max_100": "Tên hiển thị tối đa 100 ký tự.",
+  "newPassword.required": "Mật khẩu mới là bắt buộc.",
+  "newPassword.min_8": "Mật khẩu mới phải có ít nhất 8 ký tự.",
+  "newPassword.max_128": "Mật khẩu mới tối đa 128 ký tự.",
+  "confirmPassword.required": "Xác nhận mật khẩu là bắt buộc.",
+  "confirmPassword.mismatch": "Mật khẩu xác nhận không khớp."
+}

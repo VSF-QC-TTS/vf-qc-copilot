@@ -1,0 +1,26 @@
+{
+  "validation.user.email.required": "Email is required.",
+  "validation.user.email.invalid": "Invalid email address.",
+  "validation.user.email.max": "Email is too long.",
+  "validation.user.password.required": "Password is required.",
+  "validation.user.password.size": "Password must be 8 to 128 characters.",
+  "validation.user.display-name.max": "Display name is too long.",
+  "validation.auth.email-verification-token.required": "Verification token is required.",
+  "validation.auth.email-verification-token.max": "Verification token is too long.",
+  "validation.auth.password-reset-token.required": "Password reset token is required.",
+  "validation.auth.password-reset-token.max": "Password reset token is too long.",
+  "validation.user.new-password.required": "New password is required.",
+  "validation.user.new-password.size": "New password must be 8 to 128 characters.",
+
+  "email.required": "Email is required.",
+  "email.invalid": "Invalid email address.",
+  "password.required": "Password is required.",
+  "password.min_8": "Password must be at least 8 characters.",
+  "password.max_128": "Password must be at most 128 characters.",
+  "displayName.max_100": "Display name must be at most 100 characters.",
+  "newPassword.required": "New password is required.",
+  "newPassword.min_8": "New password must be at least 8 characters.",
+  "newPassword.max_128": "New password must be at most 128 characters.",
+  "confirmPassword.required": "Confirm password is required.",
+  "confirmPassword.mismatch": "Passwords do not match."
+}
