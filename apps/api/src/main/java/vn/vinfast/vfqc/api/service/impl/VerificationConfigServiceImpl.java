@@ -90,37 +90,46 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
     
     Long configId = config.getId();
     
-    // Recreate checks
-    fieldCheckRepository.deleteByVerificationConfigId(configId);
-    List<FieldCheck> fieldChecks = new ArrayList<>();
-    if (request.fieldChecks() != null) {
-      for (FieldCheckRequest fcReq : request.fieldChecks()) {
-        FieldCheck fc = mapper.toEntity(fcReq);
-        fc.setVerificationConfigId(configId);
-        if (fcReq.publicId() != null) {
-          fc.setPublicId(fcReq.publicId());
-        }
-        fieldChecks.add(fc);
-      }
-      fieldChecks = fieldCheckRepository.saveAll(fieldChecks);
-    }
-    
-    // Recreate rubrics
-    llmRubricRepository.deleteByVerificationConfigId(configId);
-    List<LlmRubric> llmRubrics = new ArrayList<>();
-    if (request.llmRubrics() != null) {
-      for (LlmRubricRequest lrReq : request.llmRubrics()) {
-        LlmRubric lr = mapper.toEntity(lrReq);
-        lr.setVerificationConfigId(configId);
-        if (lrReq.publicId() != null) {
-          lr.setPublicId(lrReq.publicId());
-        }
-        llmRubrics.add(lr);
-      }
-      llmRubrics = llmRubricRepository.saveAll(llmRubrics);
-    }
+    List<FieldCheck> fieldChecks = recreateFieldChecks(configId, request.fieldChecks());
+    List<LlmRubric> llmRubrics = recreateLlmRubrics(configId, request.llmRubrics());
     
     return mapper.toResponse(config, fieldChecks, llmRubrics);
+  }
+
+  private List<FieldCheck> recreateFieldChecks(Long configId, List<FieldCheckRequest> requests) {
+    fieldCheckRepository.deleteByVerificationConfigId(configId);
+    if (requests == null || requests.isEmpty()) {
+      return new ArrayList<>();
+    }
+    
+    List<FieldCheck> fieldChecks = new ArrayList<>();
+    for (FieldCheckRequest req : requests) {
+      FieldCheck fc = mapper.toEntity(req);
+      fc.setVerificationConfigId(configId);
+      if (req.publicId() != null) {
+        fc.setPublicId(req.publicId());
+      }
+      fieldChecks.add(fc);
+    }
+    return fieldCheckRepository.saveAll(fieldChecks);
+  }
+
+  private List<LlmRubric> recreateLlmRubrics(Long configId, List<LlmRubricRequest> requests) {
+    llmRubricRepository.deleteByVerificationConfigId(configId);
+    if (requests == null || requests.isEmpty()) {
+      return new ArrayList<>();
+    }
+    
+    List<LlmRubric> llmRubrics = new ArrayList<>();
+    for (LlmRubricRequest req : requests) {
+      LlmRubric lr = mapper.toEntity(req);
+      lr.setVerificationConfigId(configId);
+      if (req.publicId() != null) {
+        lr.setPublicId(req.publicId());
+      }
+      llmRubrics.add(lr);
+    }
+    return llmRubricRepository.saveAll(llmRubrics);
   }
 
   private void validatePreconditions(Long projectId, VerificationMode mode, List<FieldCheckRequest> fieldChecks) {

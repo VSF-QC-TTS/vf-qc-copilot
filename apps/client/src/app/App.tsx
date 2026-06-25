@@ -1,9 +1,11 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { GuestGuard } from '@/features/auth/guards/GuestGuard'
 import { AuthGuard } from '@/features/auth/guards/AuthGuard'
 import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AppLayout } from '@/features/dashboard/layouts/AppLayout'
+import { ProjectLayout } from '@/features/dashboard/layouts/ProjectLayout'
 
 // Lazy-loaded auth pages — code-split per route
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -12,21 +14,9 @@ const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswo
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
 const VerifyEmailPage = lazy(() => import('@/features/auth/pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })))
 
-// Placeholder for authenticated app
-function DashboardPlaceholder() {
-  return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Vinfast QC Copilot
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Authenticated. Dashboard coming soon.
-        </p>
-      </div>
-    </div>
-  )
-}
+const ProjectListPage = lazy(() => import('@/features/project/pages/ProjectListPage').then(m => ({ default: m.ProjectListPage })))
+const ProjectOverviewPage = lazy(() => import('@/features/project/pages/ProjectOverviewPage').then(m => ({ default: m.ProjectOverviewPage })))
+const PlaceholderPage = lazy(() => import('@/features/project/pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
 
 // Route-level loading fallback — skeleton
 function RouteFallback() {
@@ -64,8 +54,22 @@ function App() {
         </Route>
 
         {/* Protected routes */}
-        <Route path="/" element={<AuthGuard><DashboardPlaceholder /></AuthGuard>} />
-        <Route path="*" element={<AuthGuard><DashboardPlaceholder /></AuthGuard>} />
+        <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
+          <Route path="/" element={<Navigate to="/projects" replace />} />
+          <Route path="/projects" element={<ProjectListPage />} />
+          <Route path="/projects/:publicId" element={<ProjectLayout />}>
+            <Route index element={<ProjectOverviewPage />} />
+            <Route path="config/target" element={<PlaceholderPage title="API Config" />} />
+            <Route path="config/judge" element={<PlaceholderPage title="LLM Judge" />} />
+            <Route path="dataset-schema" element={<PlaceholderPage title="Dataset Schema" />} />
+            <Route path="verification" element={<PlaceholderPage title="Verification" />} />
+            <Route path="datasets" element={<PlaceholderPage title="Datasets" />} />
+            <Route path="runs" element={<PlaceholderPage title="Test Runs" />} />
+            <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />
+          </Route>
+        </Route>
+        
+        <Route path="*" element={<Navigate to="/projects" replace />} />
       </Routes>
     </Suspense>
   )
