@@ -1,65 +1,86 @@
 # API Config Context
 
-File này là context ngắn cho client/AI coding agent về 4 module Config (Target, Judge, Dataset Schema, Verification). Backend code là source of truth.
+File này là context ngắn cho client/AI coding agent về 4 module Config (Target, Judge, Dataset Schema, Verification). Code backend vẫn là source of truth; nếu cần contract chi tiết hơn, đọc file Java tương ứng.
 
-## Overview
+## Backend Status
 
-User phải config 4 thứ trước khi chạy test:
+Config modules đã có đầy đủ flow:
 
-1. **Target Config** — Chatbot API cần test (paste cURL → gọi thử → lấy response JSON tree)
-2. **Dataset Schema** — Định nghĩa các cột của bảng test data (input, expected_output...)
-3. **Judge Config** — Cấu hình AI chấm điểm (OpenAI, Gemini, Anthropic, Azure, Custom)
-4. **Verification Config** — Mapping response fields ↔ dataset columns + check rules
+- Cấu hình Target API (paste cURL → parse → execute → lưu config)
+- Cấu hình LLM Judge (5 providers: OpenAI, Gemini, Anthropic, Azure OpenAI, Custom)
+- Cấu hình Dataset Schema (immutable versioned, add/update/delete columns)
+- Cấu hình Verification (field checks + LLM rubrics, 12 operators, drag-drop mapping)
 
-Base path: `/api/v1/projects/{publicId}/config/...`
-Tất cả endpoint đều yêu cầu authentication.
+Backend dùng Spring Boot API. Tất cả endpoint đều yêu cầu authentication.
+
+## Authentication
+
+Tất cả request phải có HttpOnly cookie `refresh_token` hoặc `Authorization: Bearer <token>`.
+Client rule: nếu nhận lỗi 401, refresh token (nếu dùng refresh token flow) và thử lại. Nếu thất bại, route user về login.
+
+## Error Model
+
+Backend errors dùng RFC 9457 Problem Details. Giống với auth module.
+
+Client rules:
+
+- Dùng top-level `code` cho global/page state.
+- Dùng `fieldErrors[].field` để map lỗi vào form field.
+- Dùng `fieldErrors[].messageCode` cho i18n key.
+- Validation messages dùng key prefix `validation.` — map sang `validation.json` trên client.
 
 ---
 
 ## 1. Target Config
 
+Base path: `/api/v1/projects/{publicId}/config/target`
+
 ### Endpoints
 
 | Flow | Method | Path | Success |
 | --- | --- | --- | --- |
-| Execute cURL | `POST` | `.../config/target/execute-curl` | `200 ExecuteCurlResponse` |
-| Save config | `PUT` | `.../config/target` | `200 TargetConfigResponse` |
-| Get config | `GET` | `.../config/target` | `200 TargetConfigResponse` |
-| Test config | `POST` | `.../config/target/test` | `200 TestExecutionResult` |
-| Get response fields | `GET` | `.../config/target/response-fields` | `200 string[]` |
+| Execute cURL | `POST` | `/execute-curl` | `200 ExecuteCurlResponse` |
+| Save config | `PUT` | `/` | `200 TargetConfigResponse` |
+| Get config | `GET` | `/` | `200 TargetConfigResponse` |
+| Test config | `POST` | `/test` | `200 TestExecutionResult` |
+| Get response fields | `GET` | `/response-fields` | `200 string[]` |
 
 ### Data Types
 
 ```ts
+// --- Requests ---
+
 type ExecuteCurlRequest = {
-  curl: string; // Raw cURL string (multi-line OK, shell quoting OK)
-};
-
-type ExecuteCurlResponse = {
-  config: SaveTargetConfigRequest; // Parsed config (secrets replaced with SECRET_REDACTED)
-  secretDetections: SecretDetection[]; // Detected sensitive values
-  executionResult: TestExecutionResult; // Actual HTTP response from target
-};
-
-type SecretDetection = {
-  location: string; // "HEADER" | "QUERY_PARAM"
-  name: string; // Key name (e.g. "Authorization")
-  maskedValue: string; // Always "REDACTED"
+  curl: string; // @NotBlank(message = "invalid-curl"). Raw cURL string (multi-line OK, shell quoting OK)
 };
 
 type SaveTargetConfigRequest = {
-  method: string;
-  url: string;
+  method: string;       // @NotBlank(message = "validation.not-blank")
+  url: string;          // @NotBlank(message = "validation.not-blank")
   headers: Record<string, string> | null;
   queryParams: Record<string, string> | null;
-  bodyTemplate: string | null; // JSON with {{placeholder}} for dataset variables
-  responsePath: string | null;
-  timeoutMs: number;
+  bodyTemplate: string | null;  // Request body template, can contain {{placeholders}}
+  responsePath: string | null;  // JSONPath to the main response data array/object
+  timeoutMs: number;    // @NotNull @Min(1000, message = "validation.min")
   name: string | null;
 };
 
 type TestTargetConfigRequest = {
-  sampleInput: Record<string, string>; // Substituted into bodyTemplate {{placeholders}}
+  sampleInput: Record<string, string> | null; // Key-value pairs to substitute {{placeholders}} in bodyTemplate or URL
+};
+
+// --- Responses ---
+
+type ExecuteCurlResponse = {
+  parsedConfig: SaveTargetConfigRequest;     // Parsed cURL → config format (secrets replaced with SECRET_REDACTED)
+  secretsDetected: SecretDetection[];        // Detected sensitive values
+  testResult: TestExecutionResult;           // Actual HTTP response from target
+};
+
+type SecretDetection = {
+  location: string;   // "HEADER" | "QUERY_PARAM"
+  keyName: string;    // Key name (e.g. "Authorization")
+  action: string;     // "REDACTED"
 };
 
 type TestExecutionResult = {
@@ -71,93 +92,107 @@ type TestExecutionResult = {
 };
 
 type TargetConfigResponse = {
-  publicId: string;
+  publicId: string;        // UUID
   version: number;
   name: string | null;
   method: string;
   url: string;
-  headers: Record<string, string>;
-  queryParams: Record<string, string>;
+  maskedHeaders: Record<string, string>;      // Secrets replaced with SECRET_REDACTED
+  maskedQueryParams: Record<string, string>;  // Secrets replaced with SECRET_REDACTED
   bodyTemplate: string | null;
   responsePath: string | null;
   timeoutMs: number;
-  requestFieldSnapshot: string | null;
-  responseFieldSnapshot: string | null;
-  lastTestStatus: string | null; // "SUCCESS" | "FAILED"
-  lastTestedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  requestFieldSnapshot: string | null;   // JSON string of request body structure
+  responseFieldSnapshot: string | null;  // JSON string of response body structure
+  lastTestStatus: string | null;         // "SUCCESS" | "FAILED"
+  lastTestedAt: string | null;           // ISO-8601
+  createdAt: string;                     // ISO-8601
+  updatedAt: string;                     // ISO-8601
 };
 
-// GET .../config/target/response-fields
-// Returns: string[]
-// Example: ["$.status", "$.data.vin", "$.data.engine.power", "$.data.battery.capacity"]
-// Frontend uses this for drag-and-drop field mapping in verification config.
+// GET /response-fields trả về:
+// string[] — VD: ["$.status", "$.data.vin", "$.data.engine.power"]
+// Frontend dùng cho dropdown/drag-drop field mapping ở verification config.
 ```
+
+### Error Codes (Target)
+
+| Code | HTTP | Validation message | Client behavior |
+| --- | --- | --- | --- |
+| `INVALID_CURL` | 400 | `invalid-curl` | Show parse error trong textarea cURL |
+| `TARGET_CONFIG_NOT_FOUND` | 404 | — | Show empty state "Chưa cấu hình Target API" |
+| `TARGET_TEST_FAILED` | 502 | — | Show error message với HTTP status code |
+| `VALIDATION_ERROR` | 400 | `validation.not-blank`, `validation.min` | Map `fieldErrors` vào form fields |
 
 ### Flow
 
-1. User pastes cURL vào textarea → client calls `POST execute-curl`
-2. Backend: parse cURL (tokenizer) → detect secrets → execute HTTP → return response
+1. User pastes cURL vào textarea → client calls `POST /execute-curl`
+2. Backend: parse cURL (POSIX tokenizer) → detect secrets → execute HTTP → return response
 3. Frontend shows: response JSON tree + detected secrets (masked)
-4. User confirms → client calls `PUT save`
-5. User can re-test later with `POST test` (with sampleInput for `{{placeholder}}` variables)
-6. Frontend cần hiển thị dropdown response fields → call `GET response-fields`
+4. User confirms → client calls `PUT /` (save)
+5. User re-test later: `POST /test` (with `sampleInput` for `{{placeholder}}` variables)
+6. Frontend cần response fields cho verification: `GET /response-fields`
 
 ---
 
 ## 2. Judge Config
 
+Base path: `/api/v1/projects/{publicId}/config/judge`
+
 ### Endpoints
 
 | Flow | Method | Path | Success |
 | --- | --- | --- | --- |
-| Save config | `PUT` | `.../config/judge` | `200 JudgeConfigResponse` |
-| Get config | `GET` | `.../config/judge` | `200 JudgeConfigResponse` |
-| Test connection | `POST` | `.../config/judge/test` | `200 JudgeExecutionResult` |
+| Save config | `PUT` | `/` | `200 JudgeConfigResponse` |
+| Get config | `GET` | `/` | `200 JudgeConfigResponse` |
+| Test connection | `POST` | `/test` | `200 JudgeExecutionResult` |
 
 ### Data Types
 
 ```ts
 type LlmProvider = "OPENAI" | "AZURE_OPENAI" | "ANTHROPIC" | "GEMINI" | "CUSTOM";
 
+// --- Requests ---
+
 type SaveJudgeConfigRequest = {
-  provider: LlmProvider;
-  baseUrl: string | null; // Required for AZURE_OPENAI and CUSTOM
-  apiKey: string | null; // Send "SECRET_REDACTED" to keep existing key
-  model: string | null;
-  customModelName: string | null; // For CUSTOM and AZURE_OPENAI deployment name
-  temperature: number | null; // 0.0 - 2.0
-  maxTokens: number | null;
-  timeoutMs: number | null;
-  retryCount: number | null;
+  provider: LlmProvider;          // @NotNull(message = "validation.not-null")
+  baseUrl: string | null;         // Required for AZURE_OPENAI and CUSTOM
+  apiKey: string | null;          // Send "SECRET_REDACTED" to keep existing key
+  model: string;                  // @NotBlank(message = "validation.not-blank")
+  customModelName: string | null; // For AZURE_OPENAI deployment name or CUSTOM model name
+  temperature: number | null;     // @Min(0) @Max(2). BigDecimal in backend.
+  maxTokens: number | null;       // @Min(1)
+  timeoutMs: number;              // @NotNull @Min(1000, message = "validation.min")
+  retryCount: number;             // @NotNull @Min(0, message = "validation.min")
 };
 
 type TestJudgeConfigRequest = {
-  systemPrompt: string;
-  userMessage: string;
+  systemPrompt: string;  // @NotBlank(message = "validation.not-blank")
+  userMessage: string;   // @NotBlank(message = "validation.not-blank")
 };
 
+// --- Responses ---
+
 type JudgeConfigResponse = {
-  publicId: string;
+  publicId: string;              // UUID
   version: number;
   provider: LlmProvider;
   baseUrl: string | null;
-  hasApiKey: boolean; // true if encrypted key exists (never exposes actual key)
+  hasApiKey: boolean;            // true if encrypted key exists (never exposes actual key)
   model: string | null;
   customModelName: string | null;
-  temperature: number | null;
+  temperature: number | null;    // BigDecimal
   maxTokens: number | null;
   timeoutMs: number | null;
   retryCount: number | null;
-  lastTestStatus: string | null;
-  lastTestedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  lastTestStatus: string | null; // "SUCCESS" | "FAILED"
+  lastTestedAt: string | null;   // ISO-8601
+  createdAt: string;             // ISO-8601
+  updatedAt: string;             // ISO-8601
 };
 
 type JudgeExecutionResult = {
-  content: string | null; // LLM response text
+  generatedText: string | null;  // LLM response text
   promptTokens: number;
   completionTokens: number;
   latencyMs: number;
@@ -168,26 +203,36 @@ type JudgeExecutionResult = {
 
 ### Provider Notes
 
-| Provider | Auth | Base URL |
+| Provider | Auth | Base URL | Notes |
+| --- | --- | --- | --- |
+| `OPENAI` | `Authorization: Bearer {key}` | Default | — |
+| `GEMINI` | `?key={key}` (query param) | Default | JSON format khác (system_instruction, contents) |
+| `ANTHROPIC` | `x-api-key: {key}` | Default | anthropic-version header required |
+| `AZURE_OPENAI` | `api-key: {key}` | **Required** `https://{resource}.openai.azure.com` | `customModelName` = deployment name |
+| `CUSTOM` | `Bearer {key}` (optional) | **Required** | OpenAI-compatible format (vLLM, Ollama, LM Studio...) |
+
+### Error Codes (Judge)
+
+| Code | HTTP | Client behavior |
 | --- | --- | --- |
-| `OPENAI` | `Authorization: Bearer {key}` | Default: `api.openai.com/v1/chat/completions` |
-| `GEMINI` | `?key={key}` (query param) | Default: `generativelanguage.googleapis.com/v1beta` |
-| `ANTHROPIC` | `x-api-key: {key}` | Default: `api.anthropic.com/v1/messages` |
-| `AZURE_OPENAI` | `api-key: {key}` | **Required**: `https://{resource}.openai.azure.com` |
-| `CUSTOM` | `Bearer {key}` (optional) | **Required**: Any OpenAI-compatible URL (vLLM, Ollama...) |
+| `JUDGE_CONFIG_NOT_FOUND` | 404 | Show empty state "Chưa cấu hình LLM Judge" |
+| `JUDGE_CONNECTION_FAILED` | 502 | Show connection error với message chi tiết |
+| `UNSUPPORTED_LLM_PROVIDER` | 400 | — (shouldn't happen, all 5 providers implemented) |
 
 ---
 
 ## 3. Dataset Schema
 
+Base path: `/api/v1/projects/{publicId}/dataset-schema`
+
 ### Endpoints
 
 | Flow | Method | Path | Success |
 | --- | --- | --- | --- |
-| Get latest | `GET` | `.../dataset-schema` | `200 DatasetSchemaResponse` |
-| Add column | `POST` | `.../dataset-schema/columns` | `200 DatasetSchemaResponse` |
-| Update column | `PATCH` | `.../dataset-schema/columns/{columnPublicId}` | `200 DatasetSchemaResponse` |
-| Delete column | `DELETE` | `.../dataset-schema/columns/{columnPublicId}` | `200 DatasetSchemaResponse` |
+| Get latest | `GET` | `/` | `200 DatasetSchemaResponse` |
+| Add column | `POST` | `/columns` | `200 DatasetSchemaResponse` |
+| Update column | `PATCH` | `/columns/{columnPublicId}` | `200 DatasetSchemaResponse` |
+| Delete column | `DELETE` | `/columns/{columnPublicId}` | `200 DatasetSchemaResponse` |
 
 ### Data Types
 
@@ -195,34 +240,39 @@ type JudgeExecutionResult = {
 type ColumnDataType = "STRING" | "NUMBER" | "BOOLEAN" | "JSON";
 type ColumnRole = "INPUT" | "EXPECTED_OUTPUT" | "CONTEXT" | "METADATA";
 
+// --- Requests ---
+
 type CreateColumnRequest = {
-  columnName: string;
+  columnName: string;          // @NotBlank(message = "validation.not-blank")
   displayName: string | null;
-  dataType: ColumnDataType;
-  role: ColumnRole;
+  dataType: ColumnDataType;    // @NotNull(message = "validation.not-null")
+  role: ColumnRole;            // @NotNull(message = "validation.not-null")
   required: boolean;
   sampleValue: string | null;
-  description: string | null;
+  description: string | null;  // Prompt context for this column
 };
 
 type UpdateColumnRequest = {
   displayName: string | null;
-  dataType: ColumnDataType | null;
-  role: ColumnRole | null;
-  required: boolean | null;
+  dataType: ColumnDataType;    // @NotNull(message = "validation.not-null")
+  role: ColumnRole;            // @NotNull(message = "validation.not-null")
+  required: boolean;
   sampleValue: string | null;
   description: string | null;
+  displayOrder: number;        // @NotNull(message = "validation.not-null")
 };
 
+// --- Responses ---
+
 type DatasetSchemaResponse = {
-  publicId: string;
+  publicId: string;           // UUID
   version: number;
+  createdAt: string;          // ISO-8601
   columns: DatasetColumnResponse[];
-  createdAt: string;
 };
 
 type DatasetColumnResponse = {
-  publicId: string;
+  publicId: string;           // UUID
   columnName: string;
   displayName: string | null;
   dataType: ColumnDataType;
@@ -231,6 +281,8 @@ type DatasetColumnResponse = {
   sampleValue: string | null;
   description: string | null;
   displayOrder: number;
+  createdAt: string;          // ISO-8601
+  updatedAt: string;          // ISO-8601
 };
 ```
 
@@ -238,24 +290,35 @@ type DatasetColumnResponse = {
 
 - Schema là **immutable versioned**: mỗi thay đổi (add/update/delete column) tạo version mới.
 - `GET` luôn trả về version mới nhất.
+- `columnName` dùng cho mapping với `FieldCheck.expectedColumn`.
+
+### Error Codes (Dataset Schema)
+
+| Code | HTTP | Client behavior |
+| --- | --- | --- |
+| `DATASET_SCHEMA_NOT_FOUND` | 404 | Show empty state "Chưa có schema" |
+| `DUPLICATE_COLUMN_NAME` | 409 | Show field error trên `columnName` |
+| `COLUMN_NOT_FOUND` | 404 | Show toast "Cột không tồn tại" |
 
 ---
 
 ## 4. Verification Config
 
+Base path: `/api/v1/projects/{publicId}/config/verification`
+Operators endpoint: `/api/v1/verification/operators` (global, không cần project ID)
+
 ### Endpoints
 
 | Flow | Method | Path | Success |
 | --- | --- | --- | --- |
-| Get config | `GET` | `.../config/verification` | `200 VerificationConfigResponse` |
-| Save config | `PUT` | `.../config/verification` | `200 VerificationConfigResponse` |
+| Get config | `GET` | `/` | `200 VerificationConfigResponse` |
+| Save config | `PUT` | `/` | `200 VerificationConfigResponse` |
 | List operators | `GET` | `/api/v1/verification/operators` | `200 OperatorCatalogResponse[]` |
 
 ### Data Types
 
 ```ts
 type VerificationMode = "FIELD_CHECKS" | "OVERALL_RUBRIC" | "RULE_AND_LLM";
-
 type ExpectedSource = "LITERAL" | "DATASET_COLUMN";
 
 type CheckOperator =
@@ -263,50 +326,81 @@ type CheckOperator =
   | "CONTAINS"        // Substring match
   | "ICONTAINS"       // Case-insensitive substring match
   | "NOT_CONTAINS"    // Must NOT contain substring
-  | "CONTAINS_ALL"    // Must contain ALL values (comma-separated)
-  | "CONTAINS_ANY"    // Must contain at least one (comma-separated)
+  | "CONTAINS_ALL"    // Must contain ALL values (comma-separated in expectedValue)
+  | "CONTAINS_ANY"    // Must contain at least one (comma-separated in expectedValue)
   | "STARTS_WITH"     // Starts with string
-  | "REGEX"           // Regular expression match
+  | "REGEX"           // Regular expression match (expectedValue = regex pattern, LITERAL only)
   | "NOT_EMPTY"       // Field present and not empty (no expected value needed)
   | "IS_JSON"         // Valid JSON (no expected value needed)
-  | "JAVASCRIPT"      // Custom JS expression (expectedValue = JS code returning true/false)
-  | "LLM_JUDGE";      // Uses AI judge with rubric (expectedValue = rubric prompt)
+  | "JAVASCRIPT"      // Custom JS expression (expectedValue = JS code, must return true/false, LITERAL only)
+  | "LLM_JUDGE";      // Uses AI judge with rubric (expectedValue = rubric prompt, LITERAL only)
+
+// --- Requests ---
 
 type SaveVerificationRequest = {
-  mode: VerificationMode;
-  fieldChecks: FieldCheckRequest[] | null;
-  llmRubrics: LlmRubricRequest[] | null;
+  mode: VerificationMode;              // @NotNull(message = "validation.not-null")
+  fieldChecks: FieldCheckRequest[] | null;   // @Valid
+  llmRubrics: LlmRubricRequest[] | null;     // @Valid
 };
 
 type FieldCheckRequest = {
-  publicId: string | null; // null = new, UUID = update existing
-  responsePath: string; // JSON path from target response (e.g. "$.data.vin")
-  operator: CheckOperator;
-  expectedSource: ExpectedSource;
-  expectedColumn: string | null; // Dataset column name (when source = DATASET_COLUMN)
-  expectedValue: string | null; // Literal value (when source = LITERAL) or JS code / rubric
-  threshold: number | null; // Score threshold for LLM_JUDGE (0.0 - 1.0)
-  weight: number; // Default 1.0
+  publicId: string | null;             // null = new, UUID = update existing
+  responsePath: string;                // @NotBlank(message = "validation.not-blank"). JSON path from target response (e.g. "$.data.vin")
+  operator: CheckOperator;            // @NotNull(message = "validation.not-null")
+  expectedSource: ExpectedSource;     // @NotNull(message = "validation.not-null")
+  expectedColumn: string | null;      // Dataset column name (required when source = DATASET_COLUMN)
+  expectedValue: string | null;       // Literal value (required when source = LITERAL), or JS code / regex / rubric prompt
+  threshold: number | null;           // @DecimalMin("0.0") @DecimalMax("1.0"). Score threshold for LLM_JUDGE
+  weight: number;                     // @NotNull @DecimalMin("0.0"). Default 1.0
   enabled: boolean;
-  displayOrder: number;
+  displayOrder: number;               // @NotNull(message = "validation.not-null")
 };
 
 type LlmRubricRequest = {
-  publicId: string | null;
-  rubricPrompt: string;
-  maxScore: number;
-  weight: number;
-  displayOrder: number;
+  publicId: string | null;            // null = new, UUID = update existing
+  name: string;                       // @NotBlank(message = "validation.not-blank"). Rubric criteria name
+  targetPath: string | null;          // Optional JSON path to extract specific response part for evaluation
+  rubric: string;                     // @NotBlank(message = "validation.not-blank"). The prompt/rubric for LLM judge
+  threshold: number;                  // @NotNull @DecimalMin("0.0") @DecimalMax("1.0"). Score required to pass
+  weight: number;                     // @NotNull @DecimalMin("0.0"). Weight in overall score
+  enabled: boolean;
+  displayOrder: number;               // @NotNull(message = "validation.not-null")
 };
 
+// --- Responses ---
+
 type VerificationConfigResponse = {
-  publicId: string;
+  publicId: string;                   // UUID
   version: number;
   mode: VerificationMode;
   fieldChecks: FieldCheckResponse[];
   llmRubrics: LlmRubricResponse[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string;                  // ISO-8601
+  updatedAt: string;                  // ISO-8601
+};
+
+type FieldCheckResponse = {
+  publicId: string;                   // UUID
+  responsePath: string;
+  operator: CheckOperator;
+  expectedSource: ExpectedSource;
+  expectedColumn: string | null;
+  expectedValue: string | null;
+  threshold: number | null;           // BigDecimal
+  weight: number;                     // BigDecimal
+  enabled: boolean;
+  displayOrder: number;
+};
+
+type LlmRubricResponse = {
+  publicId: string;                   // UUID
+  name: string;
+  targetPath: string | null;
+  rubric: string;
+  threshold: number;                  // BigDecimal
+  weight: number;                     // BigDecimal
+  enabled: boolean;
+  displayOrder: number;
 };
 
 type OperatorCatalogResponse = {
@@ -318,48 +412,43 @@ type OperatorCatalogResponse = {
 
 ### Preconditions (enforced by backend)
 
-- **Must have Target Config** before saving verification (need response fields)
-- **Must have Dataset Schema** before saving verification (need column names)
-- **Must have Judge Config** if mode = `OVERALL_RUBRIC` | `RULE_AND_LLM` or any field uses `LLM_JUDGE`
+- **Must have Target Config** trước khi save verification (cần response fields)
+- **Must have Dataset Schema** trước khi save verification (cần column names)
+- **Must have Judge Config** nếu mode = `OVERALL_RUBRIC` | `RULE_AND_LLM` hoặc bất kỳ field nào dùng `LLM_JUDGE`
 
 ### Frontend Drag-and-Drop Flow
 
 1. Call `GET .../config/target/response-fields` → get `string[]` of JSON paths
-2. Call `GET .../dataset-schema` → get `DatasetColumnResponse[]` with column names
-3. Render two panels: **Response Fields** (left) and **Dataset Columns** (right)
-4. User drags a response field (e.g. `$.data.vin`) → drops on a dataset column (e.g. `expected_vin`)
-5. This creates a `FieldCheckRequest` with:
+2. Call `GET .../dataset-schema` → get `DatasetSchemaResponse` with column names
+3. Render hai panel: **Response Fields** (trái) và **Dataset Columns** (phải)
+4. User kéo response field (e.g. `$.data.vin`) → thả vào dataset column (e.g. `expected_vin`)
+5. Tạo `FieldCheckRequest`:
    - `responsePath` = `"$.data.vin"`
    - `expectedSource` = `"DATASET_COLUMN"`
    - `expectedColumn` = `"expected_vin"`
-   - `operator` = `"EQUALS"` (default, user can change)
-6. User can also add LITERAL checks (expected value hardcoded) or JAVASCRIPT/LLM_JUDGE checks
-7. Save all with `PUT .../config/verification`
+   - `operator` = `"EQUALS"` (default, user có thể thay đổi)
+6. User cũng có thể thêm LITERAL checks hoặc JAVASCRIPT/LLM_JUDGE
+7. Save tất cả cùng lúc: `PUT .../config/verification`
+
+### Error Codes (Verification)
+
+| Code | HTTP | Client behavior |
+| --- | --- | --- |
+| `VERIFICATION_CONFIG_NOT_FOUND` | 404 | Show empty state |
+| `MISSING_TARGET_CONFIG` | 422 | Block save, prompt "Cấu hình Target API trước" |
+| `MISSING_DATASET_SCHEMA` | 422 | Block save, prompt "Định nghĩa Dataset Schema trước" |
+| `MISSING_JUDGE_CONFIG` | 422 | Block save, prompt "Cấu hình LLM Judge trước" |
+| `BAD_REQUEST` | 400 | Show validation error (e.g. invalid regex pattern, missing expectedValue) |
 
 ---
 
-## Important Error Codes
-
-| Code | When | Client Behavior |
-| --- | --- | --- |
-| `TARGET_CONFIG_NOT_FOUND` | GET/test target without config | Show "Configure target first" |
-| `JUDGE_CONFIG_NOT_FOUND` | GET/test judge without config | Show "Configure judge first" |
-| `DATASET_SCHEMA_NOT_FOUND` | GET schema without any version | Show "Define schema first" |
-| `VERIFICATION_CONFIG_NOT_FOUND` | GET verification without config | Show empty state |
-| `INVALID_CURL` | Bad cURL string | Show parse error in textarea |
-| `MISSING_TARGET_CONFIG` | Save verification without target | Block and prompt to configure target |
-| `MISSING_DATASET_SCHEMA` | Save verification without schema | Block and prompt to define schema |
-| `MISSING_JUDGE_CONFIG` | Save verification needing LLM without judge | Block and prompt to configure judge |
-| `TARGET_TEST_FAILED` | Target HTTP returned non-2xx | Show error with HTTP status |
-| `JUDGE_CONNECTION_FAILED` | LLM call failed | Show connection error |
-| `UNSUPPORTED_LLM_PROVIDER` | Provider enum value without implementation | Should not happen (all 5 implemented) |
-| `DUPLICATE_COLUMN_NAME` | Add column with existing name | Show field error on columnName |
-| `COLUMN_NOT_FOUND` | Update/delete non-existent column | Show 404 |
-
 ## Backend Files Worth Reading
+
+Read these only if implementation behavior is unclear:
 
 - `apps/api/src/main/java/vn/vinfast/vfqc/api/controller/TargetConfigController.java`
 - `apps/api/src/main/java/vn/vinfast/vfqc/api/controller/JudgeConfigController.java`
 - `apps/api/src/main/java/vn/vinfast/vfqc/api/controller/DatasetSchemaController.java`
 - `apps/api/src/main/java/vn/vinfast/vfqc/api/controller/VerificationConfigController.java`
 - `apps/api/src/main/java/vn/vinfast/vfqc/api/model/verificationconfig/CheckOperator.java`
+- `apps/api/src/main/java/vn/vinfast/vfqc/api/shared/error/ErrorCode.java`
