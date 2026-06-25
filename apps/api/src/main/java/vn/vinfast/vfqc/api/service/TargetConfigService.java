@@ -2,6 +2,7 @@ package vn.vinfast.vfqc.api.service;
 
 import jakarta.validation.Valid;
 import java.util.UUID;
+import java.util.List;
 import org.springframework.validation.annotation.Validated;
 import vn.vinfast.vfqc.api.model.targetconfig.request.ExecuteCurlRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.SaveTargetConfigRequest;
@@ -55,4 +56,13 @@ public interface TargetConfigService {
    * @return the result of the test execution
    */
   TestExecutionResult test(UUID projectPublicId, @Valid TestTargetConfigRequest req);
+
+  /**
+   * Extracts a flat list of JSON paths from the stored response field snapshot.
+   * Frontend uses this list to render dropdown or drag-and-drop for field mapping.
+   *
+   * @param projectPublicId the public ID of the project
+   * @return a list of JSON paths (e.g. "$.data.vin", "$.data.engine.power")
+   */
+  List<String> getResponseFields(UUID projectPublicId);
 }

@@ -29,6 +29,36 @@ public enum CheckOperator {
       requireExpectedValueOrColumn(check);
     }
   },
+  ICONTAINS("Contains (case-insensitive)", "Case-insensitive substring match") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      requireExpectedValueOrColumn(check);
+    }
+  },
+  NOT_CONTAINS("Not Contains", "Checks that the response does NOT contain the expected substring") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      requireExpectedValueOrColumn(check);
+    }
+  },
+  CONTAINS_ALL("Contains All", "Checks that the response contains ALL of the expected values (comma-separated)") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      requireExpectedValueOrColumn(check);
+    }
+  },
+  CONTAINS_ANY("Contains Any", "Checks that the response contains at least one of the expected values (comma-separated)") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      requireExpectedValueOrColumn(check);
+    }
+  },
+  STARTS_WITH("Starts With", "Checks if the response starts with the expected string") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      requireExpectedValueOrColumn(check);
+    }
+  },
   REGEX("Regex", "Regular expression match") {
     @Override
     public void validate(FieldCheckRequest check) {
@@ -44,6 +74,18 @@ public enum CheckOperator {
     @Override
     public void validate(FieldCheckRequest check) {
       // No expected value needed
+    }
+  },
+  IS_JSON("Is JSON", "Validates that the field value is valid JSON") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      // No expected value needed
+    }
+  },
+  JAVASCRIPT("JavaScript", "Custom JavaScript expression to evaluate the field (must return true/false)") {
+    @Override
+    public void validate(FieldCheckRequest check) {
+      requireExpectedValue(check);
     }
   },
   LLM_JUDGE("LLM Judge", "Uses configured LLM judge to evaluate the field against a rubric") {

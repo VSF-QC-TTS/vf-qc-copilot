@@ -1,0 +1,49 @@
+{
+  "list": {
+    "title": "Dự án của bạn",
+    "search": "Tìm kiếm dự án...",
+    "empty": "Chưa có dự án nào",
+    "emptyHint": "Tạo dự án đầu tiên để bắt đầu.",
+    "createBtn": "Dự án mới"
+  },
+  "create": {
+    "title": "Tạo dự án",
+    "nameLabel": "Tên dự án",
+    "namePlaceholder": "vd. ViVi Voice QC",
+    "descLabel": "Mô tả",
+    "descPlaceholder": "Mô tả tùy chọn...",
+    "submitBtn": "Tạo",
+    "submittingBtn": "Đang tạo...",
+    "success": "Tạo dự án thành công"
+  },
+  "overview": {
+    "setupProgress": "Tiến độ cài đặt",
+    "recentRuns": "Lượt chạy gần đây",
+    "noRuns": "Chưa có lượt chạy nào",
+    "noRunsHint": "Hoàn tất cấu hình để bắt đầu chạy test.",
+    "continueSetup": "Tiếp tục cài đặt"
+  },
+  "nav": {
+    "overview": "Tổng quan",
+    "apiConfig": "Cấu hình API",
+    "llmJudge": "LLM Judge",
+    "datasetSchema": "Schema Dataset",
+    "verification": "Verification",
+    "datasets": "Datasets",
+    "testRuns": "Lịch sử chạy",
+    "settings": "Cài đặt dự án"
+  },
+  "toolbar": {
+    "runTest": "Chạy Test",
+    "runTestDisabled": "Hoàn tất cấu hình trước khi chạy test"
+  },
+  "switcher": {
+    "searchPlaceholder": "Tìm kiếm dự án...",
+    "createNew": "Tạo dự án mới"
+  },
+  "welcome": {
+    "title": "Chọn dự án để bắt đầu",
+    "subtitle": "Hoặc tạo dự án mới để bắt đầu đánh giá.",
+    "createBtn": "Dự án mới"
+  }
+}

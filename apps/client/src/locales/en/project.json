@@ -1,0 +1,49 @@
+{
+  "list": {
+    "title": "Your Projects",
+    "search": "Search projects...",
+    "empty": "No projects yet",
+    "emptyHint": "Create your first project to get started.",
+    "createBtn": "New Project"
+  },
+  "create": {
+    "title": "Create Project",
+    "nameLabel": "Project name",
+    "namePlaceholder": "e.g. ViVi Voice QC",
+    "descLabel": "Description",
+    "descPlaceholder": "Optional description...",
+    "submitBtn": "Create",
+    "submittingBtn": "Creating...",
+    "success": "Project created successfully"
+  },
+  "overview": {
+    "setupProgress": "Setup Progress",
+    "recentRuns": "Recent Test Runs",
+    "noRuns": "No test runs yet",
+    "noRunsHint": "Complete the setup to run your first evaluation.",
+    "continueSetup": "Continue Setup"
+  },
+  "nav": {
+    "overview": "Overview",
+    "apiConfig": "API Config",
+    "llmJudge": "LLM Judge",
+    "datasetSchema": "Dataset Schema",
+    "verification": "Verification",
+    "datasets": "Datasets",
+    "testRuns": "Test Runs",
+    "settings": "Project Settings"
+  },
+  "toolbar": {
+    "runTest": "Run Test",
+    "runTestDisabled": "Complete setup before running tests"
+  },
+  "switcher": {
+    "searchPlaceholder": "Search projects...",
+    "createNew": "Create new project"
+  },
+  "welcome": {
+    "title": "Select a project to get started",
+    "subtitle": "Or create a new one to begin your evaluation.",
+    "createBtn": "New Project"
+  }
+}

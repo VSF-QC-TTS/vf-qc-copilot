@@ -2,6 +2,7 @@ package vn.vinfast.vfqc.api.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -206,5 +207,45 @@ public class TargetConfigServiceImpl implements TargetConfigService {
         res.createdAt(),
         res.updatedAt()
     );
+  }
+  @Override
+  @Transactional(readOnly = true)
+  public List<String> getResponseFields(UUID projectPublicId) {
+    log.debug("Extracting response fields for project: {}", projectPublicId);
+    Project project = getProjectOrThrow(projectPublicId);
+    TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
+        .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
+
+    if (entity.getResponseFieldSnapshot() == null || entity.getResponseFieldSnapshot().isBlank()) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "No response snapshot available. Please test the target config first.");
+    }
+
+    try {
+      JsonNode tree = objectMapper.readTree(entity.getResponseFieldSnapshot());
+      List<String> paths = new ArrayList<>();
+      flattenJsonPaths(tree, "$", paths);
+      return paths;
+    } catch (JsonProcessingException e) {
+      log.error("Failed to parse response field snapshot", e);
+      return new ArrayList<>();
+    }
+  }
+
+  private void flattenJsonPaths(JsonNode node, String prefix, List<String> paths) {
+    if (node.isObject()) {
+      node.fields().forEachRemaining(entry -> {
+        String path = prefix + "." + entry.getKey();
+        if (entry.getValue().isValueNode()) {
+          paths.add(path);
+        } else {
+          flattenJsonPaths(entry.getValue(), path, paths);
+        }
+      });
+    } else if (node.isArray() && !node.isEmpty()) {
+      // For arrays, extract paths from the first element as sample
+      flattenJsonPaths(node.get(0), prefix + "[0]", paths);
+    } else {
+      paths.add(prefix);
+    }
   }
 }

@@ -3,6 +3,7 @@ package vn.vinfast.vfqc.api.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -61,5 +62,11 @@ public class TargetConfigController {
       @PathVariable UUID publicId,
       @Valid @RequestBody TestTargetConfigRequest req) {
     return targetConfigService.test(publicId, req);
+  }
+
+  @Operation(summary = "Get Response Fields", description = "Returns a flat list of JSON paths extracted from the last test response. Used for drag-and-drop field mapping in verification config.")
+  @GetMapping("/response-fields")
+  public List<String> getResponseFields(@PathVariable UUID publicId) {
+    return targetConfigService.getResponseFields(publicId);
   }
 }
