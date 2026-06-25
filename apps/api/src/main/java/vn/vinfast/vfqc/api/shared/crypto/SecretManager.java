@@ -127,4 +127,9 @@ public class SecretManager {
     String lower = key.toLowerCase();
     return lower.contains("api-key") || lower.contains("apikey") || lower.contains("secret") || lower.contains("token");
   }
+
+  @Transactional(readOnly = true)
+  public boolean hasSecrets(String ownerType, Long ownerId) {
+    return !repository.findByOwnerTypeAndOwnerId(ownerType, ownerId).isEmpty();
+  }
 }
