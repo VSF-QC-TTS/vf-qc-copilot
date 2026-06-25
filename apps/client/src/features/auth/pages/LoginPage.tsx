@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { FloatingInput } from '@/features/auth/components/FloatingInput'
 import { FloatingPasswordInput } from '@/features/auth/components/FloatingPasswordInput'
 import { Button } from '@/components/ui/button'
@@ -49,7 +48,7 @@ export function LoginPage() {
   }
 
   return (
-    <AuthLayout>
+    <>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-foreground">
           {t('login.title')}
@@ -99,6 +98,6 @@ export function LoginPage() {
           {t('login.register')}
         </Link>
       </p>
-    </AuthLayout>
+    </>
   )
 }

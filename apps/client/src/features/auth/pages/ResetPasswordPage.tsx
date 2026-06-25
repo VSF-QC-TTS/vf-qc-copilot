@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
-import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { AuthResult } from '@/features/auth/components/AuthResult'
 import { FloatingPasswordInput } from '@/features/auth/components/FloatingPasswordInput'
 import { Button } from '@/components/ui/button'
@@ -106,7 +105,7 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout>
+    <>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-foreground">
           {t('resetPassword.title')}
@@ -142,6 +141,6 @@ export function ResetPasswordPage() {
           {mutation.isPending ? t('resetPassword.submitting') : t('resetPassword.submit')}
         </Button>
       </form>
-    </AuthLayout>
+    </>
   )
 }

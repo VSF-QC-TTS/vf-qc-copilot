@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { AuthResult } from '@/features/auth/components/AuthResult'
 import { FloatingInput } from '@/features/auth/components/FloatingInput'
 import { Button } from '@/components/ui/button'
@@ -60,7 +59,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout>
+    <>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-foreground">
           {t('forgotPassword.title')}
@@ -95,6 +94,6 @@ export function ForgotPasswordPage() {
           {t('forgotPassword.backToLogin')}
         </Link>
       </p>
-    </AuthLayout>
+    </>
   )
 }

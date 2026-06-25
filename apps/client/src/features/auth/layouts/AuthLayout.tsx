@@ -1,11 +1,8 @@
+import { Outlet } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { AuthDynamicCanvas } from '../components/AuthDynamicCanvas'
 
-type AuthLayoutProps = {
-  children: React.ReactNode
-}
-
-export function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayout() {
   const reduceMotion = useReducedMotion()
 
   return (
@@ -22,7 +19,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         >
 
           <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl p-6 shadow-2xl sm:p-8">
-            {children}
+            <Outlet />
           </div>
         </motion.div>
       </div>

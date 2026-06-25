@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { GuestGuard } from '@/features/auth/guards/GuestGuard'
 import { AuthGuard } from '@/features/auth/guards/AuthGuard'
+import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Lazy-loaded auth pages — code-split per route
@@ -53,12 +54,14 @@ function App() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        {/* Guest-only auth routes */}
-        <Route path="/login" element={<GuestGuard><LoginPage /></GuestGuard>} />
-        <Route path="/register" element={<GuestGuard><RegisterPage /></GuestGuard>} />
-        <Route path="/forgot-password" element={<GuestGuard><ForgotPasswordPage /></GuestGuard>} />
-        <Route path="/reset-password" element={<GuestGuard><ResetPasswordPage /></GuestGuard>} />
-        <Route path="/verify-email" element={<GuestGuard><VerifyEmailPage /></GuestGuard>} />
+        {/* Guest-only auth routes — shared AuthLayout (no remount on navigate) */}
+        <Route element={<GuestGuard><AuthLayout /></GuestGuard>}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+        </Route>
 
         {/* Protected routes */}
         <Route path="/" element={<AuthGuard><DashboardPlaceholder /></AuthGuard>} />
