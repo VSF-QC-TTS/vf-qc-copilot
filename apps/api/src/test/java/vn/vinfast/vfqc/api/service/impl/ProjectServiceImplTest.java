@@ -23,7 +23,11 @@ import vn.vinfast.vfqc.api.model.project.request.CreateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.request.UpdateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.response.ProjectResponse;
 import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
+import vn.vinfast.vfqc.api.repository.DatasetSchemaVersionRepository;
+import vn.vinfast.vfqc.api.repository.JudgeConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
+import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
+import vn.vinfast.vfqc.api.repository.VerificationConfigRepository;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
 import vn.vinfast.vfqc.api.shared.model.PageResponse;
@@ -33,12 +37,19 @@ class ProjectServiceImplTest {
 
   @Mock private ProjectRepository projectRepository;
   @Mock private ProjectMapper projectMapper;
+  @Mock private TargetConfigRepository targetConfigRepository;
+  @Mock private JudgeConfigRepository judgeConfigRepository;
+  @Mock private DatasetSchemaVersionRepository datasetSchemaRepository;
+  @Mock private VerificationConfigRepository verificationConfigRepository;
 
   private ProjectServiceImpl service;
 
   @BeforeEach
   void setUp() {
-    service = new ProjectServiceImpl(projectRepository, projectMapper);
+    service = new ProjectServiceImpl(
+        projectRepository, projectMapper, targetConfigRepository, 
+        judgeConfigRepository, datasetSchemaRepository, verificationConfigRepository
+    );
   }
 
   @Test
@@ -179,18 +190,23 @@ class ProjectServiceImplTest {
   }
 
   @Test
-  void getSetupStatusReturnsAllFalseStub() {
+  void getSetupStatusReturnsCorrectStatus() {
     Project project = project();
     UUID publicId = project.getPublicId();
 
     when(projectRepository.findByPublicIdAndDeletedAtIsNull(publicId))
         .thenReturn(Optional.of(project));
+        
+    when(targetConfigRepository.existsByProjectId(1L)).thenReturn(true);
+    when(judgeConfigRepository.existsByProjectId(1L)).thenReturn(false);
+    when(datasetSchemaRepository.existsByProjectId(1L)).thenReturn(true);
+    when(verificationConfigRepository.existsByProjectId(1L)).thenReturn(false);
 
     ProjectSetupStatus status = service.getSetupStatus(publicId);
 
-    assertThat(status.hasTargetConfig()).isFalse();
+    assertThat(status.hasTargetConfig()).isTrue();
     assertThat(status.hasJudgeConfig()).isFalse();
-    assertThat(status.hasDatasetSchema()).isFalse();
+    assertThat(status.hasDatasetSchema()).isTrue();
     assertThat(status.hasVerification()).isFalse();
     assertThat(status.hasDatasets()).isFalse();
     assertThat(status.totalTestRuns()).isZero();

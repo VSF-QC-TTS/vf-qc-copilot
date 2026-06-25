@@ -15,7 +15,11 @@ import vn.vinfast.vfqc.api.model.project.request.CreateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.request.UpdateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.response.ProjectResponse;
 import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
+import vn.vinfast.vfqc.api.repository.DatasetSchemaVersionRepository;
+import vn.vinfast.vfqc.api.repository.JudgeConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
+import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
+import vn.vinfast.vfqc.api.repository.VerificationConfigRepository;
 import vn.vinfast.vfqc.api.service.ProjectService;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
@@ -32,6 +36,10 @@ public class ProjectServiceImpl implements ProjectService {
 
   private final ProjectRepository projectRepository;
   private final ProjectMapper projectMapper;
+  private final TargetConfigRepository targetConfigRepository;
+  private final JudgeConfigRepository judgeConfigRepository;
+  private final DatasetSchemaVersionRepository datasetSchemaRepository;
+  private final VerificationConfigRepository verificationConfigRepository;
 
   @Override
   @Transactional
@@ -101,10 +109,17 @@ public class ProjectServiceImpl implements ProjectService {
   @Transactional(readOnly = true)
   public ProjectSetupStatus getSetupStatus(UUID publicId) {
     // Ensure project exists and is not deleted
-    getProjectEntityOrThrow(publicId);
+    Project project = getProjectEntityOrThrow(publicId);
+    Long projectId = project.getId();
 
-    // Phase 1 stub: Return false/0 for all properties since config modules do not exist yet.
-    return new ProjectSetupStatus(false, false, false, false, false, 0);
+    return new ProjectSetupStatus(
+        targetConfigRepository.existsByProjectId(projectId),
+        judgeConfigRepository.existsByProjectId(projectId),
+        datasetSchemaRepository.existsByProjectId(projectId),
+        verificationConfigRepository.existsByProjectId(projectId),
+        false, // hasDatasets (Phase 2)
+        0      // totalTestRuns (Phase 3)
+    );
   }
 
   private Project getProjectEntityOrThrow(UUID publicId) {
