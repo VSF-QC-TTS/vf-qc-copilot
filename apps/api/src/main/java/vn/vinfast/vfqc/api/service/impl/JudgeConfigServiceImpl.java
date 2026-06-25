@@ -41,6 +41,7 @@ public class JudgeConfigServiceImpl implements JudgeConfigService {
   @Override
   @Transactional
   public JudgeConfigResponse save(UUID projectPublicId, SaveJudgeConfigRequest req) {
+    log.info("Saving judge config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
 
     JudgeConfig entity = judgeConfigRepository.findByProjectId(project.getId())
@@ -76,6 +77,7 @@ public class JudgeConfigServiceImpl implements JudgeConfigService {
   @Override
   @Transactional(readOnly = true)
   public JudgeConfigResponse get(UUID projectPublicId) {
+    log.debug("Fetching judge config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     JudgeConfig entity = judgeConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.JUDGE_CONFIG_NOT_FOUND));
@@ -86,6 +88,7 @@ public class JudgeConfigServiceImpl implements JudgeConfigService {
   @Override
   @Transactional
   public JudgeExecutionResult test(UUID projectPublicId, TestJudgeConfigRequest req) {
+    log.info("Testing judge config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     JudgeConfig entity = judgeConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.JUDGE_CONFIG_NOT_FOUND));

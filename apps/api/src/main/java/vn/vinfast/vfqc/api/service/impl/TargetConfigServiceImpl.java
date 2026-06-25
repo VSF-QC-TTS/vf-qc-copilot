@@ -55,6 +55,7 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   @Override
   @Transactional(readOnly = true)
   public ExecuteCurlResponse executeCurl(UUID projectPublicId, ExecuteCurlRequest req) {
+    log.info("Executing curl command for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     ParsedCurlCommand parsed = curlParser.parse(req.curl());
 
@@ -86,6 +87,7 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   @Override
   @Transactional
   public TargetConfigResponse save(UUID projectPublicId, SaveTargetConfigRequest req) {
+    log.info("Saving target config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     
     // First, scan and encrypt secrets
@@ -127,6 +129,7 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   @Override
   @Transactional(readOnly = true)
   public TargetConfigResponse get(UUID projectPublicId) {
+    log.debug("Fetching target config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
@@ -137,6 +140,7 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   @Override
   @Transactional
   public TestExecutionResult test(UUID projectPublicId, TestTargetConfigRequest req) {
+    log.info("Testing target config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));

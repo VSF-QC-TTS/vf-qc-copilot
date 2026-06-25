@@ -7,10 +7,15 @@ import vn.vinfast.vfqc.api.model.verificationconfig.request.FieldCheckRequest;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
  * @since 6/26/2026
  */
+@Getter
+@RequiredArgsConstructor
 public enum CheckOperator {
   EQUALS("Equals", "Exact string or number match") {
     @Override
@@ -51,19 +56,6 @@ public enum CheckOperator {
 
   private final String displayName;
   private final String description;
-
-  CheckOperator(String displayName, String description) {
-    this.displayName = displayName;
-    this.description = description;
-  }
-
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  public String getDescription() {
-    return description;
-  }
 
   public abstract void validate(FieldCheckRequest check);
 

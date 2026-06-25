@@ -36,6 +36,7 @@ public class TargetHttpExecutorImpl implements TargetHttpExecutor {
    * Executes a parsed cURL command.
    */
   public TestExecutionResult execute(ParsedCurlCommand parsed, Integer timeoutMs) {
+    log.debug("Executing HTTP {} to {}", parsed.method(), parsed.url());
     long startTime = System.currentTimeMillis();
     int status = 0;
     String responseBody = null;
@@ -84,6 +85,7 @@ public class TargetHttpExecutorImpl implements TargetHttpExecutor {
    * Executes a saved TargetConfig with optional substituted inputs.
    */
   public TestExecutionResult execute(TargetConfig config, Map<String, String> decryptedSecrets, Map<String, String> sampleInput) {
+    log.info("Executing saved target config URL: {}", config.getUrl());
     // Map JSON fields
     Map<String, String> headers = parseJsonMap(config.getHeaders());
     Map<String, String> queryParams = parseJsonMap(config.getQueryParams());

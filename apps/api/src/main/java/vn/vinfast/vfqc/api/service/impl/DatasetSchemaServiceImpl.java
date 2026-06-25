@@ -39,6 +39,7 @@ public class DatasetSchemaServiceImpl implements DatasetSchemaService {
   @Override
   @Transactional(readOnly = true)
   public DatasetSchemaResponse getLatestSchema(UUID projectPublicId) {
+    log.debug("Fetching latest dataset schema for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     
     DatasetSchemaVersion latestVersion = schemaRepository.findTopByProjectIdOrderByVersionDesc(project.getId())
@@ -51,6 +52,7 @@ public class DatasetSchemaServiceImpl implements DatasetSchemaService {
   @Override
   @Transactional
   public DatasetSchemaResponse addColumn(UUID projectPublicId, CreateColumnRequest request) {
+    log.info("Adding column '{}' to dataset schema for project: {}", request.columnName(), projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     
     Optional<DatasetSchemaVersion> currentVersionOpt = schemaRepository.findTopByProjectIdOrderByVersionDesc(project.getId());
@@ -90,6 +92,7 @@ public class DatasetSchemaServiceImpl implements DatasetSchemaService {
   @Override
   @Transactional
   public DatasetSchemaResponse updateColumn(UUID projectPublicId, UUID columnPublicId, UpdateColumnRequest request) {
+    log.info("Updating column '{}' for project: {}", columnPublicId, projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     DatasetSchemaVersion currentVersion = schemaRepository.findTopByProjectIdOrderByVersionDesc(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.DATASET_SCHEMA_NOT_FOUND));
@@ -123,6 +126,7 @@ public class DatasetSchemaServiceImpl implements DatasetSchemaService {
   @Override
   @Transactional
   public DatasetSchemaResponse deleteColumn(UUID projectPublicId, UUID columnPublicId) {
+    log.info("Deleting column '{}' for project: {}", columnPublicId, projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     DatasetSchemaVersion currentVersion = schemaRepository.findTopByProjectIdOrderByVersionDesc(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.DATASET_SCHEMA_NOT_FOUND));
