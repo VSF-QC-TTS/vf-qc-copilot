@@ -112,6 +112,24 @@ public enum ErrorCode {
       "Password reset token expired",
       "The password reset token has expired."),
 
+  PROJECT_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "project-not-found",
+      "Project Not Found",
+      "The requested project was not found."),
+
+  PROJECT_NAME_REQUIRED(
+      HttpStatus.BAD_REQUEST,
+      "project-name-required",
+      "Project Name Required",
+      "Project name cannot be empty."),
+
+  PROJECT_ALREADY_DELETED(
+      HttpStatus.GONE,
+      "project-already-deleted",
+      "Project Already Deleted",
+      "The project has already been deleted."),
+
   VALIDATION_ERROR(
       HttpStatus.BAD_REQUEST, "validation-error", "Validation error", "Request validation failed."),
 
