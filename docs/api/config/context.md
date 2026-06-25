@@ -15,8 +15,8 @@ Backend dùng Spring Boot API. Tất cả endpoint đều yêu cầu authenticat
 
 ## Authentication
 
-Tất cả request phải có HttpOnly cookie `refresh_token` hoặc `Authorization: Bearer <token>`.
-Client rule: nếu nhận lỗi 401, refresh token (nếu dùng refresh token flow) và thử lại. Nếu thất bại, route user về login.
+Tất cả request phải có `Authorization: Bearer <token>`.
+Client rule: nếu nhận lỗi 401, refresh token và thử lại. Nếu thất bại, route user về login.
 
 ## Error Model
 
