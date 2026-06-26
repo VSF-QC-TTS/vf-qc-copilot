@@ -187,70 +187,81 @@ export function JudgeTestDialog({ open, onOpenChange, isPending, result, onTest 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg gap-0 p-0 overflow-hidden">
-        <div className="px-6 pt-5 pb-4 border-b">
+      <DialogContent className="sm:max-w-[900px] w-[90vw] gap-0 p-0 overflow-hidden">
+        <div className="px-6 pt-5 pb-4 border-b shrink-0">
           <DialogTitle className="text-base font-semibold flex items-center gap-2">
             <MessageSquareTextIcon className="size-4" />
             Playground — Thử nghiệm AI
           </DialogTitle>
         </div>
 
-        <div className="px-6 py-5 flex flex-col gap-5">
-          {/* Prompt inputs */}
-          <FieldGroup>
-            <Field>
-              <FieldLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">System Prompt</FieldLabel>
-              <Textarea
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                className="resize-none min-h-[80px] text-sm"
-                disabled={isPending}
-              />
-            </Field>
-            <Field>
-              <FieldLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">User Message</FieldLabel>
-              <Textarea
-                value={userMessage}
-                onChange={(e) => setUserMessage(e.target.value)}
-                className="resize-none min-h-[80px] text-sm"
-                disabled={isPending}
-              />
-            </Field>
-          </FieldGroup>
+        <div className="flex flex-col md:flex-row h-[70vh] max-h-[600px]">
+          {/* Left panel: Prompt inputs */}
+          <div className="flex-1 flex flex-col gap-5 p-6 border-r overflow-y-auto">
+            <FieldGroup className="flex-1">
+              <Field className="flex flex-col flex-1 h-full">
+                <FieldLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">System Prompt</FieldLabel>
+                <Textarea
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  className="resize-none min-h-[120px] flex-1 text-sm font-mono"
+                  disabled={isPending}
+                />
+              </Field>
+              <Field className="flex flex-col flex-1 h-full mt-4">
+                <FieldLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">User Message</FieldLabel>
+                <Textarea
+                  value={userMessage}
+                  onChange={(e) => setUserMessage(e.target.value)}
+                  className="resize-none min-h-[120px] flex-1 text-sm font-mono"
+                  disabled={isPending}
+                />
+              </Field>
+            </FieldGroup>
 
-          <div className="flex justify-end">
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isPending || !userMessage.trim()}
-            >
-              {isPending ? <Spinner data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
-              {isPending ? 'Đang gọi AI...' : 'Chạy thử'}
-            </Button>
+            <div className="flex justify-end shrink-0 pt-4">
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isPending || !userMessage.trim()}
+                className="w-full sm:w-auto"
+              >
+                {isPending ? <Spinner data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
+                {isPending ? 'Đang gọi AI...' : 'Chạy thử'}
+              </Button>
+            </div>
           </div>
 
-          {/* Result area */}
-          <AnimatePresence mode="wait">
-            {isPending && !result ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center justify-center py-6"
-              >
-                <LoadingTypingEffect />
-              </motion.div>
-            ) : result ? (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <JudgeResultView result={result} />
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+          {/* Right panel: Result area */}
+          <div className="flex-1 p-6 bg-muted/10 overflow-y-auto flex flex-col">
+            <AnimatePresence mode="wait">
+              {isPending && !result ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex-1 flex items-center justify-center"
+                >
+                  <LoadingTypingEffect />
+                </motion.div>
+              ) : result ? (
+                <motion.div
+                  key="result"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex-1 flex flex-col"
+                >
+                  <JudgeResultView result={result} />
+                </motion.div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm flex-col gap-3">
+                  <MessageSquareTextIcon className="size-8 opacity-20" />
+                  <p>Nhấn "Chạy thử" để xem kết quả</p>
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

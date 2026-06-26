@@ -108,7 +108,7 @@ export function ColumnFormDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={!!fieldState.error}>
                   <FieldLabel>{t('config.schema.columnName', { ns: 'project' })}</FieldLabel>
-                  <Input {...field} disabled={!!editingColumn} aria-invalid={!!fieldState.error} placeholder="e.g. text_input" />
+                  <Input {...field} disabled={!!editingColumn} aria-invalid={!!fieldState.error} placeholder="VD: text_input" />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}
@@ -120,7 +120,7 @@ export function ColumnFormDialog({
               render={({ field, fieldState }) => (
                 <Field data-invalid={!!fieldState.error}>
                   <FieldLabel>{t('config.schema.displayName', { ns: 'project' })}</FieldLabel>
-                  <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. User Request Text" />
+                  <Input {...field} aria-invalid={!!fieldState.error} placeholder="VD: User Request Text" />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}

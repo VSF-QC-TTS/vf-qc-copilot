@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import {
   PlusIcon,
   TrashIcon,
@@ -15,6 +16,8 @@ import {
   ListChecksIcon,
   BrainCircuitIcon,
   CombineIcon,
+  CheckIcon,
+  XIcon
 } from 'lucide-react'
 
 import type { VerificationMode, CheckOperator, ExpectedSource, OperatorCatalogResponse } from '@/types/config'
@@ -28,6 +31,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { FieldGroup, Field, FieldLabel, FieldError } from '@/components/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
@@ -36,7 +40,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ConfigPageHeader } from '../../components/ConfigPageHeader'
 import { VerificationSkeleton } from '../../components/VerificationSkeleton'
-import { FieldCheckDialog, type FieldCheckFormData } from '../../components/FieldCheckDialog'
 
 // ---------------------------------------------------------------------------
 // Mode metadata
@@ -157,35 +160,69 @@ export function VerificationConfigPage() {
   }
 
   // ---------------------------------------------------------------------------
-  // Field Check Dialog state
+  // Field Check Inline Edit state
   // ---------------------------------------------------------------------------
-  const [checkDialogOpen, setCheckDialogOpen] = useState(false)
   const [editingCheckIndex, setEditingCheckIndex] = useState<number | null>(null)
+  const [isAddingNew, setIsAddingNew] = useState(false)
+  const [editingSnapshot, setEditingSnapshot] = useState<any>(null)
 
-  const handleAddCheck = (data: FieldCheckFormData) => {
-    if (editingCheckIndex !== null) {
-      // Update existing
-      const existing = fieldChecksArray.fields[editingCheckIndex]
-      fieldChecksArray.update(editingCheckIndex, {
-        ...existing,
-        ...data,
-        displayOrder: editingCheckIndex,
-      })
-    } else {
-      // Append new
-      fieldChecksArray.append({
-        publicId: null,
-        ...data,
-        enabled: true,
-        displayOrder: fieldChecksArray.fields.length,
-      })
-    }
-    setEditingCheckIndex(null)
+  const handleAddCheckRow = () => {
+    if (editingCheckIndex !== null) return // Prevent multiple edits
+    const newIndex = fieldChecksArray.fields.length
+    fieldChecksArray.append({
+      publicId: null,
+      responsePath: '',
+      operator: 'EQUALS',
+      expectedSource: 'DATASET_COLUMN',
+      expectedColumn: null,
+      expectedValue: null,
+      threshold: 1.0,
+      weight: 1.0,
+      enabled: true,
+      displayOrder: newIndex,
+    } as any)
+    setEditingCheckIndex(newIndex)
+    setIsAddingNew(true)
+    setEditingSnapshot(null)
   }
 
-  const handleEditCheck = (index: number) => {
+  const handleEditCheckRow = (index: number) => {
+    if (editingCheckIndex !== null) return
+    setEditingSnapshot(fieldChecksArray.fields[index])
     setEditingCheckIndex(index)
-    setCheckDialogOpen(true)
+    setIsAddingNew(false)
+  }
+
+  const handleCancelEditRow = (index: number) => {
+    if (isAddingNew) {
+      fieldChecksArray.remove(index)
+    } else if (editingSnapshot) {
+      fieldChecksArray.update(index, editingSnapshot)
+    }
+    setEditingCheckIndex(null)
+    setIsAddingNew(false)
+    setEditingSnapshot(null)
+  }
+
+  const handleSaveEditRow = (index: number) => {
+    // Check required fields before saving
+    const current = watch(`fieldChecks.${index}`)
+    if (!current?.responsePath || !current?.operator) {
+      toast.error('Vui lòng chọn Response Field và Toán tử')
+      return
+    }
+    if (current?.expectedSource === 'DATASET_COLUMN' && !current?.expectedColumn) {
+      toast.error('Vui lòng chọn Cột Dataset kỳ vọng')
+      return
+    }
+    if (current?.expectedSource === 'STATIC_VALUE' && !current?.expectedValue) {
+      toast.error('Vui lòng nhập Giá trị kỳ vọng')
+      return
+    }
+
+    setEditingCheckIndex(null)
+    setIsAddingNew(false)
+    setEditingSnapshot(null)
   }
 
   // ---------------------------------------------------------------------------
@@ -256,7 +293,8 @@ export function VerificationConfigPage() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => { setEditingCheckIndex(null); setCheckDialogOpen(true) }}
+                        onClick={handleAddCheckRow}
+                        disabled={editingCheckIndex !== null}
                       >
                         <PlusIcon data-icon="inline-start" />
                         Thêm quy tắc
@@ -290,42 +328,127 @@ export function VerificationConfigPage() {
                                 ? check?.expectedColumn
                                 : check?.expectedValue || '—'
 
+                              const isEditing = editingCheckIndex === index
+
                               return (
-                                <TableRow key={item.id} className="group">
-                                  <TableCell>
-                                    <span className="font-mono text-xs">{check?.responsePath}</span>
-                                  </TableCell>
-                                  <TableCell>
-                                    <Badge variant="outline" className="text-xs">{opLabel}</Badge>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center gap-1.5">
-                                      {check?.expectedSource === 'DATASET_COLUMN' && (
-                                        <Badge variant="secondary" className="text-[10px]">Dataset</Badge>
-                                      )}
-                                      <span className="text-sm font-mono">{expectedLabel}</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Controller control={control} name={`fieldChecks.${index}.weight`} render={({ field }) => (
-                                      <Input type="number" step="0.1" min="0" className="h-7 w-14 text-center text-xs mx-auto" {...field} />
-                                    )} />
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Controller control={control} name={`fieldChecks.${index}.enabled`} render={({ field }) => (
-                                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                    )} />
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => handleEditCheck(index)}>
-                                        <PencilIcon className="size-3.5" />
-                                      </Button>
-                                      <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => fieldChecksArray.remove(index)}>
-                                        <TrashIcon className="size-3.5" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
+                                <TableRow key={item.id} className="group h-12">
+                                  {isEditing ? (
+                                    <>
+                                      <TableCell className="p-2">
+                                        <Controller control={control} name={`fieldChecks.${index}.responsePath`} render={({ field }) => (
+                                          <Combobox
+                                            options={(responseFields ?? []).map(f => ({ value: f, label: f }))}
+                                            value={field.value || undefined}
+                                            onChange={field.onChange}
+                                            placeholder="Chọn field..."
+                                            emptyText="Không tìm thấy field"
+                                          />
+                                        )} />
+                                      </TableCell>
+                                      <TableCell className="p-2">
+                                        <Controller control={control} name={`fieldChecks.${index}.operator`} render={({ field }) => (
+                                          <Select value={field.value || undefined} onValueChange={field.onChange}>
+                                            <SelectTrigger className="h-8"><SelectValue placeholder="Toán tử" /></SelectTrigger>
+                                            <SelectContent>
+                                              {operatorOptions.map((op: any) => (
+                                                <SelectItem key={op.value} value={op.value}>{op.label}</SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        )} />
+                                      </TableCell>
+                                      <TableCell className="p-2">
+                                        <div className="flex items-center gap-2">
+                                          <Controller control={control} name={`fieldChecks.${index}.expectedSource`} render={({ field }) => (
+                                            <Select value={field.value} onValueChange={(val) => {
+                                              field.onChange(val)
+                                              form.setValue(`fieldChecks.${index}.expectedColumn`, null)
+                                              form.setValue(`fieldChecks.${index}.expectedValue`, null)
+                                            }}>
+                                              <SelectTrigger className="h-8 w-[100px] shrink-0"><SelectValue /></SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="DATASET_COLUMN">Dataset</SelectItem>
+                                                <SelectItem value="STATIC_VALUE">Static</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          )} />
+                                          {check?.expectedSource === 'DATASET_COLUMN' ? (
+                                            <Controller control={control} name={`fieldChecks.${index}.expectedColumn`} render={({ field }) => (
+                                              <Select value={field.value || undefined} onValueChange={field.onChange}>
+                                                <SelectTrigger className="h-8"><SelectValue placeholder="Chọn cột..." /></SelectTrigger>
+                                                <SelectContent>
+                                                  {expectedColumns.map(col => (
+                                                    <SelectItem key={col.columnName} value={col.columnName}>
+                                                      {col.displayName || col.columnName}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            )} />
+                                          ) : (
+                                            <Controller control={control} name={`fieldChecks.${index}.expectedValue`} render={({ field }) => (
+                                              <Input {...field} value={field.value || ''} placeholder="Giá trị..." className="h-8" />
+                                            )} />
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="p-2 text-center">
+                                        <Controller control={control} name={`fieldChecks.${index}.weight`} render={({ field }) => (
+                                          <Input type="number" step="0.1" min="0" className="h-8 w-14 text-center text-xs mx-auto" {...field} />
+                                        )} />
+                                      </TableCell>
+                                      <TableCell className="p-2 text-center">
+                                        <Controller control={control} name={`fieldChecks.${index}.enabled`} render={({ field }) => (
+                                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                        )} />
+                                      </TableCell>
+                                      <TableCell className="p-2">
+                                        <div className="flex justify-end gap-1">
+                                          <Button type="button" variant="ghost" size="icon" className="size-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleSaveEditRow(index)}>
+                                            <CheckIcon className="size-4" />
+                                          </Button>
+                                          <Button type="button" variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleCancelEditRow(index)}>
+                                            <XIcon className="size-4" />
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TableCell>
+                                        <span className="font-mono text-xs">{check?.responsePath}</span>
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge variant="outline" className="text-xs">{opLabel}</Badge>
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex items-center gap-1.5">
+                                          {check?.expectedSource === 'DATASET_COLUMN' && (
+                                            <Badge variant="secondary" className="text-[10px]">Dataset</Badge>
+                                          )}
+                                          <span className="text-sm font-mono">{expectedLabel}</span>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Badge variant="outline" className="text-[10px]">w: {check?.weight}</Badge>
+                                      </TableCell>
+                                      <TableCell className="text-center">
+                                        <Controller control={control} name={`fieldChecks.${index}.enabled`} render={({ field }) => (
+                                          <Switch checked={field.value} onCheckedChange={field.onChange} disabled={editingCheckIndex !== null} />
+                                        )} />
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <Button type="button" variant="ghost" size="icon" className="size-7" disabled={editingCheckIndex !== null} onClick={() => handleEditCheckRow(index)}>
+                                            <PencilIcon className="size-3.5" />
+                                          </Button>
+                                          <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" disabled={editingCheckIndex !== null} onClick={() => fieldChecksArray.remove(index)}>
+                                            <TrashIcon className="size-3.5" />
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </>
+                                  )}
                                 </TableRow>
                               )
                             })}
@@ -414,7 +537,7 @@ export function VerificationConfigPage() {
                                       <Controller control={control} name={`llmRubrics.${index}.name`} render={({ field, fieldState }) => (
                                         <Field data-invalid={!!fieldState.error}>
                                           <FieldLabel>Tên tiêu chí</FieldLabel>
-                                          <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. Accuracy" />
+                                          <Input {...field} aria-invalid={!!fieldState.error} placeholder="VD: Độ chính xác (Accuracy)" />
                                           <FieldError errors={[fieldState.error]} />
                                         </Field>
                                       )} />
@@ -427,7 +550,13 @@ export function VerificationConfigPage() {
                                               <TooltipContent><p className="max-w-xs">Đường dẫn trỏ tới trường dữ liệu bạn muốn AI chấm. Ví dụ: $.data.answer</p></TooltipContent>
                                             </Tooltip>
                                           </FieldLabel>
-                                          <Input {...field} value={field.value || ''} placeholder="$.data.answer" />
+                                          <Combobox
+                                            options={(responseFields ?? []).map(f => ({ value: f, label: f }))}
+                                            value={field.value || undefined}
+                                            onChange={field.onChange}
+                                            placeholder="Chọn $.data.answer"
+                                            emptyText="Không tìm thấy trường nào"
+                                          />
                                         </Field>
                                       )} />
                                     </div>
@@ -487,28 +616,6 @@ export function VerificationConfigPage() {
             </CardContent>
           </Card>
         </form>
-
-        {/* Field Check Dialog */}
-        <FieldCheckDialog
-          open={checkDialogOpen}
-          onOpenChange={(open) => { setCheckDialogOpen(open); if (!open) setEditingCheckIndex(null) }}
-          responseFields={responseFields ?? []}
-          expectedColumns={expectedColumns}
-          operatorOptions={operatorOptions}
-          editingCheck={editingCheckIndex !== null ? (() => {
-            const c = fieldChecksArray.fields[editingCheckIndex]
-            return c ? {
-              responsePath: c.responsePath,
-              operator: c.operator,
-              expectedSource: (c.expectedSource as 'DATASET_COLUMN' | 'STATIC_VALUE') || 'DATASET_COLUMN',
-              expectedColumn: c.expectedColumn ?? null,
-              expectedValue: c.expectedValue ?? null,
-              threshold: c.threshold ?? null,
-              weight: c.weight,
-            } : null
-          })() : null}
-          onSubmit={handleAddCheck}
-        />
       </motion.div>
     </TooltipProvider>
   )
