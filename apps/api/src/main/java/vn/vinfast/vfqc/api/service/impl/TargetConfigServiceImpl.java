@@ -22,7 +22,7 @@ import vn.vinfast.vfqc.api.model.targetconfig.request.ExecuteCurlRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.ParsedCurlCommand;
 import vn.vinfast.vfqc.api.model.targetconfig.request.SaveTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.TestTargetConfigRequest;
-import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ConnectResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.SecretDetection;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestExecutionResult;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
@@ -54,35 +54,87 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   private final ObjectMapper objectMapper;
 
   @Override
-  @Transactional(readOnly = true)
-  public ExecuteCurlResponse executeCurl(UUID projectPublicId, ExecuteCurlRequest req) {
-    log.info("Executing curl command for project: {}", projectPublicId);
+  @Transactional
+  public ConnectResponse connect(UUID projectPublicId, ExecuteCurlRequest req) {
+    log.info("Connecting target config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     ParsedCurlCommand parsed = curlParser.parse(req.curl());
 
-    // Scan for secrets but don't save them to DB yet, just detect them for the response
+    // 1. Scan & encrypt secrets
     SecretScanResult secrets = secretManager.scanAndEncrypt(
-        parsed.headers(), parsed.queryParams(), project.getId(), "TARGET_CONFIG_TEMP", project.getId());
+        parsed.headers(), parsed.queryParams(), project.getId(), "TARGET_CONFIG", project.getId());
 
+    // 2. Build/update TargetConfig entity
+    TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
+        .orElseGet(() -> TargetConfig.builder()
+            .projectId(project.getId())
+            .build());
+
+    entity.setMethod(parsed.method());
+    entity.setUrl(parsed.url());
+    entity.setBodyTemplate(parsed.body());
+    entity.setTimeoutMs(30000);
+
+    // Redact secrets in cURL before saving
+    String redactedCurl = req.curl();
+    if (parsed.headers() != null) {
+      for (Map.Entry<String, String> entry : parsed.headers().entrySet()) {
+        String sanitized = secrets.sanitizedHeaders().get(entry.getKey());
+        if ("SECRET_REDACTED".equals(sanitized) && entry.getValue() != null && !entry.getValue().isEmpty()) {
+          redactedCurl = redactedCurl.replace(entry.getValue(), "SECRET_REDACTED");
+        }
+      }
+    }
+    if (parsed.queryParams() != null) {
+      for (Map.Entry<String, String> entry : parsed.queryParams().entrySet()) {
+        String sanitized = secrets.sanitizedParams().get(entry.getKey());
+        if ("SECRET_REDACTED".equals(sanitized) && entry.getValue() != null && !entry.getValue().isEmpty()) {
+          redactedCurl = redactedCurl.replace(entry.getValue(), "SECRET_REDACTED");
+        }
+      }
+    }
+    entity.setRawCurl(redactedCurl);
+
+    try {
+      entity.setHeaders(objectMapper.writeValueAsString(secrets.sanitizedHeaders()));
+      entity.setQueryParams(objectMapper.writeValueAsString(secrets.sanitizedParams()));
+    } catch (JsonProcessingException e) {
+      log.error("Failed to serialize headers/params", e);
+    }
+
+    // 3. Persist secrets
+    secretManager.replaceSecrets("TARGET_CONFIG", project.getId(), secrets.detectedSecrets());
+
+    // Update version
+    if (entity.getId() != null) {
+      entity.setVersion(entity.getVersion() + 1);
+    }
+
+    // 4. Execute the HTTP request (using original parsed headers, NOT the sanitized ones)
     TestExecutionResult executionResult = targetHttpExecutor.execute(parsed, 30000);
 
+    // 5. Update test status & response snapshot
+    entity.setLastTestedAt(OffsetDateTime.now());
+    entity.setLastTestStatus(executionResult.httpStatus() >= 200 && executionResult.httpStatus() < 300 ? "SUCCESS" : "FAILED");
+
+    try {
+      if (executionResult.responseFieldTree() != null) {
+        entity.setResponseFieldSnapshot(objectMapper.writeValueAsString(executionResult.responseFieldTree()));
+      }
+    } catch (JsonProcessingException e) {
+      log.error("Failed to serialize response field tree", e);
+    }
+
+    TargetConfig saved = targetConfigRepository.save(entity);
+
+    // 6. Build response
     List<SecretDetection> detections = new ArrayList<>();
     for (SecretRef ref : secrets.detectedSecrets()) {
       detections.add(new SecretDetection(ref.getSecretLocation(), ref.getSecretName(), "REDACTED"));
     }
 
-    SaveTargetConfigRequest configRequest = new SaveTargetConfigRequest(
-        parsed.method(),
-        parsed.url(),
-        secrets.sanitizedHeaders(),
-        secrets.sanitizedParams(),
-        parsed.body(),
-        null,
-        30000,
-        null
-    );
-
-    return new ExecuteCurlResponse(configRequest, detections, executionResult);
+    TargetConfigResponse configResponse = mapToResponse(saved, secrets.sanitizedHeaders(), secrets.sanitizedParams());
+    return new ConnectResponse(configResponse, detections, executionResult);
   }
 
   @Override
@@ -90,41 +142,24 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   public TargetConfigResponse save(UUID projectPublicId, SaveTargetConfigRequest req) {
     log.info("Saving target config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
-    
-    // First, scan and encrypt secrets
-    SecretScanResult secretScan = secretManager.scanAndEncrypt(
-        req.headers(), req.queryParams(), project.getId(), "TARGET_CONFIG", project.getId());
 
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
-        .orElseGet(() -> TargetConfig.builder()
-            .projectId(project.getId())
-            .build());
+        .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
 
-    // Copy fields
-    entity.setMethod(req.method());
-    entity.setUrl(req.url());
-    entity.setName(req.name());
-    entity.setBodyTemplate(req.bodyTemplate());
+    // Only update lightweight fields
     entity.setResponsePath(req.responsePath());
-    entity.setTimeoutMs(req.timeoutMs());
-    
-    try {
-      entity.setHeaders(objectMapper.writeValueAsString(secretScan.sanitizedHeaders()));
-      entity.setQueryParams(objectMapper.writeValueAsString(secretScan.sanitizedParams()));
-    } catch (JsonProcessingException e) {
-      log.error("Failed to serialize headers/params", e);
+    if (req.name() != null) {
+      entity.setName(req.name());
     }
-
-    // Replace old secrets with new ones
-    secretManager.replaceSecrets("TARGET_CONFIG", project.getId(), secretScan.detectedSecrets());
+    if (req.timeoutMs() > 0) {
+      entity.setTimeoutMs(req.timeoutMs());
+    }
 
     // Update version
-    if (entity.getId() != null) {
-      entity.setVersion(entity.getVersion() + 1);
-    }
+    entity.setVersion(entity.getVersion() + 1);
 
     TargetConfig saved = targetConfigRepository.save(entity);
-    return mapToResponse(saved, secretScan.sanitizedHeaders(), secretScan.sanitizedParams());
+    return mapToResponse(saved, parseJson(entity.getHeaders()), parseJson(entity.getQueryParams()));
   }
 
   @Override
@@ -166,11 +201,30 @@ public class TargetConfigServiceImpl implements TargetConfigService {
 
     targetConfigRepository.save(entity);
 
-    if (result.httpStatus() < 200 || result.httpStatus() >= 300) {
-      throw ResourceException.of(ErrorCode.TARGET_TEST_FAILED, result.errorMessage() != null ? result.errorMessage() : "HTTP " + result.httpStatus());
+    return result;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<String> getResponseFields(UUID projectPublicId) {
+    log.debug("Extracting response fields for project: {}", projectPublicId);
+    Project project = getProjectOrThrow(projectPublicId);
+    TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
+        .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
+
+    if (entity.getResponseFieldSnapshot() == null || entity.getResponseFieldSnapshot().isBlank()) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "No response snapshot available. Please test the target config first.");
     }
 
-    return result;
+    try {
+      JsonNode tree = objectMapper.readTree(entity.getResponseFieldSnapshot());
+      List<String> paths = new ArrayList<>();
+      flattenJsonPaths(tree, "$", paths);
+      return paths;
+    } catch (JsonProcessingException e) {
+      log.error("Failed to parse response field snapshot", e);
+      return new ArrayList<>();
+    }
   }
 
   private Project getProjectOrThrow(UUID publicId) {
@@ -202,33 +256,12 @@ public class TargetConfigServiceImpl implements TargetConfigService {
         res.timeoutMs(),
         res.requestFieldSnapshot(),
         res.responseFieldSnapshot(),
+        res.rawCurl(),
         res.lastTestStatus(),
         res.lastTestedAt(),
         res.createdAt(),
         res.updatedAt()
     );
-  }
-  @Override
-  @Transactional(readOnly = true)
-  public List<String> getResponseFields(UUID projectPublicId) {
-    log.debug("Extracting response fields for project: {}", projectPublicId);
-    Project project = getProjectOrThrow(projectPublicId);
-    TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
-        .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
-
-    if (entity.getResponseFieldSnapshot() == null || entity.getResponseFieldSnapshot().isBlank()) {
-      throw ResourceException.of(ErrorCode.BAD_REQUEST, "No response snapshot available. Please test the target config first.");
-    }
-
-    try {
-      JsonNode tree = objectMapper.readTree(entity.getResponseFieldSnapshot());
-      List<String> paths = new ArrayList<>();
-      flattenJsonPaths(tree, "$", paths);
-      return paths;
-    } catch (JsonProcessingException e) {
-      log.error("Failed to parse response field snapshot", e);
-      return new ArrayList<>();
-    }
   }
 
   private void flattenJsonPaths(JsonNode node, String prefix, List<String> paths) {
@@ -242,8 +275,9 @@ public class TargetConfigServiceImpl implements TargetConfigService {
         }
       });
     } else if (node.isArray() && !node.isEmpty()) {
-      // For arrays, extract paths from the first element as sample
-      flattenJsonPaths(node.get(0), prefix + "[0]", paths);
+      for (int i = 0; i < node.size(); i++) {
+        flattenJsonPaths(node.get(i), prefix + "[" + i + "]", paths);
+      }
     } else {
       paths.add(prefix);
     }

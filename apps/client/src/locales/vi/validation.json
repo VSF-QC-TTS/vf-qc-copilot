@@ -11,6 +11,11 @@
   "validation.auth.password-reset-token.max": "Token đặt lại mật khẩu quá dài.",
   "validation.user.new-password.required": "Mật khẩu mới là bắt buộc.",
   "validation.user.new-password.size": "Mật khẩu mới phải từ 8 đến 128 ký tự.",
+  "validation.not-blank": "Trường này không được để trống.",
+  "validation.not-null": "Vui lòng chọn một giá trị.",
+  "validation.min": "Giá trị tối thiểu không hợp lệ.",
+  "validation.max": "Giá trị tối đa không hợp lệ.",
+  "invalid-curl": "Lệnh cURL không hợp lệ.",
 
   "email.required": "Email là bắt buộc.",
   "email.invalid": "Email không hợp lệ.",

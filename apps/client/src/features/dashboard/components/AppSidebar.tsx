@@ -9,7 +9,7 @@ import {
   Circle,
   BarChart,
   LayoutDashboard,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react'
 
 import {
@@ -18,45 +18,35 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarSeparator,
-} from '@/components/ui/sidebar'
-import { Badge } from '@/components/ui/badge'
+import { useSidebar, Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator } from '@/components/ui/sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ProjectSwitcher } from './ProjectSwitcher'
 import { UserNav } from './UserNav'
-import { useProjectsInfinite, useSetupStatus } from '@/features/project/hooks/use-projects'
+import { useSetupStatus } from '@/features/project/hooks/use-projects'
 
 export function AppSidebar() {
+  const { t } = useTranslation('project')
   const { publicId } = useParams<{ publicId: string }>()
   const location = useLocation()
-  
-  // If we are at /projects (no publicId), we show the Project List mode
+  const { state } = useSidebar()
+
   const isProjectListMode = !publicId
 
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader>
-        {isProjectListMode ? (
-          <div className="flex h-12 items-center px-4">
-            <span className="font-semibold">VF QC Copilot</span>
-          </div>
-        ) : (
+        <div className="flex flex-col gap-2 pt-2">
+          {state !== 'collapsed' && (
+            <div className="flex h-8 items-center px-4">
+              <span className="font-semibold text-foreground/80 tracking-tight">{t('app.name')}</span>
+            </div>
+          )}
           <ProjectSwitcher />
-        )}
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
-        {isProjectListMode ? <ProjectListSidebar /> : <ProjectNavSidebar publicId={publicId} location={location} />}
+        {isProjectListMode ? null : <ProjectNavSidebar publicId={publicId} location={location} />}
       </SidebarContent>
 
       <SidebarFooter>
@@ -66,34 +56,11 @@ export function AppSidebar() {
   )
 }
 
-function ProjectListSidebar() {
-  const { data } = useProjectsInfinite()
-  const projects = data?.pages.flatMap((p) => p.content) || []
 
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {projects.map((project) => (
-            <SidebarMenuItem key={project.publicId}>
-              <SidebarMenuButton asChild>
-                <Link to={`/projects/${project.publicId}`}>
-                  <span className="truncate">{project.name}</span>
-                  <Badge variant="secondary" className="ml-auto flex shrink-0 size-2 p-0 rounded-full bg-emerald-500" />
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  )
-}
 
-function ProjectNavSidebar({ publicId, location }: { publicId: string, location: any }) {
+function ProjectNavSidebar({ publicId, location }: { publicId: string; location: any }) {
   const { t } = useTranslation('project')
-  const { data: status } = useSetupStatus(publicId)
+  const { data: status, isLoading } = useSetupStatus(publicId)
 
   const setupItems = [
     { name: t('nav.apiConfig'), path: `/projects/${publicId}/config/target`, icon: Database, done: status?.hasTargetConfig },
@@ -107,7 +74,6 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string, location:
     { name: t('nav.testRuns'), path: `/projects/${publicId}/runs`, icon: BarChart },
   ]
 
-  // Auto-collapse if all setup steps are done
   const isSetupDone =
     status?.hasTargetConfig &&
     status?.hasJudgeConfig &&
@@ -120,11 +86,11 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string, location:
     <>
       <SidebarGroup>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="gap-1">
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={location.pathname === `/projects/${publicId}`}>
                 <Link to={`/projects/${publicId}`}>
-                  <LayoutDashboard className="size-4" />
+                  <LayoutDashboard />
                   <span>{t('nav.overview')}</span>
                 </Link>
               </SidebarMenuButton>
@@ -137,62 +103,69 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string, location:
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger>
-              Setup & Configuration
+              {t('nav.setup')}
               <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
             </CollapsibleTrigger>
           </SidebarGroupLabel>
           <CollapsibleContent>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {setupItems.map((item) => {
-                  const isActive = location.pathname === item.path
-                  return (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <Link to={item.path} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <item.icon className="size-4" />
-                            <span>{item.name}</span>
-                          </div>
-                          {item.done !== undefined && (
-                            item.done ? (
-                              <CheckCircle2 className="size-4 text-emerald-500" />
-                            ) : (
-                              <Circle className="size-4 text-muted-foreground/30" />
-                            )
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-
-      <SidebarGroup>
-        <SidebarGroupLabel>Execution</SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {executionItems.map((item) => {
-              const isActive = location.pathname === item.path
-              return (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild isActive={isActive}>
-                    <Link to={item.path} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <item.icon className="size-4" />
-                        <span>{item.name}</span>
-                      </div>
-                      {item.done !== undefined && (
-                        item.done ? (
-                          <CheckCircle2 className="size-4 text-emerald-500" />
-                        ) : (
-                          <Circle className="size-4 text-muted-foreground/30" />
+              <SidebarMenu className="gap-1">
+                {isLoading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <SidebarMenuItem key={i}>
+                        <div className="flex items-center gap-2 px-2 py-1.5">
+                          <Skeleton className="h-4 w-4 rounded" />
+                          <Skeleton className="h-4 flex-1 rounded" />
+                        </div>
+                      </SidebarMenuItem>
+                    ))
+                    : setupItems.map((item) => {
+                        const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+                        return (
+                          <SidebarMenuItem key={item.path}>
+                            <SidebarMenuButton asChild isActive={isActive}>
+                              <Link to={item.path} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <item.icon />
+                                  <span>{item.name}</span>
+                                </div>
+                                {item.done !== undefined &&
+                                  (item.done ? (
+                                    <CheckCircle2 className="text-emerald-500" />
+                                  ) : (
+                                    <Circle className="text-muted-foreground/50" />
+                                  ))}
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
                         )
-                      )}
+                      })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </CollapsibleContent>
+          </SidebarGroup>
+        </Collapsible>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>{t('nav.execution')}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1">
+              {executionItems.map((item) => {
+                const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link to={item.path} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <item.icon />
+                          <span>{item.name}</span>
+                        </div>
+                      {item.done !== undefined &&
+                        (item.done ? (
+                          <CheckCircle2 className="text-emerald-500" />
+                        ) : (
+                          <Circle className="text-muted-foreground/50" />
+                        ))}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -204,11 +177,11 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string, location:
       <SidebarSeparator />
       <SidebarGroup>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="gap-1">
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={location.pathname === `/projects/${publicId}/settings`}>
                 <Link to={`/projects/${publicId}/settings`}>
-                  <Settings className="size-4" />
+                  <Settings />
                   <span>{t('nav.settings')}</span>
                 </Link>
               </SidebarMenuButton>

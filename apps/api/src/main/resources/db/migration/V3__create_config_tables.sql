@@ -16,6 +16,7 @@ CREATE TABLE target_configs (
   timeout_ms               INT           NOT NULL DEFAULT 30000,
   request_field_snapshot   JSONB,
   response_field_snapshot  JSONB,
+  raw_curl                 TEXT,
   last_test_status         VARCHAR(30),
   last_tested_at           TIMESTAMP WITH TIME ZONE,
   created_at               TIMESTAMP WITH TIME ZONE NOT NULL,

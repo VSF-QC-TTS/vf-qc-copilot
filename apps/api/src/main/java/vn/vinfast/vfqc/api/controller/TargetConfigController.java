@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.vinfast.vfqc.api.model.targetconfig.request.ExecuteCurlRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.SaveTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.TestTargetConfigRequest;
-import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ConnectResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestExecutionResult;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
 import vn.vinfast.vfqc.api.service.TargetConfigService;
@@ -34,15 +34,15 @@ public class TargetConfigController {
 
   private final TargetConfigService targetConfigService;
 
-  @Operation(summary = "Execute cURL Command", description = "Parses and executes a cURL command without saving it.")
-  @PostMapping("/execute-curl")
-  public ExecuteCurlResponse executeCurl(
+  @Operation(summary = "Connect via cURL", description = "Parses a cURL command, executes it, and saves the configuration in one atomic operation.")
+  @PostMapping("/connect")
+  public ConnectResponse connect(
       @PathVariable UUID publicId,
       @Valid @RequestBody ExecuteCurlRequest req) {
-    return targetConfigService.executeCurl(publicId, req);
+    return targetConfigService.connect(publicId, req);
   }
 
-  @Operation(summary = "Save Target Config", description = "Saves or updates the target API configuration.")
+  @Operation(summary = "Save Target Config", description = "Updates lightweight fields (responsePath, name, timeoutMs) of the target API configuration.")
   @PutMapping
   public TargetConfigResponse save(
       @PathVariable UUID publicId,

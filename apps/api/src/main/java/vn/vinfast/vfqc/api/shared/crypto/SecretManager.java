@@ -29,6 +29,7 @@ public class SecretManager {
 
   /**
    * Scans headers and params for secrets, encrypts them, and returns sanitized maps along with the created SecretRefs.
+   * If a value is already "SECRET_REDACTED", the existing encrypted value from DB is preserved.
    */
   public SecretScanResult scanAndEncrypt(
       Map<String, String> headers,
@@ -37,6 +38,10 @@ public class SecretManager {
       String ownerType,
       Long ownerId) {
 
+    // Load existing secrets from DB to preserve them when value is REDACTED
+    Map<String, SecretRef> existingSecrets = repository.findByOwnerTypeAndOwnerId(ownerType, ownerId).stream()
+        .collect(Collectors.toMap(SecretRef::getSecretName, ref -> ref, (a, b) -> b));
+
     List<SecretRef> secrets = new ArrayList<>();
     Map<String, String> sanitizedHeaders = new HashMap<>();
     Map<String, String> sanitizedParams = new HashMap<>();
@@ -44,7 +49,13 @@ public class SecretManager {
     if (headers != null) {
       headers.forEach((key, value) -> {
         if (isSecretHeader(key)) {
-          secrets.add(buildSecretRef(projectId, ownerType, ownerId, key, "HEADER", null, value));
+          if ("SECRET_REDACTED".equals(value) && existingSecrets.containsKey(key)) {
+            // Preserve existing encrypted secret
+            secrets.add(existingSecrets.get(key));
+          } else {
+            // New secret value, encrypt it
+            secrets.add(buildSecretRef(projectId, ownerType, ownerId, key, "HEADER", null, value));
+          }
           sanitizedHeaders.put(key, "SECRET_REDACTED");
         } else {
           sanitizedHeaders.put(key, value);
@@ -55,7 +66,13 @@ public class SecretManager {
     if (params != null) {
       params.forEach((key, value) -> {
         if (isSecretParam(key)) {
-          secrets.add(buildSecretRef(projectId, ownerType, ownerId, key, "QUERY", null, value));
+          if ("SECRET_REDACTED".equals(value) && existingSecrets.containsKey(key)) {
+            // Preserve existing encrypted secret
+            secrets.add(existingSecrets.get(key));
+          } else {
+            // New secret value, encrypt it
+            secrets.add(buildSecretRef(projectId, ownerType, ownerId, key, "QUERY", null, value));
+          }
           sanitizedParams.put(key, "SECRET_REDACTED");
         } else {
           sanitizedParams.put(key, value);

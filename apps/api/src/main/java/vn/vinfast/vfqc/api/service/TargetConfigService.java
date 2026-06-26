@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import vn.vinfast.vfqc.api.model.targetconfig.request.ExecuteCurlRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.SaveTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.TestTargetConfigRequest;
-import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ConnectResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestExecutionResult;
 
@@ -19,17 +19,18 @@ import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestE
 public interface TargetConfigService {
 
   /**
-   * Executes a raw cURL command against a target without saving the configuration.
-   * Also detects any potential secrets in the request and masks them in the response.
+   * Parses a raw cURL command, executes it, and saves the configuration in one atomic operation.
+   * Secrets are detected, encrypted, and persisted. The cURL is stored for later viewing.
    *
    * @param projectPublicId the public ID of the project
    * @param req the request containing the raw cURL command
-   * @return the execution response including parsed configuration and execution result
+   * @return the connect response including saved config, detected secrets, and test result
    */
-  ExecuteCurlResponse executeCurl(UUID projectPublicId, @Valid ExecuteCurlRequest req);
+  ConnectResponse connect(UUID projectPublicId, @Valid ExecuteCurlRequest req);
 
   /**
    * Saves or updates the target API configuration for a project.
+   * Only updates lightweight fields (responsePath, name, timeoutMs).
    * Any detected secrets are securely encrypted before saving.
    *
    * @param projectPublicId the public ID of the project

@@ -16,5 +16,10 @@
     "confirm": "Confirm",
     "save": "Save",
     "back": "Back"
+  },
+  "user": {
+    "profile": "Profile",
+    "toggleTheme": "Toggle Theme",
+    "logout": "Log out"
   }
 }

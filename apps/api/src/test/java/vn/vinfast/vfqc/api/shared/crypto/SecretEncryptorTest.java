@@ -20,7 +20,8 @@ class SecretEncryptorTest {
   void setUp() {
     // 32-byte hex string (256 bits) for AES-256
     String testKey = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-    secretEncryptor = new SecretEncryptor(testKey);
+    String testSalt = "5c0744940b5c369b";
+    secretEncryptor = new SecretEncryptor(testKey, testSalt);
   }
 
   @Test

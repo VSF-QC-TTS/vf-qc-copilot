@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { LogOut, Moon, Sun, User } from 'lucide-react'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -14,6 +15,7 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/c
 import { useAuth } from '@/features/auth/auth-context'
 
 export function UserNav() {
+  const { t } = useTranslation('common')
   const { user, logout } = useAuth()
   const { isMobile } = useSidebar()
 
@@ -25,7 +27,6 @@ export function UserNav() {
     .join('')
     .toUpperCase()
 
-  // Simplified theme toggle for now, can be expanded to proper context
   const toggleTheme = () => {
     document.documentElement.classList.toggle('dark')
   }
@@ -58,19 +59,19 @@ export function UserNav() {
               <DropdownMenuItem asChild>
                 <Link to="/profile">
                   <User data-icon="inline-start" />
-                  Profile
+                  {t('user.profile')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={toggleTheme}>
                 <Sun data-icon="inline-start" className="dark:hidden" />
                 <Moon data-icon="inline-start" className="hidden dark:block" />
-                Toggle Theme
+                {t('user.toggleTheme')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => logout()}>
               <LogOut data-icon="inline-start" />
-              Log out
+              {t('user.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

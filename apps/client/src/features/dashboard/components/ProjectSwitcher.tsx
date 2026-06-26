@@ -1,129 +1,127 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { ChevronsUpDown, Folder, Settings2, Plus } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { type ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Check, ChevronsUpDown, Plus, Search } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { useProjectsInfinite } from '@/features/project/hooks/use-projects'
 import { cn } from '@/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { useProjectsInfinite } from '@/features/project/hooks/use-projects'
 import { CreateProjectDialog } from '@/features/project/components/CreateProjectDialog'
+import { useSidebar } from '@/components/ui/sidebar'
 
-export function ProjectSwitcher() {
+interface ProjectSwitcherProps extends ComponentProps<'div'> {
+  compact?: boolean
+  tone?: 'default' | 'sidebar'
+}
+
+export function ProjectSwitcher({
+  compact,
+  tone = 'sidebar',
+  className,
+  ...props
+}: ProjectSwitcherProps) {
   const { t } = useTranslation('project')
   const navigate = useNavigate()
   const { publicId } = useParams<{ publicId: string }>()
-  const { isMobile } = useSidebar()
-  const [open, setOpen] = useState(false)
+  const { isMobile, state } = useSidebar()
+  const isCollapsed = state === 'collapsed'
+  
   const [createOpen, setCreateOpen] = useState(false)
-  const [search, setSearch] = useState('')
 
-  const { data, hasNextPage, fetchNextPage } = useProjectsInfinite()
+  const { data } = useProjectsInfinite()
+  const projects = data?.pages.flatMap((p) => p.content) || []
+  const currentProject = projects.find((p) => p.publicId === publicId)
 
-  // Flatten pages and filter locally
-  const projects = data?.pages.flatMap((p) => p.content).filter(p => p.name.toLowerCase().includes(search.toLowerCase())) || []
-  const activeProject = projects.find((p) => p.publicId === publicId)
+  const isSidebarTone = tone === 'sidebar'
 
   return (
-    <>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <span className="font-bold">VF</span>
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    {activeProject?.name || 'Select Project'}
-                  </span>
-                  <span className="truncate text-xs">QC Copilot</span>
-                </div>
-                <ChevronsUpDown className="ml-auto" data-icon="inline-end" />
-              </SidebarMenuButton>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-[--radix-popover-trigger-width] p-0"
-              side={isMobile ? 'bottom' : 'right'}
-              align="start"
+    <div className={cn('mb-2 mt-2', compact ? 'min-w-0' : isCollapsed ? 'px-0' : 'px-2 lg:px-4', className)} {...props}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              'h-12 w-full justify-start overflow-hidden',
+              isCollapsed ? 'p-0 justify-center' : 'px-3 py-2',
+              isSidebarTone &&
+                'border-border bg-muted/50 text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring dark:border-white/10 dark:bg-white/[0.06] dark:text-zinc-100 dark:hover:bg-white/[0.10] dark:hover:text-white dark:focus-visible:ring-white/30 dark:focus-visible:ring-offset-[#15181d]'
+            )}
+            aria-label={t('switcher.selectProject')}
+            title={currentProject?.name ?? t('switcher.selectProject')}
+          >
+            <span
+              className={cn(
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                isSidebarTone ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                !isCollapsed && 'mr-2'
+              )}
             >
-              <div className="flex items-center border-b px-3">
-                <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                <Input
-                  className="flex h-10 w-full border-0 bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-0"
-                  placeholder={t('switcher.searchPlaceholder')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <ScrollArea className="max-h-64 overflow-y-auto p-1">
-                {projects.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-muted-foreground">
-                    No projects found.
-                  </p>
-                ) : (
-                  projects.map((project) => (
-                    <button
-                      key={project.publicId}
-                      onClick={() => {
-                        navigate(`/projects/${project.publicId}`)
-                        setOpen(false)
-                      }}
-                      className={cn(
-                        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
-                        publicId === project.publicId && "bg-accent text-accent-foreground"
-                      )}
-                    >
-                      {publicId === project.publicId && (
-                        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-                          <Check className="h-4 w-4" />
-                        </span>
-                      )}
-                      <span className="truncate">{project.name}</span>
-                    </button>
-                  ))
-                )}
-                {hasNextPage && (
-                  <Button
-                    variant="ghost"
-                    className="w-full text-xs"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      fetchNextPage()
-                    }}
+              <Folder />
+            </span>
+            {!isCollapsed && (
+              <>
+                <span className="min-w-0 flex-1 text-left">
+                  <span
+                    className={cn(
+                      'block truncate text-[11px] font-medium uppercase',
+                      isSidebarTone ? 'text-muted-foreground dark:text-zinc-400' : 'text-muted-foreground'
+                    )}
                   >
-                    Load more...
-                  </Button>
-                )}
-              </ScrollArea>
-              <div className="border-t p-1">
-                <button
-                  onClick={() => {
-                    setOpen(false)
-                    setCreateOpen(true)
-                  }}
-                  className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('switcher.createNew')}
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </SidebarMenuItem>
-      </SidebarMenu>
+                    {t('switcher.switchLabel', 'Switch project')}
+                  </span>
+                  <span className="block truncate">{currentProject?.name || t('switcher.selectProject')}</span>
+                </span>
+                <ChevronsUpDown className="ml-2 shrink-0 opacity-50" />
+              </>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-[200px]" side={isMobile ? 'bottom' : 'right'}>
+          <DropdownMenuLabel>{t('switcher.switchLabel', 'Switch project')}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          
+          {projects.map((project) => (
+            <DropdownMenuItem
+              key={project.publicId}
+              onClick={() => navigate(`/projects/${project.publicId}`)}
+              className="cursor-pointer"
+            >
+              {project.name}
+            </DropdownMenuItem>
+          ))}
+          
+          {projects.length === 0 ? (
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+              {t('switcher.noResults')}
+            </div>
+          ) : null}
+
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setCreateOpen(true)}
+            className="cursor-pointer text-muted-foreground mt-2"
+          >
+            <Plus className="mr-2" />
+            {t('switcher.createNew')}
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer text-muted-foreground">
+            <Link to="/projects" className="w-full flex items-center">
+              <Settings2 className="mr-2" />
+              {t('switcher.manage', 'Manage projects')}
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
-    </>
+    </div>
   )
 }

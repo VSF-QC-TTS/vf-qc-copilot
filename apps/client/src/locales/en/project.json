@@ -1,4 +1,8 @@
 {
+  "app": {
+    "name": "VF QC Copilot",
+    "subtitle": "QC Copilot"
+  },
   "list": {
     "title": "Your Projects",
     "search": "Search projects...",
@@ -16,12 +20,29 @@
     "submittingBtn": "Creating...",
     "success": "Project created successfully"
   },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No",
+    "configure": "Configure",
+    "enabled": "Enabled",
+    "testResponse": "Test Response",
+    "testResponseEmpty": "Run a test to see the response...",
+    "addHeader": "Add Header",
+    "addParam": "Add Param"
+  },
   "overview": {
     "setupProgress": "Setup Progress",
     "recentRuns": "Recent Test Runs",
     "noRuns": "No test runs yet",
     "noRunsHint": "Complete the setup to run your first evaluation.",
-    "continueSetup": "Continue Setup"
+    "continueSetup": "Continue Setup",
+    "totalRuns": "Total Runs",
+    "passRate": "Pass Rate",
+    "avgLatency": "Avg Latency",
+    "setupSteps": "Setup"
   },
   "nav": {
     "overview": "Overview",
@@ -31,7 +52,9 @@
     "verification": "Verification",
     "datasets": "Datasets",
     "testRuns": "Test Runs",
-    "settings": "Project Settings"
+    "settings": "Project Settings",
+    "setup": "Setup & Configuration",
+    "execution": "Execution"
   },
   "toolbar": {
     "runTest": "Run Test",
@@ -39,11 +62,116 @@
   },
   "switcher": {
     "searchPlaceholder": "Search projects...",
-    "createNew": "Create new project"
+    "createNew": "Create new project",
+    "selectProject": "Select a project",
+    "switchLabel": "Switch project",
+    "noResults": "No projects found.",
+    "loadMore": "Load more..."
   },
   "welcome": {
     "title": "Select a project to get started",
     "subtitle": "Or create a new one to begin your evaluation.",
     "createBtn": "New Project"
+  },
+  "config": {
+    "target": {
+      "title": "Target API Config",
+      "description": "Define your API endpoint to call during the evaluation.",
+      "endpoint": "Endpoint",
+      "method": "Method",
+      "url": "URL",
+      "timeout": "Timeout (ms)",
+      "headers": "Headers",
+      "queryParams": "Query Parameters",
+      "body": "Request Body",
+      "curlImport": "Import from cURL",
+      "curlImportHint": "Paste a cURL command to auto-fill the endpoint configuration.",
+      "curlPlaceholder": "Paste cURL command here...",
+      "curlImportBtn": "Parse cURL",
+      "curlSuccess": "cURL imported successfully",
+      "responsePath": "Response JSON Path",
+      "responsePathHint": "JSONPath to extract the primary data from response",
+      "testConnection": "Test Connection",
+      "testPassed": "Test passed: HTTP {{status}} ({{latency}}ms)",
+      "testFailed": "Test failed: HTTP {{status}}",
+      "saveSuccess": "Target API configuration saved"
+    },
+    "judge": {
+      "title": "LLM Judge Config",
+      "description": "Configure the language model that will act as the judge.",
+      "providerConfig": "Provider Configuration",
+      "provider": "Provider",
+      "providerOpenai": "OpenAI",
+      "providerAzure": "Azure OpenAI",
+      "providerAnthropic": "Anthropic",
+      "providerGemini": "Google Gemini",
+      "providerCustom": "Custom (OpenAI-compatible)",
+      "model": "Model",
+      "apiKey": "API Key",
+      "baseUrl": "Base URL (Optional)",
+      "customModelName": "Deployment / Custom Model Name",
+      "temperature": "Temperature",
+      "maxTokens": "Max Tokens",
+      "timeoutMs": "Timeout (ms)",
+      "retryCount": "Retry Count",
+      "testConnection": "Test Connection",
+      "testHint": "Send a prompt to test your LLM configuration.",
+      "systemPrompt": "System Prompt",
+      "userMessage": "User Message",
+      "testBtn": "Test",
+      "saveSuccess": "LLM Judge configuration saved"
+    },
+    "schema": {
+      "title": "Dataset Schema",
+      "description": "Define the columns that will be present in the uploaded dataset.",
+      "addColumn": "Add Column",
+      "editColumn": "Edit Column",
+      "columnName": "Column Name",
+      "displayName": "Display Name",
+      "dataType": "Data Type",
+      "role": "Role",
+      "roleInput": "Input",
+      "roleExpectedOutput": "Expected Output",
+      "roleContext": "Context",
+      "roleMetadata": "Metadata",
+      "required": "Required",
+      "descriptionLabel": "Description / Context",
+      "noColumns": "No columns defined yet.",
+      "saveSuccess": "Column information saved"
+    },
+    "verification": {
+      "title": "Verification Rules",
+      "description": "Map API response fields to dataset columns or define LLM Rubrics.",
+      "mode": "Verification Mode",
+      "modeFieldChecks": "Field Checks (Deterministic)",
+      "modeOverallRubric": "Overall Rubric (LLM Judge)",
+      "modeHybrid": "Hybrid (Rules + LLM)",
+      "responseFields": "Response Fields",
+      "datasetColumns": "Dataset Columns",
+      "availableFields": "Available API Fields",
+      "availableFieldsHint": "Drag fields from the API response to map them.",
+      "expectedColumns": "Expected Output Columns",
+      "expectedColumnsHint": "Drop fields here to configure validation rules.",
+      "noExpectedColumns": "No columns with role 'EXPECTED_OUTPUT' found.",
+      "noResponseFields": "No response fields found. Please test your Target API first.",
+      "datasetColumn": "Dataset Column",
+      "dropHint": "Drop response fields here",
+      "dragHint": "Drag a response field here to create a mapping rule",
+      "mappedHint": "mapped to this column",
+      "mappedSuccess": "Mapped {{source}} to {{target}}",
+      "operator": "Operator",
+      "weightScore": "Weight (Score)",
+      "llmRubrics": "LLM Rubrics",
+      "llmRubricsHint": "Configure AI judge evaluation criteria",
+      "addCriteria": "Add Criteria",
+      "criteriaName": "Criteria Name",
+      "targetPath": "Target JSON Path (Optional)",
+      "targetPathHint": "Evaluate a specific part of the response",
+      "rubricPrompt": "Rubric / Prompt",
+      "passingThreshold": "Passing Threshold",
+      "weight": "Weight",
+      "noRubrics": "No LLM Rubrics defined.",
+      "saveSuccess": "Verification rules saved"
+    }
   }
 }

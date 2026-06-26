@@ -18,6 +18,11 @@ const ProjectListPage = lazy(() => import('@/features/project/pages/ProjectListP
 const ProjectOverviewPage = lazy(() => import('@/features/project/pages/ProjectOverviewPage').then(m => ({ default: m.ProjectOverviewPage })))
 const PlaceholderPage = lazy(() => import('@/features/project/pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
 
+const TargetConfigPage = lazy(() => import('@/features/project/pages/config/TargetConfigPage').then(m => ({ default: m.TargetConfigPage })))
+const JudgeConfigPage = lazy(() => import('@/features/project/pages/config/JudgeConfigPage').then(m => ({ default: m.JudgeConfigPage })))
+const DatasetSchemaPage = lazy(() => import('@/features/project/pages/config/DatasetSchemaPage').then(m => ({ default: m.DatasetSchemaPage })))
+const VerificationConfigPage = lazy(() => import('@/features/project/pages/config/VerificationConfigPage').then(m => ({ default: m.VerificationConfigPage })))
+
 // Route-level loading fallback — skeleton
 function RouteFallback() {
   return (
@@ -59,10 +64,10 @@ function App() {
           <Route path="/projects" element={<ProjectListPage />} />
           <Route path="/projects/:publicId" element={<ProjectLayout />}>
             <Route index element={<ProjectOverviewPage />} />
-            <Route path="config/target" element={<PlaceholderPage title="API Config" />} />
-            <Route path="config/judge" element={<PlaceholderPage title="LLM Judge" />} />
-            <Route path="dataset-schema" element={<PlaceholderPage title="Dataset Schema" />} />
-            <Route path="verification" element={<PlaceholderPage title="Verification" />} />
+            <Route path="config/target" element={<TargetConfigPage />} />
+            <Route path="config/judge" element={<JudgeConfigPage />} />
+            <Route path="dataset-schema" element={<DatasetSchemaPage />} />
+            <Route path="verification" element={<VerificationConfigPage />} />
             <Route path="datasets" element={<PlaceholderPage title="Datasets" />} />
             <Route path="runs" element={<PlaceholderPage title="Test Runs" />} />
             <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />

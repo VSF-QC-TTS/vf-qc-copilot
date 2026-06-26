@@ -1,4 +1,8 @@
 {
+  "app": {
+    "name": "VF QC Copilot",
+    "subtitle": "QC Copilot"
+  },
   "list": {
     "title": "Dự án của bạn",
     "search": "Tìm kiếm dự án...",
@@ -16,12 +20,29 @@
     "submittingBtn": "Đang tạo...",
     "success": "Tạo dự án thành công"
   },
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "actions": "Thao tác",
+    "yes": "Có",
+    "no": "Không",
+    "configure": "Cấu hình",
+    "enabled": "Bật",
+    "testResponse": "Kết quả kiểm tra",
+    "testResponseEmpty": "Chạy kiểm tra để xem kết quả...",
+    "addHeader": "Thêm Header",
+    "addParam": "Thêm tham số"
+  },
   "overview": {
-    "setupProgress": "Tiến độ cài đặt",
-    "recentRuns": "Lượt chạy gần đây",
-    "noRuns": "Chưa có lượt chạy nào",
-    "noRunsHint": "Hoàn tất cấu hình để bắt đầu chạy test.",
-    "continueSetup": "Tiếp tục cài đặt"
+    "setupProgress": "Tiến trình cài đặt",
+    "recentRuns": "Lịch sử chạy gần đây",
+    "noRuns": "Chưa có lần chạy nào",
+    "noRunsHint": "Hoàn tất cài đặt để chạy đánh giá đầu tiên.",
+    "continueSetup": "Tiếp tục cài đặt",
+    "totalRuns": "Tổng số lần chạy",
+    "passRate": "Tỷ lệ pass",
+    "avgLatency": "Độ trễ TB",
+    "setupSteps": "Cài đặt"
   },
   "nav": {
     "overview": "Tổng quan",
@@ -31,7 +52,9 @@
     "verification": "Verification",
     "datasets": "Datasets",
     "testRuns": "Lịch sử chạy",
-    "settings": "Cài đặt dự án"
+    "settings": "Cài đặt dự án",
+    "setup": "Cài đặt & Cấu hình",
+    "execution": "Thực thi"
   },
   "toolbar": {
     "runTest": "Chạy Test",
@@ -39,11 +62,116 @@
   },
   "switcher": {
     "searchPlaceholder": "Tìm kiếm dự án...",
-    "createNew": "Tạo dự án mới"
+    "createNew": "Tạo dự án mới",
+    "selectProject": "Chọn dự án",
+    "switchLabel": "Chuyển dự án",
+    "noResults": "Không tìm thấy dự án.",
+    "loadMore": "Tải thêm..."
   },
   "welcome": {
     "title": "Chọn dự án để bắt đầu",
     "subtitle": "Hoặc tạo dự án mới để bắt đầu đánh giá.",
     "createBtn": "Dự án mới"
+  },
+  "config": {
+    "target": {
+      "title": "Cấu hình API Đích",
+      "description": "Định nghĩa endpoint API của bạn để gọi trong quá trình đánh giá.",
+      "endpoint": "Endpoint",
+      "method": "Phương thức",
+      "url": "Đường dẫn URL",
+      "timeout": "Timeout (ms)",
+      "headers": "Headers",
+      "queryParams": "Query Parameters",
+      "body": "Nội dung Request (Body)",
+      "curlImport": "Nhập từ lệnh cURL",
+      "curlImportHint": "Dán lệnh cURL để tự động điền cấu hình endpoint.",
+      "curlPlaceholder": "Dán lệnh cURL vào đây...",
+      "curlImportBtn": "Phân tích cURL",
+      "curlSuccess": "Nhập cURL thành công",
+      "responsePath": "JSON Path dữ liệu trả về",
+      "responsePathHint": "JSONPath để trích xuất dữ liệu chính từ phản hồi",
+      "testConnection": "Kiểm tra kết nối",
+      "testPassed": "Kiểm tra thành công: HTTP {{status}} ({{latency}}ms)",
+      "testFailed": "Kiểm tra thất bại: HTTP {{status}}",
+      "saveSuccess": "Đã lưu cấu hình API đích"
+    },
+    "judge": {
+      "title": "Cấu hình LLM Judge",
+      "description": "Cấu hình mô hình ngôn ngữ sẽ làm giám khảo (Judge).",
+      "providerConfig": "Cấu hình nhà cung cấp",
+      "provider": "Nhà cung cấp",
+      "providerOpenai": "OpenAI",
+      "providerAzure": "Azure OpenAI",
+      "providerAnthropic": "Anthropic",
+      "providerGemini": "Google Gemini",
+      "providerCustom": "Tùy chỉnh (tương thích OpenAI)",
+      "model": "Mô hình (Model)",
+      "apiKey": "API Key",
+      "baseUrl": "Base URL (Tuỳ chọn)",
+      "customModelName": "Deployment / Tên mô hình tùy chỉnh",
+      "temperature": "Temperature",
+      "maxTokens": "Max Tokens",
+      "timeoutMs": "Timeout (s)",
+      "retryCount": "Số lần thử lại (Retry)",
+      "testConnection": "Kiểm tra kết nối",
+      "testHint": "Gửi prompt để kiểm tra cấu hình LLM.",
+      "systemPrompt": "System Prompt",
+      "userMessage": "Tin nhắn người dùng",
+      "testBtn": "Kiểm tra",
+      "saveSuccess": "Đã lưu cấu hình LLM Judge"
+    },
+    "schema": {
+      "title": "Schema Dữ liệu",
+      "description": "Định nghĩa các cột dữ liệu sẽ có trong dataset tải lên.",
+      "addColumn": "Thêm cột",
+      "editColumn": "Sửa cột",
+      "columnName": "Tên cột",
+      "displayName": "Tên hiển thị",
+      "dataType": "Kiểu dữ liệu",
+      "role": "Role",
+      "roleInput": "Input",
+      "roleExpectedOutput": "Kết quả mong đợi",
+      "roleContext": "Context",
+      "roleMetadata": "Metadata",
+      "required": "Bắt buộc",
+      "descriptionLabel": "Mô tả / Ghi chú",
+      "noColumns": "Chưa có cột nào được định nghĩa.",
+      "saveSuccess": "Đã lưu thông tin cột"
+    },
+    "verification": {
+      "title": "Quy tắc Đánh giá (Verification)",
+      "description": "Map các trường dữ liệu trả về từ API với các cột trong dataset hoặc dùng LLM Rubric.",
+      "mode": "Chế độ kiểm tra",
+      "modeFieldChecks": "Kiểm tra theo trường (Xác định)",
+      "modeOverallRubric": "Rubric tổng thể (LLM Judge)",
+      "modeHybrid": "Kết hợp (Quy tắc + LLM)",
+      "responseFields": "Các trường trả về từ API",
+      "datasetColumns": "Cột Dataset",
+      "availableFields": "Các trường API khả dụng",
+      "availableFieldsHint": "Kéo các trường từ phản hồi API để ánh xạ.",
+      "expectedColumns": "Cột kết quả mong đợi",
+      "expectedColumnsHint": "Thả trường vào đây để cấu hình quy tắc xác thực.",
+      "noExpectedColumns": "Không tìm thấy cột nào có vai trò 'Kết quả mong đợi'.",
+      "noResponseFields": "Không tìm thấy trường phản hồi. Vui lòng kiểm tra API Đích trước.",
+      "datasetColumn": "Cột Dataset",
+      "dropHint": "Thả trường phản hồi vào đây",
+      "dragHint": "Kéo trường phản hồi vào đây để tạo quy tắc ánh xạ",
+      "mappedHint": "đã ánh xạ vào cột này",
+      "mappedSuccess": "Đã ánh xạ {{source}} vào {{target}}",
+      "operator": "Toán tử",
+      "weightScore": "Trọng số (Điểm)",
+      "llmRubrics": "LLM Rubrics",
+      "llmRubricsHint": "Cấu hình tiêu chí đánh giá AI",
+      "addCriteria": "Thêm tiêu chí",
+      "criteriaName": "Tên tiêu chí",
+      "targetPath": "Target JSON Path (Tuỳ chọn)",
+      "targetPathHint": "Đánh giá một phần cụ thể của phản hồi",
+      "rubricPrompt": "Rubric / Prompt",
+      "passingThreshold": "Ngưỡng đạt",
+      "weight": "Trọng số",
+      "noRubrics": "Chưa có LLM Rubric nào.",
+      "saveSuccess": "Đã lưu cấu hình đánh giá"
+    }
   }
 }

@@ -16,5 +16,10 @@
     "confirm": "Xác nhận",
     "save": "Lưu",
     "back": "Quay lại"
+  },
+  "user": {
+    "profile": "Hồ sơ",
+    "toggleTheme": "Chuyển giao diện",
+    "logout": "Đăng xuất"
   }
 }

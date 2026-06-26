@@ -11,6 +11,11 @@
   "validation.auth.password-reset-token.max": "Password reset token is too long.",
   "validation.user.new-password.required": "New password is required.",
   "validation.user.new-password.size": "New password must be 8 to 128 characters.",
+  "validation.not-blank": "This field cannot be blank.",
+  "validation.not-null": "Please select a value.",
+  "validation.min": "Minimum value is invalid.",
+  "validation.max": "Maximum value is invalid.",
+  "invalid-curl": "Invalid cURL command.",
 
   "email.required": "Email is required.",
   "email.invalid": "Invalid email address.",

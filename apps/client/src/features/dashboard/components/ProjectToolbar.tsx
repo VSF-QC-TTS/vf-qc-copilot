@@ -28,7 +28,7 @@ export function ProjectToolbar() {
         <BreadcrumbList>
           <BreadcrumbItem className="hidden md:block">
             <BreadcrumbLink asChild>
-              <Link to="/projects">Projects</Link>
+              <Link to="/projects">{t('list.title')}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="hidden md:block" />

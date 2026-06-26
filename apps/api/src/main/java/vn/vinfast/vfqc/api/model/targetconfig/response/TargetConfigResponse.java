@@ -46,6 +46,9 @@ public record TargetConfigResponse(
     @Schema(description = "JSON schema snapshot of the response fields")
     String responseFieldSnapshot,
 
+    @Schema(description = "Original cURL command pasted by user")
+    String rawCurl,
+
     @Schema(description = "Last test execution status (e.g. SUCCESS, FAILED)")
     String lastTestStatus,
 

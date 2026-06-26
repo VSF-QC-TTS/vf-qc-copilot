@@ -80,6 +80,9 @@ public class TargetConfig {
   @Column(name = "response_field_snapshot", columnDefinition = "jsonb")
   private String responseFieldSnapshot;
 
+  @Column(name = "raw_curl", columnDefinition = "TEXT")
+  private String rawCurl;
+
   @Column(name = "last_test_status", length = 30)
   private String lastTestStatus;
 

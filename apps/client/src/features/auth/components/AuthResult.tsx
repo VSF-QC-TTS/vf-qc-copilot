@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { CheckCircle2, AlertCircle, Mail } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -22,11 +21,6 @@ type AuthResultProps = {
   }
 }
 
-const iconConfig = {
-  success: { Icon: CheckCircle2, bg: 'bg-emerald-500/10', color: 'text-emerald-500' },
-  error: { Icon: AlertCircle, bg: 'bg-destructive/10', color: 'text-destructive' },
-  email: { Icon: Mail, bg: 'bg-emerald-500/10', color: 'text-emerald-500' },
-}
 
 /**
  * Reusable auth result state — success, error, or check-email.
@@ -42,23 +36,24 @@ export function AuthResult({
   actionButton,
 }: AuthResultProps) {
   const reduceMotion = useReducedMotion()
-  const { Icon, bg, color } = iconConfig[icon]
 
   return (
-    <div className="text-center">
-      <motion.div
-        initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className={cn('mx-auto mb-4 flex size-12 items-center justify-center rounded-full', bg)}
-      >
-        <Icon className={cn('size-6', color)} />
-      </motion.div>
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="text-center"
+    >
+      {/* Status indicator — subtle colored line instead of circle icon */}
+      <div className={cn('mx-auto mb-5 h-1 w-10 rounded-full', {
+        'bg-emerald-500': icon === 'success' || icon === 'email',
+        'bg-destructive': icon === 'error',
+      })} />
 
-      <h2 className="text-lg font-semibold text-foreground">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
         {title}
       </h2>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
         {message}
       </p>
 
@@ -82,7 +77,7 @@ export function AuthResult({
           </Link>
         )
       )}
-    </div>
+    </motion.div>
   )
 }
 

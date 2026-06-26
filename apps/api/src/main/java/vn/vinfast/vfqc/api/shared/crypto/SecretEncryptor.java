@@ -16,8 +16,8 @@ public class SecretEncryptor {
 
   private final BytesEncryptor bytesEncryptor;
 
-  public SecretEncryptor(@Value("${vfqc.security.encryption-key}") String encryptionKey) {
-    String salt = KeyGenerators.string().generateKey();
+  public SecretEncryptor(@Value("${vfqc.security.encryption-key}") String encryptionKey,
+                         @Value("${vfqc.security.encryption-salt:5c0744940b5c369b}") String salt) {
     this.bytesEncryptor = new AesBytesEncryptor(
         encryptionKey,
         salt,
