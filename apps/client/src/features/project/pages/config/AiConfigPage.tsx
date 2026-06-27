@@ -165,7 +165,7 @@ export function AiConfigPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <Controller control={control} name="provider" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>AI Provider</FieldLabel>
+                        <FieldLabel>AI Provider <span className="text-destructive">*</span></FieldLabel>
                         <Select value={field.value} onValueChange={(val) => {
                           field.onChange(val)
                           if (val !== form.getValues('provider')) {
@@ -186,7 +186,7 @@ export function AiConfigPage() {
                     )} />
                     <Controller control={control} name="keySource" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>Key Source</FieldLabel>
+                        <FieldLabel>Key Source <span className="text-destructive">*</span></FieldLabel>
                         <Select value={field.value || undefined} onValueChange={field.onChange}>
                           <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Nguồn API Key" /></SelectTrigger>
                           <SelectContent><SelectGroup>
@@ -236,7 +236,7 @@ export function AiConfigPage() {
                     <Controller control={control} name="evaluationModel" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel className="flex items-center gap-1.5">
-                          Evaluation Model
+                          Evaluation Model <span className="text-destructive">*</span>
                           <Tooltip>
                             <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                             <TooltipContent><p className="max-w-xs">Model dùng để chấm điểm và phân tích kết quả.</p></TooltipContent>
@@ -249,7 +249,7 @@ export function AiConfigPage() {
                     <Controller control={control} name="generationModel" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel className="flex items-center gap-1.5">
-                          Generation Model (Tùy chọn)
+                          Generation Model
                           <Tooltip>
                             <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                             <TooltipContent><p className="max-w-xs">Model dùng để tự động sinh testcase/dataset. Nếu để trống sẽ dùng chung với Evaluation model.</p></TooltipContent>
@@ -277,7 +277,7 @@ export function AiConfigPage() {
                         <Controller control={control} name="temperature" render={({ field, fieldState }) => (
                           <Field data-invalid={!!fieldState.error}>
                             <FieldLabel className="flex items-center gap-1.5">
-                              {t('config.judge.temperature', { ns: 'project' })}
+                              {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
                               <Tooltip>
                                 <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                 <TooltipContent><p className="max-w-xs">0.0: Chính xác, theo khuôn mẫu. 2.0: Phá cách, sáng tạo.</p></TooltipContent>
@@ -290,7 +290,7 @@ export function AiConfigPage() {
                         <Controller control={control} name="maxTokens" render={({ field, fieldState }) => (
                           <Field data-invalid={!!fieldState.error}>
                             <FieldLabel className="flex items-center gap-1.5">
-                              {t('config.judge.maxTokens', { ns: 'project' })}
+                              {t('config.judge.maxTokens', { ns: 'project' })} <span className="text-destructive">*</span>
                               <Tooltip>
                                 <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                 <TooltipContent><p className="max-w-xs">Giới hạn độ dài câu trả lời của AI.</p></TooltipContent>
@@ -303,7 +303,7 @@ export function AiConfigPage() {
                         <Controller control={control} name="retryCount" render={({ field, fieldState }) => (
                           <Field data-invalid={!!fieldState.error}>
                             <FieldLabel className="flex items-center gap-1.5">
-                              {t('config.judge.retryCount', { ns: 'project' })}
+                              {t('config.judge.retryCount', { ns: 'project' })} <span className="text-destructive">*</span>
                               <Tooltip>
                                 <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                 <TooltipContent><p className="max-w-xs">Số lần tự động gọi lại API nếu lần đầu bị lỗi.</p></TooltipContent>
@@ -315,7 +315,7 @@ export function AiConfigPage() {
                         )} />
                         <Controller control={control} name="timeout" render={({ field, fieldState }) => (
                           <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel>{t('config.judge.timeoutMs', { ns: 'project' })}</FieldLabel>
+                            <FieldLabel>{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
                             <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} />
                             <FieldError errors={[fieldState.error]} />
                           </Field>
