@@ -53,6 +53,18 @@ export function AiConfigPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(schema) as any,
     defaultValues: { provider: 'OPENAI', keySource: 'PLATFORM', evaluationModel: 'gpt-4o', apiKey: '', baseUrl: '', generationModel: '', temperature: 0.0, maxTokens: 2048, timeout: 30, retryCount: 3 },
+    values: config ? {
+      provider: config.provider || 'OPENAI',
+      keySource: config.keySource || 'PLATFORM',
+      evaluationModel: config.evaluationModel || '',
+      generationModel: config.generationModel || '',
+      apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '',
+      baseUrl: config.baseUrl || '',
+      temperature: config.temperature ?? 0.0,
+      maxTokens: config.maxTokens ?? 2048,
+      timeout: (config.timeoutMs ?? 30000) / 1000,
+      retryCount: config.retryCount ?? 3,
+    } : undefined,
   })
 
   const { control, handleSubmit, watch } = form
@@ -69,23 +81,6 @@ export function AiConfigPage() {
     AZURE_OPENAI: '',
     CUSTOM: '',
   }
-
-  useEffect(() => {
-    if (config) {
-      form.reset({
-        provider: config.provider || 'OPENAI',
-        keySource: config.keySource || 'PLATFORM',
-        evaluationModel: config.evaluationModel || '',
-        generationModel: config.generationModel || '',
-        apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '',
-        baseUrl: config.baseUrl || '',
-        temperature: config.temperature ?? 0.0,
-        maxTokens: config.maxTokens ?? 2048,
-        timeout: (config.timeoutMs ?? 30000) / 1000,
-        retryCount: config.retryCount ?? 3,
-      });
-    }
-  }, [config, form])
 
   const onSubmit = (values: FormData) => {
     saveMutation.mutate({
