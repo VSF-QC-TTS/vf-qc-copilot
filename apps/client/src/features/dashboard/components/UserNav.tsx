@@ -11,8 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from '@/components/ui/sidebar'
-import { useAuth } from '@/features/auth/auth-context'
+import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar-context'
+import { useAuth } from '@/features/auth/auth-session'
 
 export function UserNav() {
   const { t } = useTranslation('common')

@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/features/auth/auth-context'
+import { useAuth } from '@/features/auth/auth-session'
 import { Skeleton } from '@/components/ui/skeleton'
 
 type AuthGuardProps = {

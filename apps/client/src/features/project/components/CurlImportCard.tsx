@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
 import { PlugIcon, RefreshCwIcon } from 'lucide-react'
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -15,13 +16,19 @@ interface CurlImportCardProps {
 }
 
 export function CurlImportCard({ onImport, isPending, initialValue, hasExistingConfig }: CurlImportCardProps) {
-  const [curlInput, setCurlInput] = useState(initialValue || '')
+  const [curlInput, setCurlInput] = useState(initialValue ?? '')
+  const hasUserEdited = useRef(false)
 
   useEffect(() => {
-    if (initialValue && !curlInput) {
+    if (initialValue && !hasUserEdited.current) {
       setCurlInput(initialValue)
     }
   }, [initialValue])
+
+  function handleCurlInputChange(event: ChangeEvent<HTMLTextAreaElement>): void {
+    hasUserEdited.current = true
+    setCurlInput(event.target.value)
+  }
 
   const handleImport = () => {
     onImport(curlInput)
@@ -46,7 +53,7 @@ export function CurlImportCard({ onImport, isPending, initialValue, hasExistingC
             <InputGroup className="flex-1 rounded-md overflow-hidden focus-within:ring-1 focus-within:ring-ring transition-all bg-muted/20">
               <InputGroupTextarea
                 value={curlInput}
-                onChange={(e) => setCurlInput(e.target.value)}
+                onChange={handleCurlInputChange}
                 placeholder="Ví dụ: curl -X POST https://api.example.com/v1/chat -H 'Authorization: Bearer token...' -d '{...}'"
                 className="flex-1 resize-none font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[160px]"
               />

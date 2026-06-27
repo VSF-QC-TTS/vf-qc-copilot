@@ -18,14 +18,15 @@ export function VerifyEmailPage() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')
   const mutation = useVerifyEmailMutation()
+  const { mutate } = mutation
   const hasSubmitted = useRef(false)
 
   // Auto-submit on mount
   useEffect(() => {
     if (!token || hasSubmitted.current) return
     hasSubmitted.current = true
-    mutation.mutate({ token })
-  }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
+    mutate({ token })
+  }, [token, mutate])
 
   // Missing token
   if (!token) {

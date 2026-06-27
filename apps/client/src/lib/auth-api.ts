@@ -29,7 +29,7 @@ export function refreshToken(): Promise<LoginResponse> {
 }
 
 export function logout(): Promise<void> {
-  return apiClient('/auth/logout', { method: 'POST' })
+  return apiClient('/auth/logout', { method: 'POST', skipAuth: true })
 }
 
 export function verifyEmail(data: VerifyEmailRequest): Promise<void> {

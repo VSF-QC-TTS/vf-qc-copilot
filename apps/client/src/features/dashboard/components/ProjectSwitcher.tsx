@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useProjectsInfinite } from '@/features/project/hooks/use-projects'
 import { CreateProjectDialog } from '@/features/project/components/CreateProjectDialog'
-import { useSidebar } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar-context'
 
 interface ProjectSwitcherProps extends ComponentProps<'div'> {
   compact?: boolean

@@ -1,47 +1,21 @@
 import {
-  createContext,
   useCallback,
   useEffect,
   useMemo,
   useState,
-  use,
 } from 'react'
-import type { LoginResponse, UserResponse } from '@/types/api'
+import type { ReactNode } from 'react'
+
+import type { LoginResponse } from '@/types/api'
 import { setAccessToken } from '@/lib/api-client'
 import * as authApi from '@/lib/auth-api'
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type AuthStatus = 'anonymous' | 'loading' | 'authenticated'
-
-type AuthState = {
-  accessToken: string | null
-  user: UserResponse | null
-  status: AuthStatus
-}
-
-type AuthActions = {
-  login: (response: LoginResponse) => void
-  logout: () => Promise<void>
-  hydrateCurrentUser: () => Promise<void>
-  clearSession: () => void
-}
-
-type AuthContextValue = AuthState & AuthActions
-
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
-
-const AuthContext = createContext<AuthContextValue | null>(null)
+import { AuthContext, type AuthContextValue, type AuthState } from '@/features/auth/auth-session'
 
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     accessToken: null,
     user: null,
@@ -114,16 +88,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   return <AuthContext value={value}>{children}</AuthContext>
-}
-
-// ---------------------------------------------------------------------------
-// Hook — uses React 19 use()
-// ---------------------------------------------------------------------------
-
-export function useAuth(): AuthContextValue {
-  const context = use(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }

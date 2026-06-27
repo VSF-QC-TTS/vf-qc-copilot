@@ -87,7 +87,6 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional
   public LoginResult refreshToken(String refreshToken) {
-    log.info("Refresh token: {}", refreshToken);
     if (refreshToken == null || refreshToken.isBlank()) {
       throw new ResourceException(ErrorCode.INVALID_REFRESH_TOKEN);
     }

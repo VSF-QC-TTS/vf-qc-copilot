@@ -19,7 +19,8 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
-import { useSidebar, Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator } from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar-context'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ProjectSwitcher } from './ProjectSwitcher'
 import { UserNav } from './UserNav'
