@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Spinner } from '@/components/ui/spinner'
 import { AiConfigSkeleton } from '../../components/AiConfigSkeleton'
 import { ConfigPageHeader } from '../../components/ConfigPageHeader'
-import { AiStatusCard } from '../../components/AiStatusCard'
+import { AiConfigSummary } from '../../components/AiConfigSummary'
 import { AiTestDialog } from '../../components/AiTestDialog'
 
 export function AiConfigPage() {
@@ -33,7 +33,7 @@ export function AiConfigPage() {
 
   const [testResult, setTestResult] = useState<AiExecutionResult | null>(null)
   const [testDialogOpen, setTestDialogOpen] = useState(false)
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(true)
 
   const schema = z.object({
     provider: z.enum(['OPENAI', 'ANTHROPIC', 'GEMINI', 'CUSTOM']),
@@ -128,13 +128,13 @@ export function AiConfigPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col gap-6 max-w-[900px] mx-auto w-full p-6"
+        className="flex flex-col gap-8 max-w-[1200px] mx-auto w-full p-6"
       >
         <ConfigPageHeader titleKey="config.judge.title" descriptionKey="config.judge.description" />
 
-        {/* Connection Status */}
+        {/* Connection Status Summary Dashboard */}
         {hasTested && (
-          <AiStatusCard
+          <AiConfigSummary
             config={config!}
             onTest={handleOpenTest}
             isTestPending={testMutation.isPending}
