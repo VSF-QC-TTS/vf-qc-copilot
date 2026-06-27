@@ -2,11 +2,11 @@ package vn.vinfast.vfqc.api.model.dataset;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -15,23 +15,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
-/**
- * A single row in a dataset. Data is stored as JSONB keyed by column names.
- *
- * @author nghlong3004 (Long Nguyen Hoang)
- * @since 6/27/2026
- */
 @Entity
-@Table(name = "dataset_rows")
+@Table(name = "dataset_versions")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DatasetRow {
+public class DatasetVersion {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,24 +36,35 @@ public class DatasetRow {
   @Column(name = "dataset_id", nullable = false)
   private Long datasetId;
 
-  @Column(name = "dataset_version_id", nullable = false)
-  private Long datasetVersionId;
+  @Column(name = "schema_version_id", nullable = false)
+  private Long schemaVersionId;
 
-  @Column(name = "row_index", nullable = false)
-  private Integer rowIndex;
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "data", nullable = false, columnDefinition = "jsonb")
-  private String data;
+  @Column(name = "version_number", nullable = false)
+  private Integer versionNumber;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "validation_status", nullable = false, length = 20)
-  @Builder.Default
-  private DatasetRowValidationStatus validationStatus = DatasetRowValidationStatus.VALID;
+  @Column(name = "source", nullable = false, length = 30)
+  private DatasetSource source;
 
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "validation_errors", columnDefinition = "jsonb")
-  private String validationErrors;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false, length = 20)
+  @Builder.Default
+  private DatasetVersionStatus status = DatasetVersionStatus.DRAFT;
+
+  @Column(name = "total_rows", nullable = false)
+  @Builder.Default
+  private Integer totalRows = 0;
+
+  @Column(name = "valid_rows", nullable = false)
+  @Builder.Default
+  private Integer validRows = 0;
+
+  @Column(name = "invalid_rows", nullable = false)
+  @Builder.Default
+  private Integer invalidRows = 0;
+
+  @Column(name = "created_by", nullable = false)
+  private Long createdBy;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default

@@ -57,6 +57,12 @@ public class Dataset {
   @Column(name = "schema_version_id", nullable = false)
   private Long schemaVersionId;
 
+  @Column(name = "latest_version_id")
+  private Long latestVersionId;
+
+  @Column(name = "active_version_id")
+  private Long activeVersionId;
+
   @Column(name = "total_rows", nullable = false)
   @Builder.Default
   private Integer totalRows = 0;
@@ -76,6 +82,9 @@ public class Dataset {
   @Column(name = "updated_at", nullable = false)
   @Builder.Default
   private OffsetDateTime updatedAt = OffsetDateTime.now();
+
+  @Column(name = "deleted_at")
+  private OffsetDateTime deletedAt;
 
   @PreUpdate
   void preUpdate() {
