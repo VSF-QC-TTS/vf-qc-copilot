@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import {
   PlusIcon,
   TrashIcon,
-  PencilIcon,
   TableIcon,
   CopyIcon,
   BookOpenIcon,
@@ -34,7 +33,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { ConfigPageHeader } from '../../components/ConfigPageHeader'
-import { ColumnFormDialog } from '../../components/ColumnFormDialog'
 import { ProjectSchemaSkeleton } from '../../components/ProjectSchemaSkeleton'
 
 export function ProjectSchemaPage() {
@@ -45,8 +43,6 @@ export function ProjectSchemaPage() {
   const updateMutation = useUpdateSchemaColumn(publicId)
   const deleteMutation = useDeleteSchemaColumn(publicId)
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingColumn, setEditingColumn] = useState<SchemaColumnResponse | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<SchemaColumnResponse | null>(null)
 
   // Local state for inline quick add row
@@ -55,16 +51,6 @@ export function ProjectSchemaPage() {
   const [newRole, setNewRole] = useState('EXPECTED')
   const [newSample, setNewSample] = useState('')
   const nameInputRef = useRef<HTMLInputElement>(null)
-
-  const handleOpenEdit = (col: SchemaColumnResponse) => {
-    setEditingColumn(col)
-    setIsDialogOpen(true)
-  }
-
-  const handleDialogClose = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) setEditingColumn(null)
-  }
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return
@@ -340,14 +326,6 @@ export function ProjectSchemaPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-7 rounded-lg active:scale-90 transition-transform"
-                              onClick={() => handleOpenEdit(col)}
-                            >
-                              <PencilIcon className="size-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
                               className="size-7 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-90 transition-transform"
                               onClick={() => setDeleteTarget(col)}
                             >
@@ -509,15 +487,6 @@ export function ProjectSchemaPage() {
         </div>
       </div>
 
-      {/* Column Form Dialog */}
-      <ColumnFormDialog
-        open={isDialogOpen}
-        onOpenChange={handleDialogClose}
-        editingColumn={editingColumn}
-        onCreateColumn={(data) => createMutation.mutate(data, { onSuccess: () => setIsDialogOpen(false) })}
-        onUpdateColumn={(data) => updateMutation.mutate(data, { onSuccess: () => setIsDialogOpen(false) })}
-        isPending={createMutation.isPending || updateMutation.isPending}
-      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
