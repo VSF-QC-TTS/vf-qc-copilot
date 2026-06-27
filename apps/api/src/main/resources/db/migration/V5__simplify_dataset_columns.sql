@@ -1,7 +1,3 @@
--- =============================================================
--- V5: Simplify dataset_columns + rename schema version table
--- =============================================================
-
 -- Rename dataset_schema_versions → project_schemas
 ALTER TABLE dataset_schema_versions RENAME TO project_schemas;
 
@@ -12,7 +8,10 @@ ALTER TABLE project_schemas RENAME CONSTRAINT fk_schema_versions_project TO fk_p
 -- Rename index
 ALTER INDEX idx_schema_versions_project RENAME TO idx_project_schemas_project;
 
--- Update FK in dataset_columns to point to renamed table (FK target auto-follows rename)
+-- Ensure updated_at exists for ProjectSchema entity
+ALTER TABLE project_schemas
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now();
+
 -- Simplify dataset_columns: drop unused fields
 ALTER TABLE dataset_columns DROP COLUMN IF EXISTS display_name;
 ALTER TABLE dataset_columns DROP COLUMN IF EXISTS data_type;
