@@ -15,11 +15,12 @@ import vn.vinfast.vfqc.api.model.project.request.CreateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.request.UpdateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.response.ProjectResponse;
 import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
-import vn.vinfast.vfqc.api.repository.DatasetSchemaVersionRepository;
-import vn.vinfast.vfqc.api.repository.JudgeConfigRepository;
+import vn.vinfast.vfqc.api.infrastructure.persistence.JpaAiConfigRepository;
+import vn.vinfast.vfqc.api.infrastructure.persistence.JpaDatasetRepository;
+import vn.vinfast.vfqc.api.infrastructure.persistence.JpaProjectSchemaRepository;
+import vn.vinfast.vfqc.api.infrastructure.persistence.JpaVerificationConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
-import vn.vinfast.vfqc.api.repository.VerificationConfigRepository;
 import vn.vinfast.vfqc.api.service.ProjectService;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
@@ -37,9 +38,10 @@ public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
   private final ProjectMapper projectMapper;
   private final TargetConfigRepository targetConfigRepository;
-  private final JudgeConfigRepository judgeConfigRepository;
-  private final DatasetSchemaVersionRepository datasetSchemaRepository;
-  private final VerificationConfigRepository verificationConfigRepository;
+  private final JpaAiConfigRepository aiConfigRepository;
+  private final JpaProjectSchemaRepository projectSchemaRepository;
+  private final JpaVerificationConfigRepository verificationConfigRepository;
+  private final JpaDatasetRepository datasetRepository;
 
   @Override
   @Transactional
@@ -114,10 +116,10 @@ public class ProjectServiceImpl implements ProjectService {
 
     return new ProjectSetupStatus(
         targetConfigRepository.existsByProjectId(projectId),
-        judgeConfigRepository.existsByProjectId(projectId),
-        datasetSchemaRepository.existsByProjectId(projectId),
+        aiConfigRepository.existsByProjectId(projectId),
+        projectSchemaRepository.existsByProjectId(projectId),
         verificationConfigRepository.existsByProjectId(projectId),
-        false, // hasDatasets (Phase 2)
+        datasetRepository.existsByProjectId(projectId),
         0      // totalTestRuns (Phase 3)
     );
   }

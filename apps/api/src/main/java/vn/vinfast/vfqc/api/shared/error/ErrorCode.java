@@ -149,7 +149,26 @@ public enum ErrorCode {
       "Target Test Failed",
       "The test request to the target API failed."),
 
-  // Judge Config
+  // AI Config (replaces Judge Config)
+  AI_CONFIG_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "ai-config-not-found",
+      "AI Config Not Found",
+      "No AI configuration found for this project."),
+
+  AI_CONNECTION_FAILED(
+      HttpStatus.BAD_GATEWAY,
+      "ai-connection-failed",
+      "AI Connection Failed",
+      "Failed to connect to the AI provider."),
+
+  UNSUPPORTED_AI_PROVIDER(
+      HttpStatus.BAD_REQUEST,
+      "unsupported-ai-provider",
+      "Unsupported AI Provider",
+      "The specified AI provider is not supported."),
+
+  // @deprecated — kept temporarily for backward compat
   JUDGE_CONFIG_NOT_FOUND(
       HttpStatus.NOT_FOUND,
       "judge-config-not-found",
@@ -200,6 +219,31 @@ public enum ErrorCode {
       "Missing Target Config",
       "Verification requires a configured Target API."),
 
+  MISSING_AI_CONFIG(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "missing-ai-config",
+      "Missing AI Config",
+      "LLM-based verification requires a configured AI provider."),
+
+  MISSING_DATASET(
+      HttpStatus.UNPROCESSABLE_ENTITY,
+      "missing-dataset",
+      "Missing Dataset",
+      "Verification requires at least one active dataset."),
+
+  DATASET_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "dataset-not-found",
+      "Dataset Not Found",
+      "The requested dataset was not found."),
+
+  IMPORT_HEADER_MISMATCH(
+      HttpStatus.BAD_REQUEST,
+      "import-header-mismatch",
+      "Import Header Mismatch",
+      "The Excel headers do not match the project schema."),
+
+  // @deprecated — kept temporarily
   MISSING_JUDGE_CONFIG(
       HttpStatus.UNPROCESSABLE_ENTITY,
       "missing-judge-config",

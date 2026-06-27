@@ -11,11 +11,11 @@ public record ProjectSetupStatus(
     @Schema(description = "Indicates whether the Target Config (cURL) has been set up.")
     boolean hasTargetConfig,
 
-    @Schema(description = "Indicates whether the LLM Judge Provider has been set up.")
-    boolean hasJudgeConfig,
+    @Schema(description = "Indicates whether the AI Provider has been configured.")
+    boolean hasAiConfig,
 
-    @Schema(description = "Indicates whether the Dataset Schema has been configured.")
-    boolean hasDatasetSchema,
+    @Schema(description = "Indicates whether the Project Schema has been configured.")
+    boolean hasProjectSchema,
 
     @Schema(description = "Indicates whether the Verification rules have been configured.")
     boolean hasVerification,
@@ -25,3 +25,4 @@ public record ProjectSetupStatus(
 
     @Schema(description = "Total number of test runs executed for this project.")
     int totalTestRuns) {}
+
