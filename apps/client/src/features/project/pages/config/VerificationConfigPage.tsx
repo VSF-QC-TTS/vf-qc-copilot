@@ -416,27 +416,45 @@ export function VerificationConfigPage() {
                                               className="min-h-[100px] text-xs leading-relaxed rounded-xl font-mono"
                                               placeholder="VD: Câu trả lời {response.answer} có giải thích đúng chính sách {dataset.expected_answer} không?..."
                                             />
-                                            <div className="flex flex-wrap gap-1.5">
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  const val = field.value || ''
-                                                  field.onChange(val + ' {response.answer}')
-                                                }}
-                                                className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all"
-                                              >
-                                                + response.answer
-                                              </button>
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  const val = field.value || ''
-                                                  field.onChange(val + ' {dataset.expected_answer}')
-                                                }}
-                                                className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all"
-                                              >
-                                                + dataset.expected_answer
-                                              </button>
+                                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                              {(responseFields ?? []).map(f => (
+                                                <button
+                                                  key={f}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const val = field.value || ''
+                                                    field.onChange(val + ` {response.${f}}`)
+                                                  }}
+                                                  className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all font-mono text-zinc-650 dark:text-zinc-350"
+                                                >
+                                                  + response.{f}
+                                                </button>
+                                              ))}
+                                              {expectedColumns.map(col => (
+                                                <button
+                                                  key={col.publicId}
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const val = field.value || ''
+                                                    field.onChange(val + ` {dataset.${col.columnName}}`)
+                                                  }}
+                                                  className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all font-mono text-zinc-650 dark:text-zinc-350"
+                                                >
+                                                  + dataset.{col.columnName}
+                                                </button>
+                                              ))}
+                                              {(responseFields ?? []).length === 0 && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    const val = field.value || ''
+                                                    field.onChange(val + ' {response.answer}')
+                                                  }}
+                                                  className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all font-mono text-zinc-650 dark:text-zinc-350"
+                                                >
+                                                  + response.answer
+                                                </button>
+                                              )}
                                             </div>
                                           </div>
                                         )} />
@@ -599,21 +617,36 @@ export function VerificationConfigPage() {
                           className="min-h-[120px] text-xs leading-relaxed rounded-xl font-mono"
                           placeholder="VD: Hãy chấm điểm câu trả lời dựa trên các tiêu chí sau..."
                         />
-                        <div className="flex flex-wrap gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setGlobalPrompt(prev => prev + ' {response.answer}')}
-                            className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all"
-                          >
-                            + response.answer
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setGlobalPrompt(prev => prev + ' {dataset.expected_answer}')}
-                            className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all"
-                          >
-                            + dataset.expected_answer
-                          </button>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {(responseFields ?? []).map(f => (
+                            <button
+                              key={f}
+                              type="button"
+                              onClick={() => setGlobalPrompt(prev => prev + ` {response.${f}}`)}
+                              className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all font-mono text-zinc-650 dark:text-zinc-350"
+                            >
+                              + response.{f}
+                            </button>
+                          ))}
+                          {expectedColumns.map(col => (
+                            <button
+                              key={col.publicId}
+                              type="button"
+                              onClick={() => setGlobalPrompt(prev => prev + ` {dataset.${col.columnName}}`)}
+                              className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all font-mono text-zinc-650 dark:text-zinc-350"
+                            >
+                              + dataset.{col.columnName}
+                            </button>
+                          ))}
+                          {(responseFields ?? []).length === 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setGlobalPrompt(prev => prev + ' {response.answer}')}
+                              className="text-[10px] bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-2 py-1 rounded-lg border cursor-pointer transition-all font-mono text-zinc-650 dark:text-zinc-350"
+                            >
+                              + response.answer
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
