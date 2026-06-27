@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -17,7 +17,8 @@ import {
   BrainCircuitIcon,
   CombineIcon,
   CheckIcon,
-  XIcon
+  XIcon,
+  CopyIcon
 } from 'lucide-react'
 
 import type { VerificationMode, CheckOperator, ExpectedSource, OperatorCatalogResponse } from '@/types/config'
@@ -186,6 +187,16 @@ export function VerificationConfigPage() {
     setEditingSnapshot(null)
   }
 
+  const handleDuplicateCheckRow = (index: number) => {
+    if (editingCheckIndex !== null) return // Prevent duplicate while editing
+    const current = fieldChecksArray.fields[index] as any
+    fieldChecksArray.append({
+      ...current,
+      publicId: null, // Reset ID for new row
+      displayOrder: fieldChecksArray.fields.length,
+    })
+  }
+
   const handleEditCheckRow = (index: number) => {
     if (editingCheckIndex !== null) return
     setEditingSnapshot(fieldChecksArray.fields[index])
@@ -321,18 +332,27 @@ export function VerificationConfigPage() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {fieldChecksArray.fields.map((item, index) => {
-                              const check = watch(`fieldChecks.${index}`)
-                              const opLabel = operatorOptions.find((o: any) => o.value === check?.operator)?.label ?? check?.operator
-                              const expectedLabel = check?.expectedSource === 'DATASET_COLUMN'
-                                ? check?.expectedColumn
-                                : check?.expectedValue || '—'
+                            <AnimatePresence mode="popLayout" initial={false}>
+                              {fieldChecksArray.fields.map((item, index) => {
+                                const check = watch(`fieldChecks.${index}`)
+                                const opLabel = operatorOptions.find((o: any) => o.value === check?.operator)?.label ?? check?.operator
+                                const expectedLabel = check?.expectedSource === 'DATASET_COLUMN'
+                                  ? check?.expectedColumn
+                                  : check?.expectedValue || '—'
 
-                              const isEditing = editingCheckIndex === index
+                                const isEditing = editingCheckIndex === index
 
-                              return (
-                                <TableRow key={item.id} className="group h-12">
-                                  {isEditing ? (
+                                return (
+                                  <motion.tr
+                                    key={item.id}
+                                    layout
+                                    initial={{ opacity: 0, y: -10, backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
+                                    animate={{ opacity: 1, y: 0, backgroundColor: isEditing ? 'rgba(59, 130, 246, 0.05)' : 'rgba(0,0,0,0)' }}
+                                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                                    transition={{ duration: 0.2 }}
+                                    className="group h-12 border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                                  >
+                                    {isEditing ? (
                                     <>
                                       <TableCell className="p-2">
                                         <Controller control={control} name={`fieldChecks.${index}.responsePath`} render={({ field }) => (
@@ -359,36 +379,42 @@ export function VerificationConfigPage() {
                                       </TableCell>
                                       <TableCell className="p-2">
                                         <div className="flex items-center gap-2">
-                                          <Controller control={control} name={`fieldChecks.${index}.expectedSource`} render={({ field }) => (
-                                            <Select value={field.value} onValueChange={(val) => {
-                                              field.onChange(val)
-                                              form.setValue(`fieldChecks.${index}.expectedColumn`, null)
-                                              form.setValue(`fieldChecks.${index}.expectedValue`, null)
-                                            }}>
-                                              <SelectTrigger className="h-8 w-[100px] shrink-0"><SelectValue /></SelectTrigger>
-                                              <SelectContent>
-                                                <SelectItem value="DATASET_COLUMN">Dataset</SelectItem>
-                                                <SelectItem value="STATIC_VALUE">Static</SelectItem>
-                                              </SelectContent>
-                                            </Select>
-                                          )} />
-                                          {check?.expectedSource === 'DATASET_COLUMN' ? (
-                                            <Controller control={control} name={`fieldChecks.${index}.expectedColumn`} render={({ field }) => (
-                                              <Select value={field.value || undefined} onValueChange={field.onChange}>
-                                                <SelectTrigger className="h-8"><SelectValue placeholder="Chọn cột..." /></SelectTrigger>
-                                                <SelectContent>
-                                                  {expectedColumns.map(col => (
-                                                    <SelectItem key={col.columnName} value={col.columnName}>
-                                                      {col.displayName || col.columnName}
-                                                    </SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                            )} />
+                                          {['NOT_EMPTY', 'IS_JSON'].includes(check?.operator || '') ? (
+                                            <span className="text-xs italic text-muted-foreground ml-2">Không áp dụng</span>
                                           ) : (
-                                            <Controller control={control} name={`fieldChecks.${index}.expectedValue`} render={({ field }) => (
-                                              <Input {...field} value={field.value || ''} placeholder="Giá trị..." className="h-8" />
-                                            )} />
+                                            <>
+                                              <Controller control={control} name={`fieldChecks.${index}.expectedSource`} render={({ field }) => (
+                                                <Select value={field.value} onValueChange={(val) => {
+                                                  field.onChange(val)
+                                                  form.setValue(`fieldChecks.${index}.expectedColumn`, null)
+                                                  form.setValue(`fieldChecks.${index}.expectedValue`, null)
+                                                }}>
+                                                  <SelectTrigger className="h-8 w-[100px] shrink-0"><SelectValue /></SelectTrigger>
+                                                  <SelectContent>
+                                                    <SelectItem value="DATASET_COLUMN">Dataset</SelectItem>
+                                                    <SelectItem value="STATIC_VALUE">Static</SelectItem>
+                                                  </SelectContent>
+                                                </Select>
+                                              )} />
+                                              {check?.expectedSource === 'DATASET_COLUMN' ? (
+                                                <Controller control={control} name={`fieldChecks.${index}.expectedColumn`} render={({ field }) => (
+                                                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                                                    <SelectTrigger className="h-8"><SelectValue placeholder="Chọn cột..." /></SelectTrigger>
+                                                    <SelectContent>
+                                                      {expectedColumns.map(col => (
+                                                        <SelectItem key={col.columnName} value={col.columnName}>
+                                                          {col.displayName || col.columnName}
+                                                        </SelectItem>
+                                                      ))}
+                                                    </SelectContent>
+                                                  </Select>
+                                                )} />
+                                              ) : (
+                                                <Controller control={control} name={`fieldChecks.${index}.expectedValue`} render={({ field }) => (
+                                                  <Input {...field} value={field.value || ''} placeholder="Giá trị..." className="h-8" />
+                                                )} />
+                                              )}
+                                            </>
                                           )}
                                         </div>
                                       </TableCell>
@@ -423,10 +449,16 @@ export function VerificationConfigPage() {
                                       </TableCell>
                                       <TableCell>
                                         <div className="flex items-center gap-1.5">
-                                          {check?.expectedSource === 'DATASET_COLUMN' && (
-                                            <Badge variant="secondary" className="text-[10px]">Dataset</Badge>
+                                          {['NOT_EMPTY', 'IS_JSON'].includes(check?.operator || '') ? (
+                                            <span className="text-xs text-muted-foreground">—</span>
+                                          ) : check?.expectedSource === 'DATASET_COLUMN' ? (
+                                            <>
+                                              <Badge variant="secondary" className="text-[10px]">Dataset</Badge>
+                                              <span className="text-sm font-mono">{expectedLabel}</span>
+                                            </>
+                                          ) : (
+                                            <span className="text-sm font-mono">{expectedLabel}</span>
                                           )}
-                                          <span className="text-sm font-mono">{expectedLabel}</span>
                                         </div>
                                       </TableCell>
                                       <TableCell className="text-center">
@@ -442,6 +474,9 @@ export function VerificationConfigPage() {
                                           <Button type="button" variant="ghost" size="icon" className="size-7" disabled={editingCheckIndex !== null} onClick={() => handleEditCheckRow(index)}>
                                             <PencilIcon className="size-3.5" />
                                           </Button>
+                                          <Button type="button" variant="ghost" size="icon" className="size-7" disabled={editingCheckIndex !== null} onClick={() => handleDuplicateCheckRow(index)}>
+                                            <CopyIcon className="size-3.5" />
+                                          </Button>
                                           <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" disabled={editingCheckIndex !== null} onClick={() => fieldChecksArray.remove(index)}>
                                             <TrashIcon className="size-3.5" />
                                           </Button>
@@ -449,9 +484,10 @@ export function VerificationConfigPage() {
                                       </TableCell>
                                     </>
                                   )}
-                                </TableRow>
-                              )
-                            })}
+                                  </motion.tr>
+                                )
+                              })}
+                            </AnimatePresence>
                           </TableBody>
                         </Table>
                       </div>
