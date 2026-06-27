@@ -49,6 +49,17 @@ public class SchemaColumn {
   @Column(name = "description")
   private String description;
 
+  @Column(name = "data_type", nullable = false)
+  @Builder.Default
+  private String dataType = "STRING";
+
+  @Column(name = "role", nullable = false)
+  @Builder.Default
+  private String role = "EXPECTED";
+
+  @Column(name = "sample_value")
+  private String sampleValue;
+
   @Column(name = "display_order", nullable = false)
   @Builder.Default
   private Integer displayOrder = 0;

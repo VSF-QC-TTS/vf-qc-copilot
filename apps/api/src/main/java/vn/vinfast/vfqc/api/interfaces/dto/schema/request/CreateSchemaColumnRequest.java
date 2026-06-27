@@ -13,5 +13,14 @@ public record CreateSchemaColumnRequest(
     String columnName,
 
     @Schema(description = "Description of what this column contains")
-    String description
+    String description,
+
+    @Schema(description = "Data type of the column", example = "STRING")
+    String dataType,
+
+    @Schema(description = "Role of the column in evaluation", example = "EXPECTED")
+    String role,
+
+    @Schema(description = "Sample value for the column", example = "Tôi muốn hủy đơn #A1029")
+    String sampleValue
 ) {}

@@ -11,5 +11,14 @@ public record UpdateSchemaColumnRequest(
     String columnName,
 
     @Schema(description = "New description")
-    String description
+    String description,
+
+    @Schema(description = "New data type")
+    String dataType,
+
+    @Schema(description = "New role")
+    String role,
+
+    @Schema(description = "New sample value")
+    String sampleValue
 ) {}

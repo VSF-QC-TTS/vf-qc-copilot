@@ -14,7 +14,4 @@ ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT no
 
 -- Simplify dataset_columns: drop unused fields
 ALTER TABLE dataset_columns DROP COLUMN IF EXISTS display_name;
-ALTER TABLE dataset_columns DROP COLUMN IF EXISTS data_type;
-ALTER TABLE dataset_columns DROP COLUMN IF EXISTS role;
 ALTER TABLE dataset_columns DROP COLUMN IF EXISTS required;
-ALTER TABLE dataset_columns DROP COLUMN IF EXISTS sample_value;

@@ -74,6 +74,16 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
     SchemaColumn newColumn = mapper.toEntity(request);
     newColumn.setSchemaVersionId(schema.getId());
     newColumn.setDisplayOrder(currentColumns.size());
+    if (newColumn.getDataType() == null || newColumn.getDataType().isBlank()) {
+      newColumn.setDataType("STRING");
+    } else {
+      newColumn.setDataType(newColumn.getDataType().trim().toUpperCase());
+    }
+    if (newColumn.getRole() == null || newColumn.getRole().isBlank()) {
+      newColumn.setRole("EXPECTED");
+    } else {
+      newColumn.setRole(newColumn.getRole().trim().toUpperCase());
+    }
     columnRepository.save(newColumn);
 
     schema.bumpVersion();
@@ -108,6 +118,16 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
     }
 
     mapper.updateEntity(request, target);
+    if (target.getDataType() == null || target.getDataType().isBlank()) {
+      target.setDataType("STRING");
+    } else {
+      target.setDataType(target.getDataType().trim().toUpperCase());
+    }
+    if (target.getRole() == null || target.getRole().isBlank()) {
+      target.setRole("EXPECTED");
+    } else {
+      target.setRole(target.getRole().trim().toUpperCase());
+    }
     columnRepository.save(target);
 
     schema.bumpVersion();

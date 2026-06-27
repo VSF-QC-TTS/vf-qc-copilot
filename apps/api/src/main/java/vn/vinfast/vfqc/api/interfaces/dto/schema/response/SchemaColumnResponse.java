@@ -17,6 +17,15 @@ public record SchemaColumnResponse(
     @Schema(description = "Description")
     String description,
 
+    @Schema(description = "Data type")
+    String dataType,
+
+    @Schema(description = "Role")
+    String role,
+
+    @Schema(description = "Sample value")
+    String sampleValue,
+
     @Schema(description = "Display order")
     Integer displayOrder
 ) {}
