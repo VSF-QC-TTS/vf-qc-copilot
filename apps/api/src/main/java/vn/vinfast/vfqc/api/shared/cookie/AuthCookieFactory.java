@@ -23,4 +23,11 @@ public interface AuthCookieFactory {
    * @return configured expired refresh token {@link ResponseCookie}
    */
   ResponseCookie clearRefreshTokenCookie();
+
+  /**
+   * Builds the HttpOnly refresh-token {@link ResponseCookie} used to clear the legacy browser cookie on old path.
+   *
+   * @return configured expired refresh token {@link ResponseCookie}
+   */
+  ResponseCookie clearLegacyRefreshTokenCookie();
 }

@@ -40,8 +40,6 @@ import vn.vinfast.vfqc.api.shared.cookie.AuthCookieFactory;
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private static final int MAX_DISPLAY_NAME_LENGTH = 255;
-  private static final String REFRESH_TOKEN_COOKIE = "refresh_token";
-  private static final String LEGACY_OAUTH_REFRESH_COOKIE_PATH = "/api/v1/auth/refresh-token";
   private static final int MAX_REDIRECT_TO_LENGTH = 2048;
 
   @Value("${vfqc.client.base-url}")
@@ -85,7 +83,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         authCookieFactory
             .refreshTokenCookie(refreshToken, jwtTokenService.refreshTokenExpiresInSeconds())
             .toString());
-    response.addHeader(HttpHeaders.SET_COOKIE, clearLegacyOAuthRefreshCookie().toString());
+    response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.clearLegacyRefreshTokenCookie().toString());
 
     var session = request.getSession(false);
     String redirectTo = resolveRedirectTo(session);
@@ -151,16 +149,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     return fullName.length() > MAX_DISPLAY_NAME_LENGTH
         ? fullName.substring(0, MAX_DISPLAY_NAME_LENGTH)
         : fullName;
-  }
-
-  private ResponseCookie clearLegacyOAuthRefreshCookie() {
-    return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
-        .httpOnly(true)
-        .secure(cookieSecure)
-        .path(LEGACY_OAUTH_REFRESH_COOKIE_PATH)
-        .maxAge(0)
-        .sameSite(sameSite)
-        .build();
   }
 
   private String resolveRedirectTo(HttpSession session) {

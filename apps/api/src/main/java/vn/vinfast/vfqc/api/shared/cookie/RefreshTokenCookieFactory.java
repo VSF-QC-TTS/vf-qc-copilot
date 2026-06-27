@@ -40,4 +40,15 @@ public class RefreshTokenCookieFactory implements AuthCookieFactory {
         .sameSite(sameSite)
         .build();
   }
+
+  @Override
+  public ResponseCookie clearLegacyRefreshTokenCookie() {
+    return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
+        .httpOnly(true)
+        .secure(cookieSecure)
+        .path("/api/v1/auth/refresh-token")
+        .maxAge(0)
+        .sameSite(sameSite)
+        .build();
+  }
 }

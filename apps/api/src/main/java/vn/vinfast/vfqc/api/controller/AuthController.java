@@ -153,6 +153,7 @@ public class AuthController {
             result.refreshToken(), result.refreshTokenMaxAgeSeconds());
     return ResponseEntity.ok()
         .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .header(HttpHeaders.SET_COOKIE, authCookieFactory.clearLegacyRefreshTokenCookie().toString())
         .body(result.response());
   }
 
@@ -185,6 +186,7 @@ public class AuthController {
             result.refreshToken(), result.refreshTokenMaxAgeSeconds());
     return ResponseEntity.ok()
         .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .header(HttpHeaders.SET_COOKIE, authCookieFactory.clearLegacyRefreshTokenCookie().toString())
         .body(result.response());
   }
 
@@ -208,6 +210,7 @@ public class AuthController {
     var clearCookie = authCookieFactory.clearRefreshTokenCookie();
     return ResponseEntity.noContent()
         .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+        .header(HttpHeaders.SET_COOKIE, authCookieFactory.clearLegacyRefreshTokenCookie().toString())
         .build();
   }
 
