@@ -8,7 +8,6 @@ import { z } from 'zod'
 import { Info, ChevronDown, SaveIcon, FlaskConical } from 'lucide-react'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
 import type { AiProvider, AiExecutionResult, KeySource } from '@/types/config'
 import { useAiConfig, useSaveAiConfig, useTestAiConfig } from '../../hooks/use-ai-config'
@@ -33,7 +32,6 @@ export function AiConfigPage() {
 
   const [testResult, setTestResult] = useState<AiExecutionResult | null>(null)
   const [testDialogOpen, setTestDialogOpen] = useState(false)
-  const [advancedOpen, setAdvancedOpen] = useState(true)
 
   const schema = z.object({
     provider: z.enum(['OPENAI', 'ANTHROPIC', 'GEMINI', 'CUSTOM']),
@@ -146,21 +144,23 @@ export function AiConfigPage() {
         )}
 
         {/* Config Form */}
-        <motion.div
+        <motion.form
+          onSubmit={handleSubmit(onSubmit)}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: hasTested ? 0.1 : 0 }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
         >
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Cấu hình AI Model</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <FieldGroup className="space-y-5">
-                  
+          {/* Left Column: Main Configuration */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            <Card>
+              <CardHeader className="pb-4 border-b border-border/40 mb-4">
+                <CardTitle className="text-base font-semibold">Cấu hình kết nối (LLM Judge)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FieldGroup className="space-y-6">
                   {/* Provider & Key Source */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Controller control={control} name="provider" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel>AI Provider <span className="text-destructive">*</span></FieldLabel>
@@ -201,7 +201,7 @@ export function AiConfigPage() {
                   {!isPersonalKey && (
                     <Controller control={control} name="apiKey" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>{t('config.judge.apiKey', { ns: 'project' })}</FieldLabel>
+                        <FieldLabel>API Key <span className="text-destructive">*</span></FieldLabel>
                         <Input type="password" {...field} aria-invalid={!!fieldState.error} placeholder="sk-..." />
                         <p className="text-[11px] text-muted-foreground mt-1">
                           API Key được mã hóa 2 chiều và lưu trữ an toàn trên server.
@@ -222,7 +222,7 @@ export function AiConfigPage() {
                   {showBaseUrl && (
                     <Controller control={control} name="baseUrl" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>{t('config.judge.baseUrl', { ns: 'project' })}</FieldLabel>
+                        <FieldLabel>Base URL <span className="text-destructive">*</span></FieldLabel>
                         <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. https://my-resource.openai.azure.com" />
                         <FieldError errors={[fieldState.error]} />
                       </Field>
@@ -230,7 +230,7 @@ export function AiConfigPage() {
                   )}
 
                   {/* Models */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Controller control={control} name="evaluationModel" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel className="flex items-center gap-1.5">
@@ -258,99 +258,92 @@ export function AiConfigPage() {
                       </Field>
                     )} />
                   </div>
-
-                  {/* Advanced Settings — collapsible */}
-                  <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-                    <CollapsibleTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <ChevronDown className={`transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
-                        Thông số nâng cao
-                      </button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="grid grid-cols-2 gap-4 pt-4">
-                        <Controller control={control} name="temperature" render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel className="flex items-center gap-1.5">
-                              {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
-                              <Tooltip>
-                                <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
-                                <TooltipContent><p className="max-w-xs">0.0: Chính xác, theo khuôn mẫu. 2.0: Phá cách, sáng tạo.</p></TooltipContent>
-                              </Tooltip>
-                            </FieldLabel>
-                            <Input type="number" step="0.1" min="0" max="2" {...field} aria-invalid={!!fieldState.error} />
-                            <FieldError errors={[fieldState.error]} />
-                          </Field>
-                        )} />
-                        <Controller control={control} name="maxTokens" render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel className="flex items-center gap-1.5">
-                              {t('config.judge.maxTokens', { ns: 'project' })} <span className="text-destructive">*</span>
-                              <Tooltip>
-                                <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
-                                <TooltipContent><p className="max-w-xs">Giới hạn độ dài câu trả lời của AI.</p></TooltipContent>
-                              </Tooltip>
-                            </FieldLabel>
-                            <Input type="number" {...field} aria-invalid={!!fieldState.error} />
-                            <FieldError errors={[fieldState.error]} />
-                          </Field>
-                        )} />
-                        <Controller control={control} name="retryCount" render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel className="flex items-center gap-1.5">
-                              {t('config.judge.retryCount', { ns: 'project' })} <span className="text-destructive">*</span>
-                              <Tooltip>
-                                <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
-                                <TooltipContent><p className="max-w-xs">Số lần tự động gọi lại API nếu lần đầu bị lỗi.</p></TooltipContent>
-                              </Tooltip>
-                            </FieldLabel>
-                            <Input type="number" min="0" {...field} aria-invalid={!!fieldState.error} />
-                            <FieldError errors={[fieldState.error]} />
-                          </Field>
-                        )} />
-                        <Controller control={control} name="timeout" render={({ field, fieldState }) => (
-                          <Field data-invalid={!!fieldState.error}>
-                            <FieldLabel>{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
-                            <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} />
-                            <FieldError errors={[fieldState.error]} />
-                          </Field>
-                        )} />
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 mt-2 border-t gap-4">
-                    {!hasSaved ? (
-                      <p className="text-xs text-muted-foreground">
-                        Lưu cấu hình rồi ấn Chạy thử để kiểm tra kết nối
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Thay đổi sẽ áp dụng ngay cho các lượt chạy đánh giá tiếp theo.
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                      {(hasSaved || hasTested) && (
-                        <Button type="button" variant="outline" onClick={handleOpenTest} disabled={testMutation.isPending} className="w-full sm:w-auto">
-                          {testMutation.isPending ? <Spinner data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
-                          Chạy thử
-                        </Button>
-                      )}
-                      <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
-                        {saveMutation.isPending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
-                        Lưu cấu hình
-                      </Button>
-                    </div>
-                  </div>
                 </FieldGroup>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Parameters & Actions */}
+          <div className="lg:col-span-4 flex flex-col gap-6 sticky top-6">
+            <Card className="bg-muted/30 border-border/60">
+              <CardHeader className="pb-3 border-b border-border/40 mb-4 bg-background/50 rounded-t-xl">
+                <CardTitle className="text-base font-semibold">Tham số chấm</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <Controller control={control} name="temperature" render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel className="flex items-center gap-1.5 text-xs">
+                        {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild><Info className="size-3 text-muted-foreground" /></TooltipTrigger>
+                          <TooltipContent><p className="max-w-xs">0.0: Chính xác. 2.0: Sáng tạo.</p></TooltipContent>
+                        </Tooltip>
+                      </FieldLabel>
+                      <Input type="number" step="0.1" min="0" max="2" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <FieldError errors={[fieldState.error]} />
+                    </Field>
+                  )} />
+                  <Controller control={control} name="maxTokens" render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel className="flex items-center gap-1.5 text-xs">
+                        {t('config.judge.maxTokens', { ns: 'project' })} <span className="text-destructive">*</span>
+                      </FieldLabel>
+                      <Input type="number" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <FieldError errors={[fieldState.error]} />
+                    </Field>
+                  )} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Controller control={control} name="retryCount" render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel className="flex items-center gap-1.5 text-xs">
+                        {t('config.judge.retryCount', { ns: 'project' })} <span className="text-destructive">*</span>
+                      </FieldLabel>
+                      <Input type="number" min="0" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <FieldError errors={[fieldState.error]} />
+                    </Field>
+                  )} />
+                  <Controller control={control} name="timeout" render={({ field, fieldState }) => (
+                    <Field data-invalid={!!fieldState.error}>
+                      <FieldLabel className="text-xs">{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
+                      <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <FieldError errors={[fieldState.error]} />
+                    </Field>
+                  )} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-primary/5 border-primary/20 shadow-sm">
+              <CardContent className="p-5 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  {!hasSaved ? (
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Lưu cấu hình rồi ấn Chạy thử để kiểm tra kết nối.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Cấu hình này sẽ được áp dụng ngay cho lượt chạy tiếp theo.
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  <Button type="submit" disabled={saveMutation.isPending} className="w-full">
+                    {saveMutation.isPending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
+                    Lưu cấu hình
+                  </Button>
+                  {(hasSaved || hasTested) && (
+                    <Button type="button" variant="outline" onClick={handleOpenTest} disabled={testMutation.isPending} className="w-full bg-background border-primary/20 hover:bg-primary/10 text-primary">
+                      {testMutation.isPending ? <Spinner data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
+                      Chạy thử kết nối
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.form>
 
         {/* AI Test Dialog */}
         <AiTestDialog

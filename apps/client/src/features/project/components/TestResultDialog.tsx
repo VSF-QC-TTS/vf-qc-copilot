@@ -182,18 +182,18 @@ function ResultView({ result }: { result: TestExecutionResult }) {
 
       {/* Response body */}
       {formattedBody && (
-        <motion.div variants={staggerItem} className="relative group mt-2">
-          <div className="absolute -top-3 left-4 px-2 bg-zinc-950 text-[10px] uppercase tracking-widest text-zinc-400 font-semibold z-10">
+        <motion.div variants={staggerItem} className="relative group mt-4">
+          <div className="absolute -top-3 left-4 px-2 bg-background text-[10px] uppercase tracking-widest text-muted-foreground font-semibold z-10">
             Raw Response
           </div>
-          <pre className="text-[13px] font-mono leading-relaxed whitespace-pre-wrap break-all bg-zinc-950 text-zinc-50 rounded-xl p-5 pt-6 max-h-[350px] overflow-auto shadow-inner border border-zinc-800 relative">
+          <pre className="text-[13px] font-mono leading-relaxed whitespace-pre-wrap break-all bg-muted/30 text-foreground/90 rounded-xl p-5 pt-6 max-h-[350px] overflow-auto shadow-sm border relative">
             {formattedBody}
           </pre>
           <Button
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity h-8 bg-zinc-800 text-zinc-100 border-zinc-700 hover:bg-zinc-700 hover:text-white"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity h-8 bg-background/80 backdrop-blur-sm shadow-sm"
           >
             {copied ? <CheckIcon className="size-3.5 mr-1.5" /> : <CopyIcon className="size-3.5 mr-1.5" />}
             {copied ? 'Đã chép' : 'Copy'}
