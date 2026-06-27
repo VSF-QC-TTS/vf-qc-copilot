@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import {
   PlusIcon,
   TrashIcon,
-  GripVerticalIcon,
   PencilIcon,
   TableIcon,
   CopyIcon,
@@ -193,7 +192,6 @@ export function ProjectSchemaPage() {
                 <Table className="w-full min-w-[700px] lg:min-w-0">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-10" />
                       <TableHead className="text-xs font-semibold uppercase">{t('config.schema.columnName')}</TableHead>
                       <TableHead className="w-24 text-xs font-semibold uppercase">Kiểu</TableHead>
                       <TableHead className="w-36 text-xs font-semibold uppercase">Vai trò</TableHead>
@@ -204,9 +202,6 @@ export function ProjectSchemaPage() {
                   <TableBody>
                     {columns.map((col) => (
                       <TableRow key={col.publicId} className="group hover:bg-muted/30">
-                        <TableCell className="px-2">
-                          <GripVerticalIcon className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors cursor-grab" />
-                        </TableCell>
                         <TableCell>
                           <Input
                             defaultValue={col.columnName}
@@ -215,7 +210,12 @@ export function ProjectSchemaPage() {
                               if (val && val !== col.columnName) {
                                 updateMutation.mutate({
                                   columnId: col.publicId,
-                                  payload: { columnName: val },
+                                  payload: {
+                                    columnName: val,
+                                    dataType: col.dataType || 'STRING',
+                                    role: col.role || 'EXPECTED',
+                                    sampleValue: col.sampleValue,
+                                  },
                                 })
                               }
                             }}
@@ -234,7 +234,12 @@ export function ProjectSchemaPage() {
                             onValueChange={(val) => {
                               updateMutation.mutate({
                                 columnId: col.publicId,
-                                payload: { dataType: val },
+                                payload: {
+                                  columnName: col.columnName,
+                                  dataType: val,
+                                  role: col.role || 'EXPECTED',
+                                  sampleValue: col.sampleValue,
+                                },
                               })
                             }}
                           >
@@ -258,7 +263,12 @@ export function ProjectSchemaPage() {
                             onValueChange={(val) => {
                               updateMutation.mutate({
                                 columnId: col.publicId,
-                                payload: { role: val },
+                                payload: {
+                                  columnName: col.columnName,
+                                  dataType: col.dataType || 'STRING',
+                                  role: val,
+                                  sampleValue: col.sampleValue,
+                                },
                               })
                             }}
                           >
@@ -282,7 +292,12 @@ export function ProjectSchemaPage() {
                               if (val !== (col.sampleValue || '')) {
                                 updateMutation.mutate({
                                   columnId: col.publicId,
-                                  payload: { sampleValue: val || null },
+                                  payload: {
+                                    columnName: col.columnName,
+                                    dataType: col.dataType || 'STRING',
+                                    role: col.role || 'EXPECTED',
+                                    sampleValue: val || null,
+                                  },
                                 })
                               }
                             }}
@@ -320,7 +335,6 @@ export function ProjectSchemaPage() {
 
                     {/* Inline quick-add row */}
                     <TableRow className="bg-muted/5 border-t border-dashed hover:bg-muted/10">
-                      <TableCell className="px-2" />
                       <TableCell className="py-2">
                         <Input
                           ref={nameInputRef}
