@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Info, ChevronDown, SaveIcon, FlaskConical } from 'lucide-react'
+import { Info, SaveIcon, FlaskConical } from 'lucide-react'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
