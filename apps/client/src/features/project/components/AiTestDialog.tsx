@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon, PlayIcon, CoinsIcon, MessageSquareTextIcon, Sparkles } from 'lucide-react'
 
 import {
@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { FieldGroup, Field, FieldLabel } from '@/components/ui/field'
@@ -85,20 +84,20 @@ function LoadingTypingEffect() {
 
       {/* Skeletal hint */}
       <div className="w-full mt-6 space-y-3 opacity-20">
-        <motion.div 
-          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+        <motion.div
+          animate={{ opacity: [0.1, 0.3, 0.1] }}
           transition={{ duration: 2, repeat: Infinity, delay: 0 }}
-          className="h-2 bg-foreground rounded-full w-full" 
+          className="h-2 bg-foreground rounded-full w-full"
         />
-        <motion.div 
-          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+        <motion.div
+          animate={{ opacity: [0.1, 0.3, 0.1] }}
           transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-          className="h-2 bg-foreground rounded-full w-[85%]" 
+          className="h-2 bg-foreground rounded-full w-[85%]"
         />
-        <motion.div 
-          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+        <motion.div
+          animate={{ opacity: [0.1, 0.3, 0.1] }}
           transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-          className="h-2 bg-foreground rounded-full w-[60%]" 
+          className="h-2 bg-foreground rounded-full w-[60%]"
         />
       </div>
     </div>
@@ -109,13 +108,13 @@ function LoadingTypingEffect() {
 // Result view for AI
 // ---------------------------------------------------------------------------
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } }
 }
-const staggerItem = {
+const staggerItem: Variants = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } }
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100, damping: 20 } }
 }
 
 function AiResultView({ result }: { result: AiExecutionResult }) {

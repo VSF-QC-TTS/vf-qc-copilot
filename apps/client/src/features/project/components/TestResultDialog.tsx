@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon, Sparkles } from 'lucide-react'
 
 import {
@@ -106,13 +106,13 @@ function LoadingTypingEffect() {
 // Result view
 // ---------------------------------------------------------------------------
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } }
 }
-const staggerItem = {
+const staggerItem: Variants = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } }
+  show: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 100, damping: 20 } }
 }
 
 function ResultView({ result }: { result: TestExecutionResult }) {
