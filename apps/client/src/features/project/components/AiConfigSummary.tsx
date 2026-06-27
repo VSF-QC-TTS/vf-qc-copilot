@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, BrainCircuit, FlaskConical, Clock, ShieldCheck, Settings2, Globe, Database } from 'lucide-react'
+import { CheckCircle2, XCircle, FlaskConical, Clock, ShieldCheck, Settings2, Globe, Database } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -36,9 +36,7 @@ export function AiConfigSummary({ config, onTest, isTestPending }: AiConfigSumma
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Cell 1: Status (col-span-2) */}
       <Card className="md:col-span-2 relative overflow-hidden flex flex-col justify-between p-6 bg-card border-border shadow-sm">
-        <div className="absolute -top-10 -right-10 p-8 opacity-[0.03] pointer-events-none">
-          <BrainCircuit className="w-64 h-64" />
-        </div>
+
         <div className="flex items-start justify-between relative z-10 h-full">
           <div className="flex flex-col h-full justify-between">
             <div>

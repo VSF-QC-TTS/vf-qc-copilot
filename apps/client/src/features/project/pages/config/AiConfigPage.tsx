@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
@@ -53,19 +53,24 @@ export function AiConfigPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(schema) as any,
     defaultValues: { provider: 'OPENAI', keySource: 'PLATFORM', evaluationModel: 'gpt-4o', apiKey: '', baseUrl: '', generationModel: '', temperature: 0.0, maxTokens: 2048, timeout: 30, retryCount: 3 },
-    values: config ? {
-      provider: config.provider || 'OPENAI',
-      keySource: config.keySource || 'PLATFORM',
-      evaluationModel: config.evaluationModel || '',
-      generationModel: config.generationModel || '',
-      apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '',
-      baseUrl: config.baseUrl || '',
-      temperature: config.temperature ?? 0.0,
-      maxTokens: config.maxTokens ?? 2048,
-      timeout: (config.timeoutMs ?? 30000) / 1000,
-      retryCount: config.retryCount ?? 3,
-    } : undefined,
   })
+
+  useEffect(() => {
+    if (config) {
+      form.reset({
+        provider: config.provider || 'OPENAI',
+        keySource: config.keySource || 'PLATFORM',
+        evaluationModel: config.evaluationModel || '',
+        generationModel: config.generationModel || '',
+        apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '',
+        baseUrl: config.baseUrl || '',
+        temperature: config.temperature ?? 0.0,
+        maxTokens: config.maxTokens ?? 2048,
+        timeout: (config.timeoutMs ?? 30000) / 1000,
+        retryCount: config.retryCount ?? 3,
+      })
+    }
+  }, [config, form])
 
   const { control, handleSubmit, watch } = form
   const provider = watch('provider')
