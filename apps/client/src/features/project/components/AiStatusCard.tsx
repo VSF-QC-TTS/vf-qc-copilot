@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 
-import type { JudgeConfigResponse } from '@/types/config'
+import type { AiConfigResponse } from '@/types/config'
 
 function timeAgo(dateStr: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
@@ -17,13 +17,13 @@ function timeAgo(dateStr: string): string {
   return `${days} ngày trước`
 }
 
-interface JudgeStatusCardProps {
-  config: JudgeConfigResponse
+interface AiStatusCardProps {
+  config: AiConfigResponse
   onTest: () => void
   isTestPending: boolean
 }
 
-export function JudgeStatusCard({ config, onTest, isTestPending }: JudgeStatusCardProps) {
+export function AiStatusCard({ config, onTest, isTestPending }: AiStatusCardProps) {
   const isSuccess = config.lastTestStatus === 'SUCCESS'
 
   return (
@@ -42,7 +42,7 @@ export function JudgeStatusCard({ config, onTest, isTestPending }: JudgeStatusCa
               <div className="flex items-center gap-2 text-sm font-medium">
                 <BrainCircuit className="size-3.5 text-muted-foreground shrink-0" />
                 <span className="truncate">
-                  {config.provider} • {config.model}
+                  {config.provider} • {config.evaluationModel}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">

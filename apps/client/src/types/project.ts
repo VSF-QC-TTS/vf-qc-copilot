@@ -8,8 +8,8 @@ export type ProjectResponse = {
 
 export type ProjectSetupStatus = {
   hasTargetConfig: boolean
-  hasJudgeConfig: boolean
-  hasDatasetSchema: boolean
+  hasAiConfig: boolean
+  hasProjectSchema: boolean
   hasVerification: boolean
   hasDatasets: boolean
   totalTestRuns: number

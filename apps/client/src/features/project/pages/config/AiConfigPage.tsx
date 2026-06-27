@@ -10,8 +10,8 @@ import { Info, ChevronDown, SaveIcon } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 
-import type { LlmProvider, JudgeExecutionResult } from '@/types/config'
-import { useJudgeConfig, useSaveJudgeConfig, useTestJudgeConfig } from '../../hooks/use-judge-config'
+import type { AiProvider, AiExecutionResult, KeySource } from '@/types/config'
+import { useAiConfig, useSaveAiConfig, useTestAiConfig } from '../../hooks/use-ai-config'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,28 +19,29 @@ import { Input } from '@/components/ui/input'
 import { FieldGroup, Field, FieldLabel, FieldError } from '@/components/ui/field'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
-import { JudgeConfigSkeleton } from '../../components/JudgeConfigSkeleton'
+import { AiConfigSkeleton } from '../../components/AiConfigSkeleton'
 import { ConfigPageHeader } from '../../components/ConfigPageHeader'
-import { JudgeStatusCard } from '../../components/JudgeStatusCard'
-import { JudgeTestDialog } from '../../components/JudgeTestDialog'
+import { AiStatusCard } from '../../components/AiStatusCard'
+import { AiTestDialog } from '../../components/AiTestDialog'
 
-export function JudgeConfigPage() {
+export function AiConfigPage() {
   const { publicId } = useParams<{ publicId: string }>()
   const { t } = useTranslation(['project', 'validation'])
-  const { data: config, isLoading } = useJudgeConfig(publicId)
-  const saveMutation = useSaveJudgeConfig(publicId)
-  const testMutation = useTestJudgeConfig(publicId)
+  const { data: config, isLoading } = useAiConfig(publicId)
+  const saveMutation = useSaveAiConfig(publicId)
+  const testMutation = useTestAiConfig(publicId)
 
-  const [testResult, setTestResult] = useState<JudgeExecutionResult | null>(null)
+  const [testResult, setTestResult] = useState<AiExecutionResult | null>(null)
   const [testDialogOpen, setTestDialogOpen] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const schema = z.object({
     provider: z.enum(['OPENAI', 'AZURE_OPENAI', 'ANTHROPIC', 'GEMINI', 'CUSTOM']),
-    model: z.string().min(1, t('validation.not-blank', { ns: 'validation' })),
+    keySource: z.enum(['PLATFORM', 'PERSONAL']),
     apiKey: z.string().optional(),
     baseUrl: z.string().optional(),
-    customModelName: z.string().optional(),
+    evaluationModel: z.string().min(1, t('validation.not-blank', { ns: 'validation' })),
+    generationModel: z.string().optional(),
     temperature: z.coerce.number().min(0).max(2),
     maxTokens: z.coerce.number().min(1),
     timeout: z.coerce.number().min(1),
@@ -51,31 +52,53 @@ export function JudgeConfigPage() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema) as any,
-    defaultValues: { provider: 'OPENAI', model: 'gpt-4o', apiKey: '', baseUrl: '', customModelName: '', temperature: 0.0, maxTokens: 2048, timeout: 30, retryCount: 3 },
+    defaultValues: { provider: 'OPENAI', keySource: 'PLATFORM', evaluationModel: 'gpt-4o', apiKey: '', baseUrl: '', generationModel: '', temperature: 0.0, maxTokens: 2048, timeout: 30, retryCount: 3 },
   })
 
   const { control, handleSubmit, reset, watch } = form
   const provider = watch('provider')
+  const keySource = watch('keySource')
+  
   const showBaseUrl = provider === 'AZURE_OPENAI' || provider === 'CUSTOM'
-  const showCustomModel = provider === 'AZURE_OPENAI' || provider === 'CUSTOM'
+  const isPersonalKey = keySource === 'PERSONAL'
+
+  const DEFAULT_MODELS: Record<string, string> = {
+    OPENAI: 'gpt-4o-mini',
+    GEMINI: 'gemini-2.0-flash',
+    ANTHROPIC: 'claude-sonnet-4-20250514',
+    AZURE_OPENAI: '',
+    CUSTOM: '',
+  }
 
   useEffect(() => {
     if (config) {
       reset({
-        provider: config.provider || 'OPENAI', model: config.model || 'gpt-4o',
-        apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '', baseUrl: config.baseUrl || '',
-        customModelName: config.customModelName || '', temperature: config.temperature ?? 0.0,
-        maxTokens: config.maxTokens ?? 2048, timeout: (config.timeoutMs ?? 30000) / 1000, retryCount: config.retryCount ?? 3,
+        provider: config.provider || 'OPENAI', 
+        keySource: config.keySource || 'PLATFORM',
+        evaluationModel: config.evaluationModel || 'gpt-4o', 
+        generationModel: config.generationModel || '',
+        apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '', 
+        baseUrl: config.baseUrl || '',
+        temperature: config.temperature ?? 0.0,
+        maxTokens: config.maxTokens ?? 2048, 
+        timeout: (config.timeoutMs ?? 30000) / 1000, 
+        retryCount: config.retryCount ?? 3,
       })
     }
   }, [config, reset])
 
   const onSubmit = (values: FormData) => {
     saveMutation.mutate({
-      provider: values.provider as LlmProvider, model: values.model,
-      apiKey: values.apiKey || null, baseUrl: values.baseUrl || null,
-      customModelName: values.customModelName || null, temperature: values.temperature,
-      maxTokens: values.maxTokens, timeoutMs: values.timeout * 1000, retryCount: values.retryCount,
+      provider: values.provider as AiProvider, 
+      keySource: values.keySource as KeySource,
+      evaluationModel: values.evaluationModel,
+      generationModel: values.generationModel || null,
+      apiKey: values.apiKey || null, 
+      baseUrl: values.baseUrl || null,
+      temperature: values.temperature,
+      maxTokens: values.maxTokens, 
+      timeoutMs: values.timeout * 1000, 
+      retryCount: values.retryCount,
     })
   }
 
@@ -99,7 +122,7 @@ export function JudgeConfigPage() {
     setTestDialogOpen(true)
   }
 
-  if (isLoading) return <JudgeConfigSkeleton />
+  if (isLoading) return <AiConfigSkeleton />
 
   const hasSaved = !!config?.provider
   const hasTested = !!config?.lastTestStatus
@@ -114,16 +137,16 @@ export function JudgeConfigPage() {
       >
         <ConfigPageHeader titleKey="config.judge.title" descriptionKey="config.judge.description" />
 
-        {/* Connection Status — only after first test */}
+        {/* Connection Status */}
         {hasTested && (
-          <JudgeStatusCard
+          <AiStatusCard
             config={config!}
             onTest={handleOpenTest}
             isTestPending={testMutation.isPending}
           />
         )}
 
-        {/* Config Form — single card */}
+        {/* Config Form */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -136,12 +159,17 @@ export function JudgeConfigPage() {
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <FieldGroup className="space-y-5">
-                  {/* Provider + Model — same row */}
+                  
+                  {/* Provider & Key Source */}
                   <div className="grid grid-cols-2 gap-4">
                     <Controller control={control} name="provider" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>{t('config.judge.provider', { ns: 'project' })}</FieldLabel>
-                        <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <FieldLabel>AI Provider</FieldLabel>
+                        <Select value={field.value || undefined} onValueChange={(val) => {
+                          field.onChange(val)
+                          form.setValue('evaluationModel', DEFAULT_MODELS[val] || '')
+                          form.setValue('generationModel', '')
+                        }}>
                           <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Chọn nhà cung cấp" /></SelectTrigger>
                           <SelectContent><SelectGroup>
                             <SelectItem value="OPENAI">{t('config.judge.providerOpenai', { ns: 'project' })}</SelectItem>
@@ -154,25 +182,43 @@ export function JudgeConfigPage() {
                         <FieldError errors={[fieldState.error]} />
                       </Field>
                     )} />
-                    <Controller control={control} name="model" render={({ field, fieldState }) => (
+                    <Controller control={control} name="keySource" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>{t('config.judge.model', { ns: 'project' })}</FieldLabel>
-                        <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. gpt-4o" />
+                        <FieldLabel>Key Source</FieldLabel>
+                        <Select value={field.value || undefined} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Nguồn API Key" /></SelectTrigger>
+                          <SelectContent><SelectGroup>
+                            <SelectItem value="PLATFORM">Nền tảng (Platform)</SelectItem>
+                            <SelectItem value="PERSONAL">Cá nhân (Personal)</SelectItem>
+                          </SelectGroup></SelectContent>
+                        </Select>
                         <FieldError errors={[fieldState.error]} />
                       </Field>
                     )} />
                   </div>
 
-                  {/* API Key — full width */}
-                  <Controller control={control} name="apiKey" render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel>{t('config.judge.apiKey', { ns: 'project' })}</FieldLabel>
-                      <Input type="password" {...field} aria-invalid={!!fieldState.error} placeholder="sk-..." />
-                      <FieldError errors={[fieldState.error]} />
-                    </Field>
-                  )} />
+                  {/* API Key */}
+                  {!isPersonalKey && (
+                    <Controller control={control} name="apiKey" render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel>{t('config.judge.apiKey', { ns: 'project' })}</FieldLabel>
+                        <Input type="password" {...field} aria-invalid={!!fieldState.error} placeholder="sk-..." />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          API Key được mã hóa 2 chiều và lưu trữ an toàn trên server.
+                        </p>
+                        <FieldError errors={[fieldState.error]} />
+                      </Field>
+                    )} />
+                  )}
 
-                  {/* Conditional: Base URL + Custom Model */}
+                  {isPersonalKey && (
+                    <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 p-3 border border-amber-200 dark:border-amber-900/50">
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                        Bạn đã chọn cấu hình <strong>Cá nhân</strong>. API Key sẽ do từng user tự nhập ở màn hình chạy test và không được lưu trữ trên server.
+                      </p>
+                    </div>
+                  )}
+
                   {showBaseUrl && (
                     <Controller control={control} name="baseUrl" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
@@ -182,15 +228,36 @@ export function JudgeConfigPage() {
                       </Field>
                     )} />
                   )}
-                  {showCustomModel && (
-                    <Controller control={control} name="customModelName" render={({ field, fieldState }) => (
+
+                  {/* Models */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller control={control} name="evaluationModel" render={({ field, fieldState }) => (
                       <Field data-invalid={!!fieldState.error}>
-                        <FieldLabel>{t('config.judge.customModelName', { ns: 'project' })}</FieldLabel>
-                        <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. my-gpt4-deployment" />
+                        <FieldLabel className="flex items-center gap-1.5">
+                          Evaluation Model
+                          <Tooltip>
+                            <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
+                            <TooltipContent><p className="max-w-xs">Model dùng để chấm điểm và phân tích kết quả.</p></TooltipContent>
+                          </Tooltip>
+                        </FieldLabel>
+                        <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. gpt-4o" />
                         <FieldError errors={[fieldState.error]} />
                       </Field>
                     )} />
-                  )}
+                    <Controller control={control} name="generationModel" render={({ field, fieldState }) => (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel className="flex items-center gap-1.5">
+                          Generation Model (Tùy chọn)
+                          <Tooltip>
+                            <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
+                            <TooltipContent><p className="max-w-xs">Model dùng để tự động sinh testcase/dataset. Nếu để trống sẽ dùng chung với Evaluation model.</p></TooltipContent>
+                          </Tooltip>
+                        </FieldLabel>
+                        <Input {...field} aria-invalid={!!fieldState.error} placeholder="e.g. gpt-4o-mini" />
+                        <FieldError errors={[fieldState.error]} />
+                      </Field>
+                    )} />
+                  </div>
 
                   {/* Advanced Settings — collapsible */}
                   <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
@@ -199,7 +266,7 @@ export function JudgeConfigPage() {
                         type="button"
                         className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <ChevronDown className={`size-4 transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
                         Thông số nâng cao
                       </button>
                     </CollapsibleTrigger>
@@ -210,7 +277,7 @@ export function JudgeConfigPage() {
                             <FieldLabel className="flex items-center gap-1.5">
                               {t('config.judge.temperature', { ns: 'project' })}
                               <Tooltip>
-                                <TooltipTrigger asChild><Info className="size-3.5 text-muted-foreground" /></TooltipTrigger>
+                                <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                 <TooltipContent><p className="max-w-xs">0.0: Chính xác, theo khuôn mẫu. 2.0: Phá cách, sáng tạo.</p></TooltipContent>
                               </Tooltip>
                             </FieldLabel>
@@ -223,7 +290,7 @@ export function JudgeConfigPage() {
                             <FieldLabel className="flex items-center gap-1.5">
                               {t('config.judge.maxTokens', { ns: 'project' })}
                               <Tooltip>
-                                <TooltipTrigger asChild><Info className="size-3.5 text-muted-foreground" /></TooltipTrigger>
+                                <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                 <TooltipContent><p className="max-w-xs">Giới hạn độ dài câu trả lời của AI.</p></TooltipContent>
                               </Tooltip>
                             </FieldLabel>
@@ -236,7 +303,7 @@ export function JudgeConfigPage() {
                             <FieldLabel className="flex items-center gap-1.5">
                               {t('config.judge.retryCount', { ns: 'project' })}
                               <Tooltip>
-                                <TooltipTrigger asChild><Info className="size-3.5 text-muted-foreground" /></TooltipTrigger>
+                                <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                 <TooltipContent><p className="max-w-xs">Số lần tự động gọi lại API nếu lần đầu bị lỗi.</p></TooltipContent>
                               </Tooltip>
                             </FieldLabel>
@@ -280,8 +347,8 @@ export function JudgeConfigPage() {
           </Card>
         </motion.div>
 
-        {/* Judge Test Dialog */}
-        <JudgeTestDialog
+        {/* AI Test Dialog */}
+        <AiTestDialog
           open={testDialogOpen}
           onOpenChange={setTestDialogOpen}
           isPending={testMutation.isPending}

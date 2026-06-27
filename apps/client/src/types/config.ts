@@ -1,8 +1,6 @@
-export type LlmProvider = 'OPENAI' | 'AZURE_OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'CUSTOM'
+export type AiProvider = 'OPENAI' | 'AZURE_OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'CUSTOM'
 
-export type ColumnDataType = 'STRING' | 'NUMBER' | 'BOOLEAN' | 'JSON'
-
-export type ColumnRole = 'INPUT' | 'EXPECTED_OUTPUT' | 'CONTEXT' | 'METADATA'
+export type KeySource = 'PLATFORM' | 'PERSONAL'
 
 export type CheckOperator =
   | 'EQUALS'
@@ -20,7 +18,7 @@ export type CheckOperator =
 
 export type ExpectedSource = 'DATASET_COLUMN' | 'LITERAL'
 
-export type VerificationMode = 'FIELD_CHECKS' | 'OVERALL_RUBRIC' | 'RULE_AND_LLM'
+export type VerificationMode = 'FIELD_CHECKS_ONLY' | 'OVERALL_RUBRIC' | 'RULE_AND_LLM'
 
 // ==========================================
 // Target Config
@@ -86,17 +84,18 @@ export interface TestTargetConfigRequest {
 }
 
 // ==========================================
-// Judge Config
+// AI Config (replaces Judge Config)
 // ==========================================
 
-export interface JudgeConfigResponse {
+export interface AiConfigResponse {
   publicId: string
   version: number
-  provider: LlmProvider
+  provider: AiProvider
   baseUrl: string | null
+  keySource: KeySource
   hasApiKey: boolean
-  model: string | null
-  customModelName: string | null
+  evaluationModel: string | null
+  generationModel: string | null
   temperature: number | null
   maxTokens: number | null
   timeoutMs: number | null
@@ -107,24 +106,25 @@ export interface JudgeConfigResponse {
   updatedAt: string
 }
 
-export interface SaveJudgeConfigRequest {
-  provider: LlmProvider
+export interface SaveAiConfigRequest {
+  provider: AiProvider
   baseUrl?: string | null
   apiKey?: string | null       // Send "SECRET_REDACTED" to keep existing key
-  model: string
-  customModelName?: string | null
+  keySource: KeySource
+  evaluationModel: string
+  generationModel?: string | null
   temperature?: number | null
   maxTokens?: number | null
   timeoutMs: number
   retryCount: number
 }
 
-export interface TestJudgeConfigRequest {
+export interface TestAiConfigRequest {
   systemPrompt: string
   userMessage: string
 }
 
-export interface JudgeExecutionResult {
+export interface AiExecutionResult {
   generatedText: string | null
   promptTokens: number
   completionTokens: number
@@ -134,60 +134,43 @@ export interface JudgeExecutionResult {
 }
 
 // ==========================================
-// Dataset Schema
+// Project Schema (simplified from Dataset Schema)
 // ==========================================
 
-export interface DatasetColumnResponse {
+export interface SchemaColumnResponse {
   publicId: string
   columnName: string
-  displayName: string | null
-  dataType: ColumnDataType
-  role: ColumnRole
-  required: boolean
-  sampleValue: string | null
   description: string | null
   displayOrder: number
-  createdAt: string
-  updatedAt: string
 }
 
-export interface DatasetSchemaResponse {
+export interface ProjectSchemaResponse {
   publicId: string
   version: number
+  columns: SchemaColumnResponse[]
   createdAt: string
-  columns: DatasetColumnResponse[]
 }
 
-export interface CreateColumnRequest {
+export interface CreateSchemaColumnRequest {
   columnName: string
-  displayName?: string | null
-  dataType: ColumnDataType
-  role: ColumnRole
-  required: boolean
-  sampleValue?: string | null
   description?: string | null
 }
 
-export interface UpdateColumnRequest {
-  displayName?: string | null
-  dataType: ColumnDataType
-  role: ColumnRole
-  required: boolean
-  sampleValue?: string | null
+export interface UpdateSchemaColumnRequest {
+  columnName?: string | null
   description?: string | null
-  displayOrder: number
 }
 
 // ==========================================
 // Verification Config
 // ==========================================
 
-export interface FieldCheckResponse {
+export interface FieldCheckRuleResponse {
   publicId: string
   responsePath: string
   operator: CheckOperator
   expectedSource: ExpectedSource
-  expectedColumn: string | null
+  expectedColumnKey: string | null   // UUID of SchemaColumn.publicId
   expectedValue: string | null
   threshold: number | null
   weight: number
@@ -195,12 +178,12 @@ export interface FieldCheckResponse {
   displayOrder: number
 }
 
-export interface FieldCheckRequest {
+export interface FieldCheckRuleRequest {
   publicId?: string | null
   responsePath: string
   operator: CheckOperator
   expectedSource: ExpectedSource
-  expectedColumn?: string | null
+  expectedColumnKey?: string | null   // UUID of SchemaColumn.publicId
   expectedValue?: string | null
   threshold?: number | null
   weight: number
@@ -208,7 +191,7 @@ export interface FieldCheckRequest {
   displayOrder: number
 }
 
-export interface LlmRubricResponse {
+export interface LlmRubricRuleResponse {
   publicId: string
   name: string
   targetPath: string | null
@@ -219,7 +202,7 @@ export interface LlmRubricResponse {
   displayOrder: number
 }
 
-export interface LlmRubricRequest {
+export interface LlmRubricRuleRequest {
   publicId?: string | null
   name: string
   targetPath?: string | null
@@ -234,20 +217,33 @@ export interface VerificationConfigResponse {
   publicId: string
   version: number
   mode: VerificationMode
-  fieldChecks: FieldCheckResponse[]
-  llmRubrics: LlmRubricResponse[]
+  fieldChecks: FieldCheckRuleResponse[]
+  llmRubrics: LlmRubricRuleResponse[]
   createdAt: string
   updatedAt: string
 }
 
 export interface SaveVerificationRequest {
   mode: VerificationMode
-  fieldChecks?: FieldCheckRequest[] | null
-  llmRubrics?: LlmRubricRequest[] | null
+  fieldChecks?: FieldCheckRuleRequest[] | null
+  llmRubrics?: LlmRubricRuleRequest[] | null
 }
 
 export interface OperatorCatalogResponse {
   operator: CheckOperator
   displayName: string
   description: string
+}
+
+// ==========================================
+// Project Setup Status
+// ==========================================
+
+export interface ProjectSetupStatus {
+  hasTargetConfig: boolean
+  hasAiConfig: boolean
+  hasProjectSchema: boolean
+  hasVerification: boolean
+  hasDatasets: boolean
+  totalTestRuns: number
 }

@@ -35,8 +35,8 @@ export function ProjectOverviewPage() {
 
   const steps = [
     { key: 'targetConfig', label: t('nav.apiConfig'), done: status?.hasTargetConfig, path: `/projects/${publicId}/config/target` },
-    { key: 'judgeConfig', label: t('nav.llmJudge'), done: status?.hasJudgeConfig, path: `/projects/${publicId}/config/judge` },
-    { key: 'datasetSchema', label: t('nav.datasetSchema'), done: status?.hasDatasetSchema, path: `/projects/${publicId}/dataset-schema` },
+    { key: 'aiConfig', label: t('nav.llmJudge'), done: status?.hasAiConfig, path: `/projects/${publicId}/config/ai` },
+    { key: 'projectSchema', label: t('nav.datasetSchema'), done: status?.hasProjectSchema, path: `/projects/${publicId}/config/schema` },
     { key: 'verification', label: t('nav.verification'), done: status?.hasVerification, path: `/projects/${publicId}/verification` },
     { key: 'datasets', label: t('nav.datasets'), done: status?.hasDatasets, path: `/projects/${publicId}/datasets` },
   ]

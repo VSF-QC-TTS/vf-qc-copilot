@@ -6,13 +6,13 @@ import type {
   ConnectResponse,
   TestTargetConfigRequest,
   TestExecutionResult,
-  JudgeConfigResponse,
-  SaveJudgeConfigRequest,
-  TestJudgeConfigRequest,
-  JudgeExecutionResult,
-  DatasetSchemaResponse,
-  CreateColumnRequest,
-  UpdateColumnRequest,
+  AiConfigResponse,
+  SaveAiConfigRequest,
+  TestAiConfigRequest,
+  AiExecutionResult,
+  ProjectSchemaResponse,
+  CreateSchemaColumnRequest,
+  UpdateSchemaColumnRequest,
   VerificationConfigResponse,
   SaveVerificationRequest,
   OperatorCatalogResponse,
@@ -52,51 +52,51 @@ export async function getResponseFields(publicId: string): Promise<string[]> {
 }
 
 // ==========================================
-// Judge Config API
+// AI Config API (replaces Judge Config)
 // ==========================================
 
-export async function getJudgeConfig(publicId: string): Promise<JudgeConfigResponse> {
-  return apiClient(`/projects/${publicId}/config/judge`)
+export async function getAiConfig(publicId: string): Promise<AiConfigResponse> {
+  return apiClient(`/projects/${publicId}/config/ai`)
 }
 
-export async function saveJudgeConfig(publicId: string, data: SaveJudgeConfigRequest): Promise<JudgeConfigResponse> {
-  return apiClient(`/projects/${publicId}/config/judge`, {
+export async function saveAiConfig(publicId: string, data: SaveAiConfigRequest): Promise<AiConfigResponse> {
+  return apiClient(`/projects/${publicId}/config/ai`, {
     method: 'PUT',
     body: data,
   })
 }
 
-export async function testJudgeConfig(publicId: string, data: TestJudgeConfigRequest): Promise<JudgeExecutionResult> {
-  return apiClient(`/projects/${publicId}/config/judge/test`, {
+export async function testAiConfig(publicId: string, data: TestAiConfigRequest): Promise<AiExecutionResult> {
+  return apiClient(`/projects/${publicId}/config/ai/test`, {
     method: 'POST',
     body: data,
   })
 }
 
 // ==========================================
-// Dataset Schema API
+// Project Schema API (replaces Dataset Schema)
 // ==========================================
 
-export async function getDatasetSchema(publicId: string): Promise<DatasetSchemaResponse> {
-  return apiClient(`/projects/${publicId}/dataset-schema`)
+export async function getProjectSchema(publicId: string): Promise<ProjectSchemaResponse> {
+  return apiClient(`/projects/${publicId}/config/schema`)
 }
 
-export async function createColumn(publicId: string, data: CreateColumnRequest): Promise<DatasetSchemaResponse> {
-  return apiClient(`/projects/${publicId}/dataset-schema/columns`, {
+export async function createSchemaColumn(publicId: string, data: CreateSchemaColumnRequest): Promise<ProjectSchemaResponse> {
+  return apiClient(`/projects/${publicId}/config/schema/columns`, {
     method: 'POST',
     body: data,
   })
 }
 
-export async function updateColumn(publicId: string, columnId: string, data: UpdateColumnRequest): Promise<DatasetSchemaResponse> {
-  return apiClient(`/projects/${publicId}/dataset-schema/columns/${columnId}`, {
-    method: 'PATCH',
+export async function updateSchemaColumn(publicId: string, columnId: string, data: UpdateSchemaColumnRequest): Promise<ProjectSchemaResponse> {
+  return apiClient(`/projects/${publicId}/config/schema/columns/${columnId}`, {
+    method: 'PUT',
     body: data,
   })
 }
 
-export async function deleteColumn(publicId: string, columnId: string): Promise<DatasetSchemaResponse> {
-  return apiClient(`/projects/${publicId}/dataset-schema/columns/${columnId}`, {
+export async function deleteSchemaColumn(publicId: string, columnId: string): Promise<ProjectSchemaResponse> {
+  return apiClient(`/projects/${publicId}/config/schema/columns/${columnId}`, {
     method: 'DELETE',
   })
 }

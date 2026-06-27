@@ -19,8 +19,8 @@ const ProjectOverviewPage = lazy(() => import('@/features/project/pages/ProjectO
 const PlaceholderPage = lazy(() => import('@/features/project/pages/PlaceholderPage').then(m => ({ default: m.PlaceholderPage })))
 
 const TargetConfigPage = lazy(() => import('@/features/project/pages/config/TargetConfigPage').then(m => ({ default: m.TargetConfigPage })))
-const JudgeConfigPage = lazy(() => import('@/features/project/pages/config/JudgeConfigPage').then(m => ({ default: m.JudgeConfigPage })))
-const DatasetSchemaPage = lazy(() => import('@/features/project/pages/config/DatasetSchemaPage').then(m => ({ default: m.DatasetSchemaPage })))
+const AiConfigPage = lazy(() => import('@/features/project/pages/config/AiConfigPage').then(m => ({ default: m.AiConfigPage })))
+const ProjectSchemaPage = lazy(() => import('@/features/project/pages/config/ProjectSchemaPage').then(m => ({ default: m.ProjectSchemaPage })))
 const VerificationConfigPage = lazy(() => import('@/features/project/pages/config/VerificationConfigPage').then(m => ({ default: m.VerificationConfigPage })))
 
 // Route-level loading fallback — skeleton
@@ -65,9 +65,9 @@ function App() {
           <Route path="/projects/:publicId" element={<ProjectLayout />}>
             <Route index element={<ProjectOverviewPage />} />
             <Route path="config/target" element={<TargetConfigPage />} />
-            <Route path="config/judge" element={<JudgeConfigPage />} />
-            <Route path="dataset-schema" element={<DatasetSchemaPage />} />
-            <Route path="verification" element={<VerificationConfigPage />} />
+            <Route path="config/ai" element={<AiConfigPage />} />
+            <Route path="config/schema" element={<ProjectSchemaPage />} />
+            <Route path="config/verification" element={<VerificationConfigPage />} />
             <Route path="datasets" element={<PlaceholderPage title="Datasets" />} />
             <Route path="runs" element={<PlaceholderPage title="Test Runs" />} />
             <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />

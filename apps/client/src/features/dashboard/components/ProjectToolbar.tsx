@@ -14,10 +14,10 @@ export function ProjectToolbar() {
   const { data: project } = useProject(publicId)
   const { data: status } = useSetupStatus(publicId)
 
-  const isSetupComplete =
-    status?.hasTargetConfig &&
-    status?.hasJudgeConfig &&
-    status?.hasDatasetSchema &&
+  const isSetupComplete = 
+    status?.hasTargetConfig && 
+    status?.hasAiConfig && 
+    status?.hasProjectSchema && 
     status?.hasVerification &&
     status?.hasDatasets
 

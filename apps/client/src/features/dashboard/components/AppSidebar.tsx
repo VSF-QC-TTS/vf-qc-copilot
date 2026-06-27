@@ -2,14 +2,15 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Settings,
-  Database,
-  FileCheck2,
+  Globe,
+  CheckSquare,
   Table,
   CheckCircle2,
   Circle,
   BarChart,
   LayoutDashboard,
   ChevronRight,
+  Database,
 } from 'lucide-react'
 
 import {
@@ -63,10 +64,10 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
   const { data: status, isLoading } = useSetupStatus(publicId)
 
   const setupItems = [
-    { name: t('nav.apiConfig'), path: `/projects/${publicId}/config/target`, icon: Database, done: status?.hasTargetConfig },
-    { name: t('nav.llmJudge'), path: `/projects/${publicId}/config/judge`, icon: Settings, done: status?.hasJudgeConfig },
-    { name: t('nav.datasetSchema'), path: `/projects/${publicId}/dataset-schema`, icon: Table, done: status?.hasDatasetSchema },
-    { name: t('nav.verification'), path: `/projects/${publicId}/verification`, icon: FileCheck2, done: status?.hasVerification },
+    { name: t('nav.targetConfig'), path: `/projects/${publicId}/config/target`, icon: Globe, done: status?.hasTargetConfig },
+    { name: t('nav.llmJudge'), path: `/projects/${publicId}/config/ai`, icon: Settings, done: status?.hasAiConfig },
+    { name: t('nav.datasetSchema'), path: `/projects/${publicId}/config/schema`, icon: Table, done: status?.hasProjectSchema },
+    { name: t('nav.verification'), path: `/projects/${publicId}/config/verification`, icon: CheckSquare, done: status?.hasVerification },
   ]
 
   const executionItems = [
@@ -74,13 +75,13 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
     { name: t('nav.testRuns'), path: `/projects/${publicId}/runs`, icon: BarChart },
   ]
 
-  const isSetupDone =
-    status?.hasTargetConfig &&
-    status?.hasJudgeConfig &&
-    status?.hasDatasetSchema &&
+  const isSetupComplete = 
+    status?.hasTargetConfig && 
+    status?.hasAiConfig && 
+    status?.hasProjectSchema && 
     status?.hasVerification &&
     status?.hasDatasets
-  const defaultOpen = !isSetupDone
+  const defaultOpen = !isSetupComplete
 
   return (
     <>

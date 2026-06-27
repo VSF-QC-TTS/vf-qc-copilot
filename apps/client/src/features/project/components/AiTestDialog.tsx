@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { FieldGroup, Field, FieldLabel } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 
-import type { JudgeExecutionResult } from '@/types/config'
+import type { AiExecutionResult } from '@/types/config'
 
 // ---------------------------------------------------------------------------
 // Loading typing effect
@@ -88,10 +88,10 @@ function LoadingTypingEffect() {
 }
 
 // ---------------------------------------------------------------------------
-// Result view for Judge
+// Result view for AI
 // ---------------------------------------------------------------------------
 
-function JudgeResultView({ result }: { result: JudgeExecutionResult }) {
+function AiResultView({ result }: { result: AiExecutionResult }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
@@ -169,15 +169,15 @@ function JudgeResultView({ result }: { result: JudgeExecutionResult }) {
 // Main dialog — includes prompt input + result
 // ---------------------------------------------------------------------------
 
-interface JudgeTestDialogProps {
+interface AiTestDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   isPending: boolean
-  result: JudgeExecutionResult | null
+  result: AiExecutionResult | null
   onTest: (systemPrompt: string, userMessage: string) => void
 }
 
-export function JudgeTestDialog({ open, onOpenChange, isPending, result, onTest }: JudgeTestDialogProps) {
+export function AiTestDialog({ open, onOpenChange, isPending, result, onTest }: AiTestDialogProps) {
   const [systemPrompt, setSystemPrompt] = useState('You are a helpful assistant.')
   const [userMessage, setUserMessage] = useState('Hello, world!')
 
@@ -252,7 +252,7 @@ export function JudgeTestDialog({ open, onOpenChange, isPending, result, onTest 
                   animate={{ opacity: 1 }}
                   className="flex-1 flex flex-col"
                 >
-                  <JudgeResultView result={result} />
+                  <AiResultView result={result} />
                 </motion.div>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm flex-col gap-3">

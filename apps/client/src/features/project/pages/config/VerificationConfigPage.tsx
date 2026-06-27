@@ -23,7 +23,7 @@ import {
 
 import type { VerificationMode, CheckOperator, ExpectedSource, OperatorCatalogResponse } from '@/types/config'
 import { useVerificationConfig, useSaveVerificationConfig, useResponseFields, useOperatorCatalog } from '../../hooks/use-verification-config'
-import { useDatasetSchema } from '../../hooks/use-dataset-schema'
+import { useProjectSchema } from '../../hooks/use-project-schema'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -46,7 +46,7 @@ import { VerificationSkeleton } from '../../components/VerificationSkeleton'
 // Mode metadata
 // ---------------------------------------------------------------------------
 const MODE_META: Record<string, { icon: React.ElementType; label: string; description: string }> = {
-  FIELD_CHECKS: {
+  FIELD_CHECKS_ONLY: {
     icon: ListChecksIcon,
     label: 'So khớp trường dữ liệu',
     description: 'So khớp từng trường dữ liệu giữa response API và dataset theo toán tử.',
@@ -81,12 +81,12 @@ const FALLBACK_OPERATORS = [
 export function VerificationConfigPage() {
   const { publicId } = useParams<{ publicId: string }>()
   const { data: config, isLoading } = useVerificationConfig(publicId)
-  const { data: schemaData } = useDatasetSchema(publicId)
+  const { data: schemaData } = useProjectSchema(publicId)
   const { data: responseFields } = useResponseFields(publicId)
   const { data: operatorCatalog } = useOperatorCatalog()
   const saveMutation = useSaveVerificationConfig(publicId)
 
-  const expectedColumns = schemaData?.columns.filter(c => c.role === 'EXPECTED_OUTPUT') || []
+  const expectedColumns = schemaData?.columns || []
 
   const operatorOptions = operatorCatalog
     ? operatorCatalog.map((op: OperatorCatalogResponse) => ({ value: op.operator, label: op.displayName }))
@@ -96,13 +96,13 @@ export function VerificationConfigPage() {
   // Form
   // ---------------------------------------------------------------------------
   const schema = z.object({
-    mode: z.enum(['FIELD_CHECKS', 'OVERALL_RUBRIC', 'RULE_AND_LLM']),
+    mode: z.enum(['FIELD_CHECKS_ONLY', 'OVERALL_RUBRIC', 'RULE_AND_LLM']),
     fieldChecks: z.array(z.object({
       publicId: z.string().nullable().optional(),
       responsePath: z.string().min(1),
       operator: z.string(),
       expectedSource: z.string(),
-      expectedColumn: z.string().nullable().optional(),
+      expectedColumnKey: z.string().nullable().optional(),
       expectedValue: z.string().nullable().optional(),
       threshold: z.coerce.number().min(0).max(1).nullable().optional(),
       weight: z.coerce.number().min(0),
@@ -125,7 +125,7 @@ export function VerificationConfigPage() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema) as any,
-    defaultValues: { mode: 'FIELD_CHECKS', fieldChecks: [], llmRubrics: [] },
+    defaultValues: { mode: 'FIELD_CHECKS_ONLY', fieldChecks: [], llmRubrics: [] },
   })
 
   const { control, handleSubmit, reset, watch } = form
@@ -139,7 +139,7 @@ export function VerificationConfigPage() {
         mode: config.mode,
         fieldChecks: config.fieldChecks.map(fc => ({
           ...fc,
-          expectedColumn: fc.expectedColumn || null,
+          expectedColumnKey: fc.expectedColumnKey || null,
           expectedValue: fc.expectedValue || null,
           threshold: fc.threshold || null,
         })),
@@ -175,7 +175,7 @@ export function VerificationConfigPage() {
       responsePath: '',
       operator: 'EQUALS',
       expectedSource: 'DATASET_COLUMN',
-      expectedColumn: null,
+      expectedColumnKey: null,
       expectedValue: null,
       threshold: 1.0,
       weight: 1.0,
@@ -222,11 +222,11 @@ export function VerificationConfigPage() {
       toast.error('Vui lòng chọn Response Field và Toán tử')
       return
     }
-    if (current?.expectedSource === 'DATASET_COLUMN' && !current?.expectedColumn) {
+    if (current?.expectedSource === 'DATASET_COLUMN' && !current?.expectedColumnKey) {
       toast.error('Vui lòng chọn Cột Dataset kỳ vọng')
       return
     }
-    if (current?.expectedSource === 'STATIC_VALUE' && !current?.expectedValue) {
+    if (current?.expectedSource === 'LITERAL' && !current?.expectedValue) {
       toast.error('Vui lòng nhập Giá trị kỳ vọng')
       return
     }
@@ -243,8 +243,8 @@ export function VerificationConfigPage() {
 
   if (isLoading) return <VerificationSkeleton />
 
-  const modeMeta = MODE_META[mode] || MODE_META.FIELD_CHECKS
-  const showFieldChecks = mode === 'FIELD_CHECKS' || mode === 'RULE_AND_LLM'
+  const modeMeta = MODE_META[mode] || MODE_META.FIELD_CHECKS_ONLY
+  const showFieldChecks = mode === 'FIELD_CHECKS_ONLY' || mode === 'RULE_AND_LLM'
   const showRubrics = mode === 'OVERALL_RUBRIC' || mode === 'RULE_AND_LLM'
 
   return (
@@ -261,7 +261,7 @@ export function VerificationConfigPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <ShieldCheckIcon className="size-5" />
+                <ShieldCheckIcon />
                 Cấu hình kiểm tra
               </CardTitle>
             </CardHeader>
@@ -277,7 +277,7 @@ export function VerificationConfigPage() {
                         {Object.entries(MODE_META).map(([value, meta]) => (
                           <SelectItem key={value} value={value}>
                             <span className="flex items-center gap-2">
-                              <meta.icon className="size-4 text-muted-foreground" />
+                              <meta.icon className="text-muted-foreground" />
                               {meta.label}
                             </span>
                           </SelectItem>
@@ -314,7 +314,7 @@ export function VerificationConfigPage() {
 
                     {fieldChecksArray.fields.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-lg">
-                        <ListChecksIcon className="size-5 text-muted-foreground/40 mb-2" />
+                        <ListChecksIcon className="text-muted-foreground/40 mb-2" />
                         <p className="text-sm text-muted-foreground">Chưa có quy tắc nào</p>
                         <p className="text-xs text-muted-foreground/60 mt-0.5">Ấn "Thêm quy tắc" để bắt đầu</p>
                       </div>
@@ -337,7 +337,7 @@ export function VerificationConfigPage() {
                                 const check = watch(`fieldChecks.${index}`)
                                 const opLabel = operatorOptions.find((o: any) => o.value === check?.operator)?.label ?? check?.operator
                                 const expectedLabel = check?.expectedSource === 'DATASET_COLUMN'
-                                  ? check?.expectedColumn
+                                  ? expectedColumns.find(c => c.publicId === check?.expectedColumnKey)?.columnName || check?.expectedColumnKey
                                   : check?.expectedValue || '—'
 
                                 const isEditing = editingCheckIndex === index
@@ -386,24 +386,24 @@ export function VerificationConfigPage() {
                                               <Controller control={control} name={`fieldChecks.${index}.expectedSource`} render={({ field }) => (
                                                 <Select value={field.value} onValueChange={(val) => {
                                                   field.onChange(val)
-                                                  form.setValue(`fieldChecks.${index}.expectedColumn`, null)
+                                                  form.setValue(`fieldChecks.${index}.expectedColumnKey`, null)
                                                   form.setValue(`fieldChecks.${index}.expectedValue`, null)
                                                 }}>
                                                   <SelectTrigger className="h-8 w-[100px] shrink-0"><SelectValue /></SelectTrigger>
                                                   <SelectContent>
                                                     <SelectItem value="DATASET_COLUMN">Dataset</SelectItem>
-                                                    <SelectItem value="STATIC_VALUE">Static</SelectItem>
+                                                    <SelectItem value="LITERAL">Static</SelectItem>
                                                   </SelectContent>
                                                 </Select>
                                               )} />
                                               {check?.expectedSource === 'DATASET_COLUMN' ? (
-                                                <Controller control={control} name={`fieldChecks.${index}.expectedColumn`} render={({ field }) => (
+                                                <Controller control={control} name={`fieldChecks.${index}.expectedColumnKey`} render={({ field }) => (
                                                   <Select value={field.value || undefined} onValueChange={field.onChange}>
                                                     <SelectTrigger className="h-8"><SelectValue placeholder="Chọn cột..." /></SelectTrigger>
                                                     <SelectContent>
                                                       {expectedColumns.map(col => (
-                                                        <SelectItem key={col.columnName} value={col.columnName}>
-                                                          {col.displayName || col.columnName}
+                                                        <SelectItem key={col.publicId} value={col.publicId}>
+                                                          {col.description ? `${col.columnName} (${col.description})` : col.columnName}
                                                         </SelectItem>
                                                       ))}
                                                     </SelectContent>
@@ -431,10 +431,10 @@ export function VerificationConfigPage() {
                                       <TableCell className="p-2">
                                         <div className="flex justify-end gap-1">
                                           <Button type="button" variant="ghost" size="icon" className="size-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => handleSaveEditRow(index)}>
-                                            <CheckIcon className="size-4" />
+                                            <CheckIcon />
                                           </Button>
                                           <Button type="button" variant="ghost" size="icon" className="size-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleCancelEditRow(index)}>
-                                            <XIcon className="size-4" />
+                                            <XIcon />
                                           </Button>
                                         </div>
                                       </TableCell>
@@ -472,13 +472,13 @@ export function VerificationConfigPage() {
                                       <TableCell>
                                         <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                           <Button type="button" variant="ghost" size="icon" className="size-7" disabled={editingCheckIndex !== null} onClick={() => handleEditCheckRow(index)}>
-                                            <PencilIcon className="size-3.5" />
+                                            <PencilIcon />
                                           </Button>
                                           <Button type="button" variant="ghost" size="icon" className="size-7" disabled={editingCheckIndex !== null} onClick={() => handleDuplicateCheckRow(index)}>
-                                            <CopyIcon className="size-3.5" />
+                                            <CopyIcon />
                                           </Button>
                                           <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" disabled={editingCheckIndex !== null} onClick={() => fieldChecksArray.remove(index)}>
-                                            <TrashIcon className="size-3.5" />
+                                            <TrashIcon />
                                           </Button>
                                         </div>
                                       </TableCell>
@@ -529,7 +529,7 @@ export function VerificationConfigPage() {
 
                     {llmRubricsArray.fields.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-10 border border-dashed rounded-lg">
-                        <BrainCircuitIcon className="size-5 text-muted-foreground/40 mb-2" />
+                        <BrainCircuitIcon className="text-muted-foreground/40 mb-2" />
                         <p className="text-sm text-muted-foreground">Chưa có tiêu chí nào</p>
                         <p className="text-xs text-muted-foreground/60 mt-0.5">Ấn "Thêm tiêu chí" để tạo rubric mới</p>
                       </div>
@@ -544,7 +544,7 @@ export function VerificationConfigPage() {
                                 <div className="flex items-center gap-3 px-4 py-3 bg-muted/30">
                                   <CollapsibleTrigger asChild>
                                     <button type="button" className="flex items-center gap-2 flex-1 text-left">
-                                      <ChevronDown className={`size-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                      <ChevronDown className={`text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                                       <Controller control={control} name={`llmRubrics.${index}.name`} render={({ field }) => (
                                         <span className="text-sm font-medium">{field.value || `Tiêu chí ${index + 1}`}</span>
                                       )} />
@@ -561,7 +561,7 @@ export function VerificationConfigPage() {
                                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                                     )} />
                                     <Button type="button" variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={() => llmRubricsArray.remove(index)}>
-                                      <TrashIcon className="size-3.5" />
+                                      <TrashIcon />
                                     </Button>
                                   </div>
                                 </div>
@@ -582,7 +582,7 @@ export function VerificationConfigPage() {
                                           <FieldLabel className="flex items-center gap-1.5">
                                             Target Path
                                             <Tooltip>
-                                              <TooltipTrigger asChild><Info className="size-3.5 text-muted-foreground" /></TooltipTrigger>
+                                              <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                               <TooltipContent><p className="max-w-xs">Đường dẫn trỏ tới trường dữ liệu bạn muốn AI chấm. Ví dụ: $.data.answer</p></TooltipContent>
                                             </Tooltip>
                                           </FieldLabel>
@@ -609,7 +609,7 @@ export function VerificationConfigPage() {
                                           <FieldLabel className="flex items-center gap-1.5">
                                             Ngưỡng Pass
                                             <Tooltip>
-                                              <TooltipTrigger asChild><Info className="size-3.5 text-muted-foreground" /></TooltipTrigger>
+                                              <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                               <TooltipContent><p className="max-w-xs">Pass khi điểm ≥ ngưỡng. Ví dụ: 0.8</p></TooltipContent>
                                             </Tooltip>
                                           </FieldLabel>
@@ -622,7 +622,7 @@ export function VerificationConfigPage() {
                                           <FieldLabel className="flex items-center gap-1.5">
                                             Trọng số
                                             <Tooltip>
-                                              <TooltipTrigger asChild><Info className="size-3.5 text-muted-foreground" /></TooltipTrigger>
+                                              <TooltipTrigger asChild><Info className="text-muted-foreground" /></TooltipTrigger>
                                               <TooltipContent><p className="max-w-xs">Độ quan trọng của tiêu chí này khi tính điểm tổng.</p></TooltipContent>
                                             </Tooltip>
                                           </FieldLabel>
