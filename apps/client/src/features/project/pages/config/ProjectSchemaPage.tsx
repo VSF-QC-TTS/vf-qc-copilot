@@ -8,7 +8,8 @@ import {
   PencilIcon,
   TableIcon,
   CopyIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  HelpCircleIcon
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -23,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Dialog,
   DialogContent,
@@ -179,7 +181,7 @@ export function ProjectSchemaPage() {
                 <div>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <TableIcon className="size-4 text-primary" />
-                    Dataset columns (schema)
+                    Dataset columns
                   </CardTitle>
                   <CardDescription className="text-xs mt-0.5">
                     Định nghĩa cột mẫu — dùng làm biến trong Verification
@@ -194,7 +196,30 @@ export function ProjectSchemaPage() {
                     <TableRow>
                       <TableHead className="text-xs font-semibold uppercase">{t('config.schema.columnName')}</TableHead>
                       <TableHead className="w-24 text-xs font-semibold uppercase">Kiểu</TableHead>
-                      <TableHead className="w-36 text-xs font-semibold uppercase">Vai trò</TableHead>
+                      <TableHead className="w-36 text-xs font-semibold uppercase">
+                        <div className="flex items-center gap-1">
+                          <span>Vai trò</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button type="button" className="text-muted-foreground/60 hover:text-foreground cursor-pointer focus:outline-none transition-colors">
+                                  <HelpCircleIcon className="size-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs p-3 space-y-2 bg-popover text-popover-foreground border border-border shadow-md rounded-lg text-xs leading-relaxed">
+                                <p className="font-semibold text-zinc-900 dark:text-zinc-100">Các vai trò của biến:</p>
+                                <ul className="space-y-1.5 list-disc pl-3.5 text-[11px] text-muted-foreground">
+                                  <li><strong className="text-zinc-850 dark:text-zinc-200">Input:</strong> Dữ liệu đầu vào của hệ thống (ví dụ câu hỏi của người dùng).</li>
+                                  <li><strong className="text-zinc-850 dark:text-zinc-200">expected:</strong> Đáp án hoặc kết quả mong đợi dùng để đối chiếu khi đánh giá.</li>
+                                  <li><strong className="text-zinc-850 dark:text-zinc-200">context:</strong> Ngữ cảnh/tài liệu đi kèm để cung cấp thêm thông tin cho LLM.</li>
+                                  <li><strong className="text-zinc-850 dark:text-zinc-200">evaluation_param:</strong> Các tham số điều khiển cách chấm điểm hoặc cấu hình.</li>
+                                  <li><strong className="text-zinc-850 dark:text-zinc-200">metadata:</strong> Dữ liệu phụ trợ đi kèm dùng để phân loại hoặc thống kê.</li>
+                                </ul>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </TableHead>
                       <TableHead className="text-xs font-semibold uppercase">Giá trị mẫu</TableHead>
                       <TableHead className="w-[100px] text-right text-xs font-semibold uppercase">Thao tác</TableHead>
                     </TableRow>

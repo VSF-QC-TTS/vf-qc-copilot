@@ -155,7 +155,7 @@ export function AiConfigPage() {
           <div className="lg:col-span-8 flex flex-col gap-6">
             <Card>
               <CardHeader className="pb-4 border-b border-border/40 mb-4">
-                <CardTitle className="text-base font-semibold">Cấu hình kết nối (LLM Judge)</CardTitle>
+                <CardTitle className="text-base font-semibold">Cấu hình kết nối</CardTitle>
               </CardHeader>
               <CardContent>
                 <FieldGroup className="space-y-6">
