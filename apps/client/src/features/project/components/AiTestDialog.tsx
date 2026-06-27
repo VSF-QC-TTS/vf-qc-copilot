@@ -170,8 +170,8 @@ function AiResultView({ result }: { result: AiExecutionResult }) {
 
       {/* Generated text */}
       {result.generatedText && (
-        <motion.div variants={staggerItem} className="relative group mt-2">
-          <div className="absolute -top-3 left-4 px-2 bg-[#f4f4f5] dark:bg-[#18181b] text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+        <motion.div variants={staggerItem} className="relative group mt-4">
+          <div className="absolute -top-3 left-4 px-2 bg-[#f4f4f5] dark:bg-[#18181b] text-[10px] uppercase tracking-widest text-muted-foreground font-semibold z-10">
             AI Output
           </div>
           <div className="text-[13px] leading-relaxed bg-background/60 rounded-xl p-5 pt-6 max-h-[350px] overflow-auto border shadow-sm whitespace-pre-wrap text-foreground/90">
