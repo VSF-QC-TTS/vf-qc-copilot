@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
+import vn.vinfast.vfqc.api.shared.mail.template.HtmlMailTemplateRenderer;
 
 class HtmlMailTemplateRendererTest {
 

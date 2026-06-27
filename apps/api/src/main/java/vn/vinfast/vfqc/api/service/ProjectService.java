@@ -1,14 +1,14 @@
 package vn.vinfast.vfqc.api.service;
 
 import jakarta.validation.Valid;
-import java.util.List;
+
 import java.util.UUID;
 import org.springframework.validation.annotation.Validated;
 import vn.vinfast.vfqc.api.model.project.request.CreateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.request.UpdateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.response.ProjectResponse;
 import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
-import vn.vinfast.vfqc.api.shared.model.PageResponse;
+import vn.vinfast.vfqc.api.shared.dto.PageResponse;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
@@ -21,7 +21,7 @@ public interface ProjectService {
    * Creates a new QC project.
    *
    * @param request validated {@link CreateProjectRequest}
-   * @param userId  internal user ID of the creator
+   * @param userId internal user ID of the creator
    * @return public {@link ProjectResponse}
    */
   ProjectResponse create(@Valid CreateProjectRequest request, Long userId);
@@ -30,8 +30,8 @@ public interface ProjectService {
    * Lists all non-deleted projects created by a user with pagination.
    *
    * @param userId internal user ID of the creator
-   * @param page   page number (0-indexed)
-   * @param size   page size
+   * @param page page number (0-indexed)
+   * @param size page size
    * @return paginated {@link ProjectResponse}
    */
   PageResponse<ProjectResponse> listByUser(Long userId, int page, int size);
@@ -48,7 +48,7 @@ public interface ProjectService {
    * Updates an existing project's metadata.
    *
    * @param publicId public project identifier
-   * @param request  validated {@link UpdateProjectRequest}
+   * @param request validated {@link UpdateProjectRequest}
    * @return updated {@link ProjectResponse}
    */
   ProjectResponse update(UUID publicId, @Valid UpdateProjectRequest request);

@@ -1,7 +1,6 @@
 package vn.vinfast.vfqc.api.service.impl;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,16 +14,16 @@ import vn.vinfast.vfqc.api.model.project.request.CreateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.request.UpdateProjectRequest;
 import vn.vinfast.vfqc.api.model.project.response.ProjectResponse;
 import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
-import vn.vinfast.vfqc.api.infrastructure.persistence.JpaAiConfigRepository;
-import vn.vinfast.vfqc.api.infrastructure.persistence.JpaDatasetRepository;
-import vn.vinfast.vfqc.api.infrastructure.persistence.JpaProjectSchemaRepository;
-import vn.vinfast.vfqc.api.infrastructure.persistence.JpaVerificationConfigRepository;
+import vn.vinfast.vfqc.api.repository.JpaAiConfigRepository;
+import vn.vinfast.vfqc.api.repository.JpaDatasetRepository;
+import vn.vinfast.vfqc.api.repository.JpaProjectSchemaRepository;
+import vn.vinfast.vfqc.api.repository.JpaVerificationConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
 import vn.vinfast.vfqc.api.service.ProjectService;
+import vn.vinfast.vfqc.api.shared.dto.PageResponse;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
-import vn.vinfast.vfqc.api.shared.model.PageResponse;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
@@ -67,7 +66,7 @@ public class ProjectServiceImpl implements ProjectService {
     Page<Project> projectsPage =
         projectRepository.findByCreatedByAndDeletedAtIsNullOrderByUpdatedAtDesc(
             userId, PageRequest.of(page, size));
-            
+
     return PageResponse.of(projectsPage.map(projectMapper::toResponse));
   }
 
@@ -120,8 +119,8 @@ public class ProjectServiceImpl implements ProjectService {
         projectSchemaRepository.existsByProjectId(projectId),
         verificationConfigRepository.existsByProjectId(projectId),
         datasetRepository.existsByProjectId(projectId),
-        0      // totalTestRuns (Phase 3)
-    );
+        0 // totalTestRuns (Phase 3)
+        );
   }
 
   private Project getProjectEntityOrThrow(UUID publicId) {

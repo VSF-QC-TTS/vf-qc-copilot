@@ -7,8 +7,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.StaticMessageSource;
-import vn.vinfast.vfqc.api.mail.model.MailRequest;
-import vn.vinfast.vfqc.api.mail.model.MailType;
+import vn.vinfast.vfqc.api.shared.mail.model.MailRequest;
+import vn.vinfast.vfqc.api.shared.mail.model.MailType;
+import vn.vinfast.vfqc.api.shared.mail.strategy.EmailVerificationMailStrategy;
+import vn.vinfast.vfqc.api.shared.mail.strategy.PasswordResetMailStrategy;
 
 class MailStrategyTest {
 

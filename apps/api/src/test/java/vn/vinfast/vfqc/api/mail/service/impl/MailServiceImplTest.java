@@ -19,13 +19,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
-import vn.vinfast.vfqc.api.mail.config.MailProperties;
-import vn.vinfast.vfqc.api.mail.factory.MailStrategyFactory;
-import vn.vinfast.vfqc.api.mail.model.MailMessage;
-import vn.vinfast.vfqc.api.mail.model.MailRequest;
-import vn.vinfast.vfqc.api.mail.model.MailType;
-import vn.vinfast.vfqc.api.mail.strategy.MailStrategy;
-import vn.vinfast.vfqc.api.mail.template.HtmlMailTemplateRenderer;
+import vn.vinfast.vfqc.api.shared.mail.config.MailProperties;
+import vn.vinfast.vfqc.api.shared.mail.factory.MailStrategyFactory;
+import vn.vinfast.vfqc.api.shared.mail.model.MailMessage;
+import vn.vinfast.vfqc.api.shared.mail.model.MailRequest;
+import vn.vinfast.vfqc.api.shared.mail.model.MailType;
+import vn.vinfast.vfqc.api.shared.mail.service.impl.MailServiceImpl;
+import vn.vinfast.vfqc.api.shared.mail.strategy.MailStrategy;
+import vn.vinfast.vfqc.api.shared.mail.template.HtmlMailTemplateRenderer;
 
 @ExtendWith(MockitoExtension.class)
 class MailServiceImplTest {

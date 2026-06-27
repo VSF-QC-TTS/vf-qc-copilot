@@ -2,7 +2,7 @@ package vn.vinfast.vfqc.api.shared;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import vn.vinfast.vfqc.api.mail.config.MailProperties;
+import vn.vinfast.vfqc.api.shared.mail.config.MailProperties;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)

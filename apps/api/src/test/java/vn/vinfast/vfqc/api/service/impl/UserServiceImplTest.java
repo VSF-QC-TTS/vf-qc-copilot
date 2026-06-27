@@ -17,8 +17,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import vn.vinfast.vfqc.api.mail.model.MailType;
-import vn.vinfast.vfqc.api.mail.service.MailService;
+import vn.vinfast.vfqc.api.shared.mail.model.MailType;
+import vn.vinfast.vfqc.api.shared.mail.service.MailService;
 import vn.vinfast.vfqc.api.mapper.UserMapper;
 import vn.vinfast.vfqc.api.model.user.Role;
 import vn.vinfast.vfqc.api.model.user.User;
@@ -61,7 +61,8 @@ class UserServiceImplTest {
   void registerMapsUniqueConstraintViolationToEmailAlreadyExists() {
     when(userRepository.existsByEmail("qc@example.com")).thenReturn(false);
     when(passwordEncoder.encode("password123")).thenReturn("hash");
-    when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("dup"));
+    when(userRepository.save(any(User.class)))
+        .thenThrow(new DataIntegrityViolationException("dup"));
 
     assertResourceCode(
         () -> service.register(new RegisterRequest("qc@example.com", "password123", "QC Demo")),

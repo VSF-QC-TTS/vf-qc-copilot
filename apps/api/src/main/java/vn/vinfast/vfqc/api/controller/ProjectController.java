@@ -1,7 +1,6 @@
 package vn.vinfast.vfqc.api.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,10 +28,10 @@ import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
 import vn.vinfast.vfqc.api.model.user.User;
 import vn.vinfast.vfqc.api.repository.UserRepository;
 import vn.vinfast.vfqc.api.service.ProjectService;
+import vn.vinfast.vfqc.api.shared.dto.PageResponse;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ErrorResponse;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
-import vn.vinfast.vfqc.api.shared.model.PageResponse;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
