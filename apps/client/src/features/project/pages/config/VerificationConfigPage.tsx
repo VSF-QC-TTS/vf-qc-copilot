@@ -281,8 +281,8 @@ export function VerificationConfigPage() {
       >
         <ConfigPageHeader titleKey="config.verification.title" descriptionKey="config.verification.description" />
 
-        {/* Tab Switcher & Header Controls */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full border-b pb-4">
+        {/* Tab Switcher */}
+        <div className="flex items-center justify-between border-b pb-4 w-full">
           <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-full border shadow-sm select-none">
             {Object.entries(MODE_META).map(([value, meta]) => {
               const isActive = mode === value
@@ -302,15 +302,6 @@ export function VerificationConfigPage() {
                 </button>
               )
             })}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="text-xs bg-zinc-100 dark:bg-zinc-800 border px-3 py-1.5 rounded-xl text-muted-foreground font-mono">
-              version v{config?.version || 1}
-            </div>
-            <Badge className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 border border-emerald-200 dark:border-emerald-800/40 rounded-full shadow-none font-semibold px-3 py-1 cursor-pointer hover:bg-emerald-100/50 active:scale-95 transition-all text-xs">
-              A/B compare - ON
-            </Badge>
           </div>
         </div>
 
@@ -781,10 +772,6 @@ export function VerificationConfigPage() {
                       <p className="font-semibold text-foreground">Regex (Khớp chuỗi)</p>
                       <p>Xác thực theo biểu thức chính quy (regular expressions).</p>
                     </div>
-                    <div className="space-y-1">
-                      <p className="font-semibold text-foreground">LLM Judge (AI chấm)</p>
-                      <p>Châm điểm thông minh qua prompt và chỉ dẫn ngữ nghĩa.</p>
-                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -802,73 +789,6 @@ export function VerificationConfigPage() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* LLM Judge Settings Panel */}
-              <Card className="rounded-2xl shadow-sm border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
-                <CardHeader className="pb-3 border-b bg-muted/5">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider">
-                    Judge Settings (LLM)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-4">
-                  <Field>
-                    <FieldLabel className="text-xs font-semibold">Model chấm điểm</FieldLabel>
-                    <Select defaultValue="gpt-4o">
-                      <SelectTrigger className="h-8 rounded-lg text-xs"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-                        <SelectItem value="gpt-4-turbo">gpt-4-turbo</SelectItem>
-                        <SelectItem value="gemini-1.5-pro">gemini-1.5-pro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-semibold">Temperature</span>
-                      <span className="text-muted-foreground font-mono">0.0</span>
-                    </div>
-                    <div className="h-1 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full w-0 bg-blue-600" />
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-muted-foreground flex items-center justify-between border-t pt-2 border-dashed">
-                    <span>Ước lượng chi phí:</span>
-                    <strong className="text-foreground">~$0.002 / case</strong>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Version History / Performance panel */}
-              <Card className="rounded-2xl shadow-sm border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
-                <CardHeader className="pb-3 border-b bg-muted/5">
-                  <CardTitle className="text-xs font-bold uppercase tracking-wider">
-                    Version History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-3">
-                  {[
-                    { version: '3.2', status: 'current', passRate: '87.4%', date: 'Hôm nay' },
-                    { version: '3.1', status: 'A', passRate: '84.0%', date: 'Hôm qua' },
-                    { version: '3.0', status: 'legacy', passRate: '81.2%', date: '2 ngày trước' }
-                  ].map((v) => (
-                    <div key={v.version} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-semibold">v{v.version}</span>
-                        {v.status === 'current' ? (
-                          <Badge className="bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-[9px] px-1 py-0 shadow-none font-bold rounded-md">current</Badge>
-                        ) : v.status === 'A' ? (
-                          <Badge className="bg-blue-600 text-white text-[9px] px-1 py-0 shadow-none font-bold rounded-md">compare</Badge>
-                        ) : null}
-                      </div>
-                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                        <span>pass rate: <strong className="text-zinc-800 dark:text-zinc-200 font-mono">{v.passRate}</strong></span>
-                        <span className="text-[10px] text-zinc-400">{v.date}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
             </div>
           </div>
         </form>
