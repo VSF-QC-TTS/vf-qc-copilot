@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon, Sparkles } from 'lucide-react'
 
 import {
   Dialog,
@@ -54,32 +54,50 @@ function LoadingTypingEffect() {
   }, [phraseIndex])
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center justify-center gap-2 w-full max-w-sm mx-auto p-6">
+      {/* Premium Orb */}
+      <div className="relative flex items-center justify-center size-14 mb-4">
         <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-          className="size-2.5 rounded-full bg-primary"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0 rounded-full border-[1.5px] border-primary/10 border-t-primary"
         />
         <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: 0.15 }}
-          className="size-2.5 rounded-full bg-primary"
+          animate={{ scale: [0.85, 1.15, 0.85], opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute inset-2 rounded-full bg-primary/20 blur-md"
         />
-        <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-          className="size-2.5 rounded-full bg-primary"
-        />
+        <Sparkles className="size-5 text-primary relative z-10" />
       </div>
-      <p className="text-sm text-muted-foreground flex items-center">
+
+      {/* Typing Text */}
+      <p className="text-sm font-medium text-foreground tracking-tight flex items-center h-6">
         {text}
         <motion.span
           animate={{ opacity: [1, 0] }}
           transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-          className="inline-block w-0.5 h-3.5 ml-0.5 bg-muted-foreground"
+          className="inline-block w-[2px] h-4 ml-0.5 bg-primary"
         />
       </p>
+
+      {/* Skeletal hint */}
+      <div className="w-full mt-6 space-y-3 opacity-20">
+        <motion.div 
+          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+          transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+          className="h-2 bg-foreground rounded-full w-full" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+          transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
+          className="h-2 bg-foreground rounded-full w-[85%]" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+          transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+          className="h-2 bg-foreground rounded-full w-[60%]" 
+        />
+      </div>
     </div>
   )
 }
@@ -87,6 +105,15 @@ function LoadingTypingEffect() {
 // ---------------------------------------------------------------------------
 // Result view
 // ---------------------------------------------------------------------------
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+}
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } }
+}
 
 function ResultView({ result }: { result: TestExecutionResult }) {
   const [copied, setCopied] = useState(false)
@@ -113,56 +140,65 @@ function ResultView({ result }: { result: TestExecutionResult }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col gap-4"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col gap-6"
     >
       {/* Status bar */}
-      <div className="flex items-center gap-3">
-        <div className={`flex items-center justify-center size-8 rounded-full shrink-0 ${isSuccess ? 'bg-emerald-100 dark:bg-emerald-950/50' : 'bg-red-100 dark:bg-red-950/50'}`}>
+      <motion.div variants={staggerItem} className="flex items-center gap-4 bg-background border border-border/60 rounded-xl p-3 shadow-sm">
+        <div className={`flex items-center justify-center size-10 rounded-full shrink-0 ${isSuccess ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
           {isSuccess ? (
-            <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <XCircle className="size-4 text-red-600 dark:text-red-400" />
+            <XCircle className="size-5 text-red-600 dark:text-red-400" />
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={isSuccess ? 'default' : 'destructive'}
-            className={isSuccess ? 'bg-emerald-500 text-white' : ''}
-          >
-            HTTP {result.httpStatus}
-          </Badge>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="size-3" />
-            {result.latencyMs}ms
+        <div className="flex flex-col gap-1 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold tracking-tight text-sm text-foreground">
+              {isSuccess ? 'Kết nối thành công' : 'Kết nối thất bại'}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+            <Badge
+              variant={isSuccess ? 'default' : 'destructive'}
+              className={isSuccess ? 'bg-emerald-500 text-white' : ''}
+            >
+              HTTP {result.httpStatus}
+            </Badge>
+            <span className="flex items-center gap-1"><Clock className="size-3" /> {result.latencyMs}ms</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Error message */}
       {result.errorMessage && (
-        <div className="text-sm text-destructive bg-destructive/10 rounded-lg p-3 border border-destructive/20">
+        <motion.div variants={staggerItem} className="text-sm text-destructive bg-destructive/10 rounded-xl p-4 border border-destructive/20">
+          <strong className="block mb-1 font-semibold">Chi tiết lỗi:</strong>
           {result.errorMessage}
-        </div>
+        </motion.div>
       )}
 
       {/* Response body */}
       {formattedBody && (
-        <div className="relative group">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity size-7 p-0"
-          >
-            {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
-          </Button>
-          <pre className="text-xs font-mono leading-relaxed whitespace-pre-wrap break-all bg-muted/40 rounded-lg p-4 max-h-[350px] overflow-auto border">
+        <motion.div variants={staggerItem} className="relative group mt-2">
+          <div className="absolute -top-3 left-4 px-2 bg-zinc-950 text-[10px] uppercase tracking-widest text-zinc-400 font-semibold z-10">
+            Raw Response
+          </div>
+          <pre className="text-[13px] font-mono leading-relaxed whitespace-pre-wrap break-all bg-zinc-950 text-zinc-50 rounded-xl p-5 pt-6 max-h-[350px] overflow-auto shadow-inner border border-zinc-800 relative">
             {formattedBody}
           </pre>
-        </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity h-8 bg-zinc-800 text-zinc-100 border-zinc-700 hover:bg-zinc-700 hover:text-white"
+          >
+            {copied ? <CheckIcon className="size-3.5 mr-1.5" /> : <CopyIcon className="size-3.5 mr-1.5" />}
+            {copied ? 'Đã chép' : 'Copy'}
+          </Button>
+        </motion.div>
       )}
     </motion.div>
   )

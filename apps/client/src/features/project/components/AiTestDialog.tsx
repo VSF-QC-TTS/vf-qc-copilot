@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon, PlayIcon, CoinsIcon, MessageSquareTextIcon } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon, PlayIcon, CoinsIcon, MessageSquareTextIcon, Sparkles } from 'lucide-react'
 
 import {
   Dialog,
@@ -57,32 +57,50 @@ function LoadingTypingEffect() {
   }, [phraseIndex])
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center justify-center gap-2 w-full max-w-sm mx-auto p-6">
+      {/* Premium Orb */}
+      <div className="relative flex items-center justify-center size-14 mb-4">
         <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-          className="size-2.5 rounded-full bg-primary"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+          className="absolute inset-0 rounded-full border-[1.5px] border-primary/10 border-t-primary"
         />
         <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: 0.15 }}
-          className="size-2.5 rounded-full bg-primary"
+          animate={{ scale: [0.85, 1.15, 0.85], opacity: [0.4, 0.8, 0.4] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute inset-2 rounded-full bg-primary/20 blur-md"
         />
-        <motion.div
-          animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-          className="size-2.5 rounded-full bg-primary"
-        />
+        <Sparkles className="size-5 text-primary relative z-10" />
       </div>
-      <p className="text-sm text-muted-foreground flex items-center">
+
+      {/* Typing Text */}
+      <p className="text-sm font-medium text-foreground tracking-tight flex items-center h-6">
         {text}
         <motion.span
           animate={{ opacity: [1, 0] }}
           transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-          className="inline-block w-0.5 h-3.5 ml-0.5 bg-muted-foreground"
+          className="inline-block w-[2px] h-4 ml-0.5 bg-primary"
         />
       </p>
+
+      {/* Skeletal hint */}
+      <div className="w-full mt-6 space-y-3 opacity-20">
+        <motion.div 
+          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+          transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+          className="h-2 bg-foreground rounded-full w-full" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+          transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
+          className="h-2 bg-foreground rounded-full w-[85%]" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.1, 0.3, 0.1] }} 
+          transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+          className="h-2 bg-foreground rounded-full w-[60%]" 
+        />
+      </div>
     </div>
   )
 }
@@ -90,6 +108,15 @@ function LoadingTypingEffect() {
 // ---------------------------------------------------------------------------
 // Result view for AI
 // ---------------------------------------------------------------------------
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+}
+const staggerItem = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } }
+}
 
 function AiResultView({ result }: { result: AiExecutionResult }) {
   const [copied, setCopied] = useState(false)
@@ -104,62 +131,63 @@ function AiResultView({ result }: { result: AiExecutionResult }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col gap-4"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col gap-6 pt-2"
     >
       {/* Status bar */}
-      <div className="flex items-center gap-3">
-        <div className={`flex items-center justify-center size-8 rounded-full shrink-0 ${result.successful ? 'bg-emerald-100 dark:bg-emerald-950/50' : 'bg-red-100 dark:bg-red-950/50'}`}>
+      <motion.div variants={staggerItem} className="flex items-center gap-4 bg-background border border-border/60 rounded-xl p-3 shadow-sm">
+        <div className={`flex items-center justify-center size-10 rounded-full shrink-0 ${result.successful ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
           {result.successful ? (
-            <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400" />
           ) : (
-            <XCircle className="size-4 text-red-600 dark:text-red-400" />
+            <XCircle className="size-5 text-red-600 dark:text-red-400" />
           )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge
-            variant={result.successful ? 'default' : 'destructive'}
-            className={result.successful ? 'bg-emerald-500 text-white' : ''}
-          >
-            {result.successful ? 'Thành công' : 'Thất bại'}
-          </Badge>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="size-3" />
-            {result.latencyMs}ms
+        <div className="flex flex-col gap-1 flex-1">
+          <span className="font-semibold tracking-tight text-sm text-foreground">
+            {result.successful ? 'Sinh Text Thành Công' : 'Đã xảy ra lỗi'}
+          </span>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+            <span className="flex items-center gap-1"><Clock className="size-3" /> {result.latencyMs}ms</span>
+            {result.promptTokens > 0 && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-border" />
+                <span className="flex items-center gap-1"><CoinsIcon className="size-3" /> {result.promptTokens} + {result.completionTokens} tokens</span>
+              </>
+            )}
           </div>
-          {result.promptTokens > 0 && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <CoinsIcon className="size-3" />
-              {result.promptTokens} + {result.completionTokens} tokens
-            </div>
-          )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Error message */}
       {result.errorMessage && (
-        <div className="text-sm text-destructive bg-destructive/10 rounded-lg p-3 border border-destructive/20">
+        <motion.div variants={staggerItem} className="text-sm text-destructive bg-destructive/10 rounded-xl p-4 border border-destructive/20">
+          <strong className="block mb-1 font-semibold">Chi tiết lỗi:</strong>
           {result.errorMessage}
-        </div>
+        </motion.div>
       )}
 
       {/* Generated text */}
       {result.generatedText && (
-        <div className="relative group">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity size-7 p-0"
-          >
-            {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
-          </Button>
-          <div className="text-sm leading-relaxed bg-muted/40 rounded-lg p-4 max-h-[350px] overflow-auto border whitespace-pre-wrap">
+        <motion.div variants={staggerItem} className="relative group mt-2">
+          <div className="absolute -top-3 left-4 px-2 bg-[#f4f4f5] dark:bg-[#18181b] text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+            AI Output
+          </div>
+          <div className="text-[13px] leading-relaxed bg-background/60 rounded-xl p-5 pt-6 max-h-[350px] overflow-auto border shadow-sm whitespace-pre-wrap text-foreground/90">
             {result.generatedText}
           </div>
-        </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity h-8 bg-background/80 backdrop-blur-sm shadow-sm"
+          >
+            {copied ? <CheckIcon className="size-3.5 mr-1.5" /> : <CopyIcon className="size-3.5 mr-1.5" />}
+            {copied ? 'Đã chép' : 'Copy'}
+          </Button>
+        </motion.div>
       )}
     </motion.div>
   )
@@ -195,25 +223,25 @@ export function AiTestDialog({ open, onOpenChange, isPending, result, onTest }: 
           </DialogTitle>
         </div>
 
-        <div className="flex flex-col md:flex-row h-[70vh] max-h-[600px]">
+        <div className="flex flex-col md:flex-row h-[70vh] max-h-[600px] bg-[#f4f4f5] dark:bg-[#18181b]">
           {/* Left panel: Prompt inputs */}
-          <div className="flex-1 flex flex-col gap-5 p-6 border-r overflow-y-auto">
+          <div className="flex-1 flex flex-col gap-5 p-6 border-r overflow-y-auto bg-background">
             <FieldGroup className="flex-1">
               <Field className="flex flex-col flex-1 h-full">
-                <FieldLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">System Prompt</FieldLabel>
+                <FieldLabel className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em]">System Prompt</FieldLabel>
                 <Textarea
                   value={systemPrompt}
                   onChange={(e) => setSystemPrompt(e.target.value)}
-                  className="resize-none min-h-[120px] flex-1 text-sm font-mono"
+                  className="resize-none min-h-[120px] flex-1 text-[13px] font-mono leading-relaxed bg-background shadow-sm focus-visible:ring-1"
                   disabled={isPending}
                 />
               </Field>
               <Field className="flex flex-col flex-1 h-full mt-4">
-                <FieldLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">User Message</FieldLabel>
+                <FieldLabel className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em]">User Message</FieldLabel>
                 <Textarea
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
-                  className="resize-none min-h-[120px] flex-1 text-sm font-mono"
+                  className="resize-none min-h-[120px] flex-1 text-[13px] font-mono leading-relaxed bg-background shadow-sm focus-visible:ring-1"
                   disabled={isPending}
                 />
               </Field>
@@ -224,7 +252,7 @@ export function AiTestDialog({ open, onOpenChange, isPending, result, onTest }: 
                 type="button"
                 onClick={handleSubmit}
                 disabled={isPending || !userMessage.trim()}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto shadow-sm"
               >
                 {isPending ? <Spinner data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
                 {isPending ? 'Đang gọi AI...' : 'Chạy thử'}
@@ -233,7 +261,7 @@ export function AiTestDialog({ open, onOpenChange, isPending, result, onTest }: 
           </div>
 
           {/* Right panel: Result area */}
-          <div className="flex-1 p-6 bg-muted/10 overflow-y-auto flex flex-col">
+          <div className="flex-1 p-6 overflow-y-auto flex flex-col relative">
             <AnimatePresence mode="wait">
               {isPending && !result ? (
                 <motion.div
@@ -255,9 +283,11 @@ export function AiTestDialog({ open, onOpenChange, isPending, result, onTest }: 
                   <AiResultView result={result} />
                 </motion.div>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm flex-col gap-3">
-                  <MessageSquareTextIcon className="size-8 opacity-20" />
-                  <p>Nhấn "Chạy thử" để xem kết quả</p>
+                <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm flex-col gap-4">
+                  <div className="size-16 rounded-full bg-border/40 flex items-center justify-center">
+                    <MessageSquareTextIcon className="size-8 opacity-40" />
+                  </div>
+                  <p className="font-medium opacity-80">Nhấn "Chạy thử" để xem kết quả</p>
                 </div>
               )}
             </AnimatePresence>
