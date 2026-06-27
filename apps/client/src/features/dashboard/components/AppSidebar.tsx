@@ -64,7 +64,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
   const { data: status, isLoading } = useSetupStatus(publicId)
 
   const setupItems = [
-    { name: t('nav.targetConfig'), path: `/projects/${publicId}/config/target`, icon: Globe, done: status?.hasTargetConfig },
+    { name: t('nav.apiConfig'), path: `/projects/${publicId}/config/target`, icon: Globe, done: status?.hasTargetConfig },
     { name: t('nav.llmJudge'), path: `/projects/${publicId}/config/ai`, icon: Settings, done: status?.hasAiConfig },
     { name: t('nav.datasetSchema'), path: `/projects/${publicId}/config/schema`, icon: Table, done: status?.hasProjectSchema },
     { name: t('nav.verification'), path: `/projects/${publicId}/config/verification`, icon: CheckSquare, done: status?.hasVerification },
