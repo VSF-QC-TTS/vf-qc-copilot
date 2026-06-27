@@ -22,6 +22,8 @@ const TargetConfigPage = lazy(() => import('@/features/project/pages/config/Targ
 const AiConfigPage = lazy(() => import('@/features/project/pages/config/AiConfigPage').then(m => ({ default: m.AiConfigPage })))
 const ProjectSchemaPage = lazy(() => import('@/features/project/pages/config/ProjectSchemaPage').then(m => ({ default: m.ProjectSchemaPage })))
 const VerificationConfigPage = lazy(() => import('@/features/project/pages/config/VerificationConfigPage').then(m => ({ default: m.VerificationConfigPage })))
+const DatasetListPage = lazy(() => import('@/features/project/pages/datasets/DatasetListPage').then(m => ({ default: m.DatasetListPage })))
+const DatasetDetailPage = lazy(() => import('@/features/project/pages/datasets/DatasetDetailPage').then(m => ({ default: m.DatasetDetailPage })))
 
 // Route-level loading fallback — skeleton
 function RouteFallback() {
@@ -68,7 +70,8 @@ function App() {
             <Route path="config/ai" element={<AiConfigPage />} />
             <Route path="config/schema" element={<ProjectSchemaPage />} />
             <Route path="config/verification" element={<VerificationConfigPage />} />
-            <Route path="datasets" element={<PlaceholderPage title="Datasets" />} />
+            <Route path="datasets" element={<DatasetListPage />} />
+            <Route path="datasets/:datasetId" element={<DatasetDetailPage />} />
             <Route path="runs" element={<PlaceholderPage title="Test Runs" />} />
             <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />
           </Route>

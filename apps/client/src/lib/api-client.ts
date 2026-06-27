@@ -5,7 +5,7 @@ import { isApiError } from '@/lib/api-error'
 // Config
 // ---------------------------------------------------------------------------
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api/v1'
 
 // ---------------------------------------------------------------------------
 // Token store (memory-only, never persisted to localStorage)
@@ -53,7 +53,7 @@ function drainQueue(success: boolean) {
 
 async function attemptRefresh(): Promise<boolean> {
   try {
-    const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -109,7 +109,7 @@ async function rawFetch<T>(
     reqHeaders['Authorization'] = `Bearer ${accessToken}`
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     credentials: 'include',
     headers: reqHeaders,
