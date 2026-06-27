@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Info, ChevronDown, SaveIcon } from 'lucide-react'
+import { Info, ChevronDown, SaveIcon, FlaskConical } from 'lucide-react'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -142,8 +142,6 @@ export function AiConfigPage() {
         {hasTested && (
           <AiConfigSummary
             config={config!}
-            onTest={handleOpenTest}
-            isTestPending={testMutation.isPending}
           />
         )}
 
@@ -325,21 +323,26 @@ export function AiConfigPage() {
                   </Collapsible>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    {!hasSaved && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-5 mt-2 border-t gap-4">
+                    {!hasSaved ? (
                       <p className="text-xs text-muted-foreground">
                         Lưu cấu hình rồi ấn Chạy thử để kiểm tra kết nối
                       </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Thay đổi sẽ áp dụng ngay cho các lượt chạy đánh giá tiếp theo.
+                      </p>
                     )}
-                    <div className="flex items-center gap-3 ml-auto">
-                      {hasSaved && !hasTested && (
-                        <Button type="button" variant="outline" onClick={handleOpenTest}>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      {(hasSaved || hasTested) && (
+                        <Button type="button" variant="outline" onClick={handleOpenTest} disabled={testMutation.isPending} className="w-full sm:w-auto">
+                          {testMutation.isPending ? <Spinner data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
                           Chạy thử
                         </Button>
                       )}
-                      <Button type="submit" disabled={saveMutation.isPending}>
+                      <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
                         {saveMutation.isPending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
-                        Lưu
+                        Lưu cấu hình
                       </Button>
                     </div>
                   </div>
