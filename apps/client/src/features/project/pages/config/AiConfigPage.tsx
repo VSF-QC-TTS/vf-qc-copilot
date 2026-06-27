@@ -36,7 +36,7 @@ export function AiConfigPage() {
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const schema = z.object({
-    provider: z.enum(['OPENAI', 'AZURE_OPENAI', 'ANTHROPIC', 'GEMINI', 'CUSTOM']),
+    provider: z.enum(['OPENAI', 'ANTHROPIC', 'GEMINI', 'CUSTOM']),
     keySource: z.enum(['PLATFORM', 'PERSONAL']),
     apiKey: z.string().optional(),
     baseUrl: z.string().optional(),
@@ -173,7 +173,6 @@ export function AiConfigPage() {
                           <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Chọn nhà cung cấp" /></SelectTrigger>
                           <SelectContent><SelectGroup>
                             <SelectItem value="OPENAI">{t('config.judge.providerOpenai', { ns: 'project' })}</SelectItem>
-                            <SelectItem value="AZURE_OPENAI">{t('config.judge.providerAzure', { ns: 'project' })}</SelectItem>
                             <SelectItem value="ANTHROPIC">{t('config.judge.providerAnthropic', { ns: 'project' })}</SelectItem>
                             <SelectItem value="GEMINI">{t('config.judge.providerGemini', { ns: 'project' })}</SelectItem>
                             <SelectItem value="CUSTOM">{t('config.judge.providerCustom', { ns: 'project' })}</SelectItem>
@@ -330,7 +329,7 @@ export function AiConfigPage() {
                       </p>
                     )}
                     <div className="flex items-center gap-3 ml-auto">
-                      {hasSaved && (
+                      {hasSaved && !hasTested && (
                         <Button type="button" variant="outline" onClick={handleOpenTest}>
                           Chạy thử
                         </Button>
