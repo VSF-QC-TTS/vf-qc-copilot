@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { FieldGroup, Field, FieldLabel, FieldError } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -37,7 +36,6 @@ export function ColumnFormDialog({
     dataType: z.string().min(1, t('validation.not-blank', { ns: 'validation' })),
     role: z.string().min(1, t('validation.not-blank', { ns: 'validation' })),
     sampleValue: z.string().optional(),
-    description: z.string().optional(),
   })
 
   type FormData = z.infer<typeof schema>
@@ -50,14 +48,12 @@ export function ColumnFormDialog({
           dataType: editingColumn.dataType || 'STRING',
           role: editingColumn.role || 'EXPECTED',
           sampleValue: editingColumn.sampleValue || '',
-          description: editingColumn.description || '',
         }
       : {
           columnName: '',
           dataType: 'STRING',
           role: 'EXPECTED',
           sampleValue: '',
-          description: '',
         },
   })
 
@@ -69,7 +65,6 @@ export function ColumnFormDialog({
       dataType: values.dataType,
       role: values.role,
       sampleValue: values.sampleValue || null,
-      description: values.description || null,
     }
 
     if (editingColumn) {
@@ -161,18 +156,6 @@ export function ColumnFormDialog({
                 <Field data-invalid={!!fieldState.error}>
                   <FieldLabel>Giá trị mẫu</FieldLabel>
                   <Input {...field} aria-invalid={!!fieldState.error} placeholder="VD: Tôi muốn hủy đơn #A1029" />
-                  <FieldError errors={[fieldState.error]} />
-                </Field>
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="description"
-              render={({ field, fieldState }) => (
-                <Field data-invalid={!!fieldState.error}>
-                  <FieldLabel>{t('config.schema.descriptionLabel', { ns: 'project' })}</FieldLabel>
-                  <Textarea {...field} aria-invalid={!!fieldState.error} />
                   <FieldError errors={[fieldState.error]} />
                 </Field>
               )}

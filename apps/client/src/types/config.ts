@@ -140,7 +140,6 @@ export interface AiExecutionResult {
 export interface SchemaColumnResponse {
   publicId: string
   columnName: string
-  description: string | null
   dataType: string
   role: string
   sampleValue: string | null
@@ -156,7 +155,6 @@ export interface ProjectSchemaResponse {
 
 export interface CreateSchemaColumnRequest {
   columnName: string
-  description?: string | null
   dataType: string
   role: string
   sampleValue?: string | null
@@ -164,7 +162,6 @@ export interface CreateSchemaColumnRequest {
 
 export interface UpdateSchemaColumnRequest {
   columnName?: string | null
-  description?: string | null
   dataType?: string | null
   role?: string | null
   sampleValue?: string | null

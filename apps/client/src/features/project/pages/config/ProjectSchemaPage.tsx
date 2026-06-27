@@ -174,8 +174,8 @@ export function ProjectSchemaPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start w-full">
         {/* Columns Table (Left Column) */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          <Card>
-            <CardHeader className="pb-3 border-b bg-muted/10">
+          <Card className="rounded-2xl shadow-sm border border-zinc-200/80 dark:border-zinc-800/80">
+            <CardHeader className="pb-3 border-b bg-muted/5 dark:bg-muted/10">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -202,22 +202,17 @@ export function ProjectSchemaPage() {
                 </TableHeader>
                 <TableBody>
                   {columns.map((col) => (
-                    <TableRow key={col.publicId} className="group">
+                    <TableRow key={col.publicId} className="group hover:bg-muted/30">
                       <TableCell className="px-2">
                         <GripVerticalIcon className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors cursor-grab" />
                       </TableCell>
                       <TableCell>
                         <span
                           onClick={() => handleOpenEdit(col)}
-                          className="font-semibold text-sm text-blue-600 dark:text-blue-400 hover:underline cursor-pointer transition-all"
+                          className="font-mono font-medium text-sm text-zinc-900 dark:text-zinc-100 hover:text-primary cursor-pointer transition-colors"
                         >
                           {col.columnName}
                         </span>
-                        {col.description && (
-                          <span className="text-[11px] text-muted-foreground block mt-0.5 line-clamp-1">
-                            {col.description}
-                          </span>
-                        )}
                       </TableCell>
                       <TableCell className="py-1">
                         <Select
@@ -229,7 +224,7 @@ export function ProjectSchemaPage() {
                             })
                           }}
                         >
-                          <SelectTrigger className="h-7 w-20 px-2 py-0 border-none shadow-none bg-muted/60 hover:bg-muted font-normal text-xs rounded transition-colors">
+                          <SelectTrigger className="h-7 w-20 px-2 py-0 border-none shadow-none bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono text-[11px] rounded transition-colors focus:ring-1 focus:ring-ring">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -253,7 +248,7 @@ export function ProjectSchemaPage() {
                             })
                           }}
                         >
-                          <SelectTrigger className={`h-7 px-2 py-0 font-medium text-[11px] rounded-full shadow-none border cursor-pointer w-auto flex items-center justify-between gap-1 ${getRoleSelectTriggerClass(col.role)}`}>
+                          <SelectTrigger className={`h-7 px-2.5 py-0 font-mono font-medium text-[10.5px] rounded-full shadow-none border cursor-pointer w-auto flex items-center justify-between gap-1 transition-all focus:ring-1 focus:ring-ring ${getRoleSelectTriggerClass(col.role)}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -277,7 +272,7 @@ export function ProjectSchemaPage() {
                               })
                             }
                           }}
-                          className="h-7 border-transparent hover:border-border focus:border-input focus:bg-background bg-transparent text-xs px-2 py-1 rounded transition-all"
+                          className="h-7 border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 focus:border-zinc-300 dark:focus:border-zinc-700 focus:bg-background bg-transparent text-xs px-2 py-1 rounded-lg transition-all focus:ring-1 focus:ring-ring w-full font-mono text-zinc-700 dark:text-zinc-300"
                           placeholder="giá trị mẫu..."
                         />
                       </TableCell>
@@ -286,18 +281,18 @@ export function ProjectSchemaPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7"
+                            className="size-7 rounded-lg active:scale-90 transition-transform"
                             onClick={() => handleOpenEdit(col)}
                           >
-                            <PencilIcon />
+                            <PencilIcon className="size-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="size-7 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-90 transition-transform"
                             onClick={() => setDeleteTarget(col)}
                           >
-                            <TrashIcon />
+                            <TrashIcon className="size-3.5" />
                           </Button>
                         </div>
                       </TableCell>
@@ -314,12 +309,12 @@ export function ProjectSchemaPage() {
                         onChange={(e) => setNewName(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="column_name"
-                        className="h-8 text-xs border-dashed"
+                        className="h-8 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background"
                       />
                     </TableCell>
                     <TableCell className="py-2">
                       <Select value={newDataType} onValueChange={setNewDataType}>
-                        <SelectTrigger className="h-8 w-20 text-xs border-dashed">
+                        <SelectTrigger className="h-8 w-20 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -335,7 +330,7 @@ export function ProjectSchemaPage() {
                     </TableCell>
                     <TableCell className="py-2">
                       <Select value={newRole} onValueChange={setNewRole}>
-                        <SelectTrigger className={`h-8 text-xs border-dashed flex items-center justify-between gap-1 ${getRoleSelectTriggerClass(newRole)}`}>
+                        <SelectTrigger className={`h-8 text-xs border-dashed focus:border-solid flex items-center justify-between gap-1 rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background ${getRoleSelectTriggerClass(newRole)}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -353,7 +348,7 @@ export function ProjectSchemaPage() {
                         onChange={(e) => setNewSample(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="giá trị mẫu..."
-                        className="h-8 text-xs border-dashed"
+                        className="h-8 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background"
                       />
                     </TableCell>
                     <TableCell className="py-2 text-right">
@@ -361,7 +356,7 @@ export function ProjectSchemaPage() {
                         type="button"
                         onClick={handleQuickAdd}
                         size="icon"
-                        className="size-8 active:scale-[0.95] transition-transform"
+                        className="size-8 active:scale-[0.95] transition-transform rounded-lg"
                         disabled={createMutation.isPending}
                       >
                         {createMutation.isPending ? <Spinner data-icon="inline-start" /> : <PlusIcon />}
@@ -378,7 +373,7 @@ export function ProjectSchemaPage() {
               onClick={() => nameInputRef.current?.focus()}
               size="sm"
               variant="outline"
-              className="mt-1 active:scale-[0.98] transition-transform"
+              className="mt-1 active:scale-[0.98] transition-transform rounded-lg border-dashed border-zinc-300 dark:border-zinc-700 bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
             >
               <PlusIcon data-icon="inline-start" />
               {t('config.schema.addColumn')}
@@ -388,8 +383,8 @@ export function ProjectSchemaPage() {
 
         {/* Variables List (Right Column) */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-          <Card>
-            <CardHeader className="pb-3 border-b bg-muted/10">
+          <Card className="rounded-2xl shadow-sm border border-zinc-200/80 dark:border-zinc-800/80 bg-background/50 backdrop-blur-sm">
+            <CardHeader className="pb-3 border-b bg-muted/5 dark:bg-muted/10">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <BookOpenIcon className="size-4 text-emerald-500" />
                 Biến dùng trong Verify
@@ -400,12 +395,29 @@ export function ProjectSchemaPage() {
             </CardHeader>
             <CardContent className="p-4 flex flex-col gap-3">
               {hasColumns ? (
-                <div className="flex flex-col gap-2.5 max-h-[400px] overflow-auto pr-1">
+                <motion.div
+                  initial="hidden"
+                  animate="show"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    show: {
+                      opacity: 1,
+                      transition: {
+                        staggerChildren: 0.05
+                      }
+                    }
+                  }}
+                  className="flex flex-col gap-2.5 max-h-[400px] overflow-auto pr-1"
+                >
                   {columns.map((col) => (
-                    <div
+                    <motion.div
                       key={col.publicId}
+                      variants={{
+                        hidden: { opacity: 0, y: 8 },
+                        show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                      }}
                       onClick={() => copyToClipboard(`dataset.${col.columnName}`)}
-                      className="flex items-center justify-between p-2.5 rounded-xl border bg-card hover:bg-accent/40 cursor-pointer group transition-all duration-200 hover:shadow-sm"
+                      className="flex items-center justify-between p-2.5 rounded-xl border bg-card hover:bg-accent/40 cursor-pointer group transition-all duration-200 hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 active:scale-[0.98] select-none"
                     >
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs text-foreground group-hover:text-primary transition-colors">
@@ -416,11 +428,11 @@ export function ProjectSchemaPage() {
                       <Badge className={`text-[10px] font-normal px-2 py-0.5 rounded-full shadow-none border ${getRoleBadgeClass(col.role)}`}>
                         {getRoleLabel(col.role)}
                       </Badge>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
               ) : (
-                <div className="py-8 text-center border border-dashed rounded-xl flex flex-col items-center justify-center gap-2">
+                <div className="py-8 text-center border border-dashed rounded-xl flex flex-col items-center justify-center gap-2 bg-muted/5">
                   <TableIcon className="size-8 text-muted-foreground/35 animate-pulse" />
                   <p className="text-xs text-muted-foreground max-w-[200px]">
                     Thêm các cột ở bảng bên trái để tạo các biến verify.
@@ -430,7 +442,7 @@ export function ProjectSchemaPage() {
 
               <Separator className="my-1" />
 
-              <div className="rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 p-3.5 text-xs leading-relaxed text-muted-foreground">
+              <div className="rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 p-3.5 text-xs leading-relaxed text-muted-foreground">
                 Mở <strong className="text-foreground">Verification</strong> &rarr; chèn biến từ menu + <code className="text-emerald-600 dark:text-emerald-400 font-mono">dataset.*</code> để chấm điểm.
               </div>
             </CardContent>

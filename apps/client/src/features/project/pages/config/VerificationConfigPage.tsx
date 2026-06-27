@@ -403,7 +403,7 @@ export function VerificationConfigPage() {
                                                     <SelectContent>
                                                       {expectedColumns.map(col => (
                                                         <SelectItem key={col.publicId} value={col.publicId}>
-                                                          {col.description ? `${col.columnName} (${col.description})` : col.columnName}
+                                                          {col.columnName}
                                                         </SelectItem>
                                                       ))}
                                                     </SelectContent>
