@@ -1,4 +1,4 @@
-export type AiProvider = 'OPENAI' | 'AZURE_OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'CUSTOM'
+export type AiProvider = 'OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'CUSTOM'
 
 export type KeySource = 'PLATFORM' | 'PERSONAL'
 

@@ -121,7 +121,7 @@ public class AiConfig {
    * Returns true if this provider requires a custom base URL.
    */
   public boolean requiresCustomBaseUrl() {
-    return provider == AiProvider.AZURE_OPENAI || provider == AiProvider.CUSTOM;
+    return provider == AiProvider.CUSTOM;
   }
 
   /**

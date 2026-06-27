@@ -105,7 +105,7 @@
       "providerAzure": "Azure OpenAI",
       "providerAnthropic": "Anthropic",
       "providerGemini": "Google Gemini",
-      "providerCustom": "Tùy chỉnh (tương thích OpenAI)",
+      "providerCustom": "Tùy chỉnh",
       "model": "Mô hình (Model)",
       "apiKey": "API Key",
       "baseUrl": "Base URL (Tuỳ chọn)",

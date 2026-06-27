@@ -55,11 +55,11 @@ export function AiConfigPage() {
     defaultValues: { provider: 'OPENAI', keySource: 'PLATFORM', evaluationModel: 'gpt-4o', apiKey: '', baseUrl: '', generationModel: '', temperature: 0.0, maxTokens: 2048, timeout: 30, retryCount: 3 },
   })
 
-  const { control, handleSubmit, reset, watch } = form
+  const { control, handleSubmit, watch } = form
   const provider = watch('provider')
   const keySource = watch('keySource')
   
-  const showBaseUrl = provider === 'AZURE_OPENAI' || provider === 'CUSTOM'
+  const showBaseUrl = provider === 'CUSTOM'
   const isPersonalKey = keySource === 'PERSONAL'
 
   const DEFAULT_MODELS: Record<string, string> = {
@@ -72,7 +72,8 @@ export function AiConfigPage() {
 
   useEffect(() => {
     if (config) {
-      reset({
+      // Explicitly set values to avoid Select component mapping issues
+      const resetValues = {
         provider: config.provider || 'OPENAI', 
         keySource: config.keySource || 'PLATFORM',
         evaluationModel: config.evaluationModel || 'gpt-4o', 
@@ -83,9 +84,15 @@ export function AiConfigPage() {
         maxTokens: config.maxTokens ?? 2048, 
         timeout: (config.timeoutMs ?? 30000) / 1000, 
         retryCount: config.retryCount ?? 3,
-      })
+      };
+      // For some provider Enums (like CUSTOM), resetting the Select directly via reset() 
+      // sometimes causes un-controlled Radix selects to drop the value if the schema/options aren't perfectly synced.
+      // We use setValue manually for all to ensure the form adopts them correctly.
+      Object.entries(resetValues).forEach(([key, val]) => {
+        form.setValue(key as keyof FormData, val, { shouldValidate: true, shouldDirty: false })
+      });
     }
-  }, [config, reset])
+  }, [config, form])
 
   const onSubmit = (values: FormData) => {
     saveMutation.mutate({
@@ -167,8 +174,8 @@ export function AiConfigPage() {
                         <FieldLabel>AI Provider</FieldLabel>
                         <Select value={field.value || undefined} onValueChange={(val) => {
                           field.onChange(val)
-                          form.setValue('evaluationModel', DEFAULT_MODELS[val] || '')
-                          form.setValue('generationModel', '')
+                          form.setValue('evaluationModel', DEFAULT_MODELS[val] || '', { shouldValidate: true })
+                          form.setValue('generationModel', '', { shouldValidate: true })
                         }}>
                           <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Chọn nhà cung cấp" /></SelectTrigger>
                           <SelectContent><SelectGroup>
