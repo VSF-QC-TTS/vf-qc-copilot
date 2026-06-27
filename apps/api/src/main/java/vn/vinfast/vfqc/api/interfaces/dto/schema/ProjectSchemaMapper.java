@@ -29,6 +29,7 @@ public interface ProjectSchemaMapper {
   @Mapping(target = "displayOrder", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "description", ignore = true)
   SchemaColumn toEntity(CreateSchemaColumnRequest request);
 
   @Mapping(target = "id", ignore = true)
@@ -37,5 +38,6 @@ public interface ProjectSchemaMapper {
   @Mapping(target = "displayOrder", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "description", ignore = true)
   void updateEntity(UpdateSchemaColumnRequest request, @MappingTarget SchemaColumn entity);
 }

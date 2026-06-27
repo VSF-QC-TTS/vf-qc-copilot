@@ -10,9 +10,6 @@ public record UpdateSchemaColumnRequest(
     @Schema(description = "New column name")
     String columnName,
 
-    @Schema(description = "New description")
-    String description,
-
     @Schema(description = "New data type")
     String dataType,
 

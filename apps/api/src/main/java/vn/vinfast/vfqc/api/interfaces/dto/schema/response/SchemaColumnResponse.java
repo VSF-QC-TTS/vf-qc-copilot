@@ -14,9 +14,6 @@ public record SchemaColumnResponse(
     @Schema(description = "Column name")
     String columnName,
 
-    @Schema(description = "Description")
-    String description,
-
     @Schema(description = "Data type")
     String dataType,
 

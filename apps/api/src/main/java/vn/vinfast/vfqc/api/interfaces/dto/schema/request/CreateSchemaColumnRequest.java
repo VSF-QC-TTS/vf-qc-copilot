@@ -12,9 +12,6 @@ public record CreateSchemaColumnRequest(
     @NotBlank(message = "validation.not-blank")
     String columnName,
 
-    @Schema(description = "Description of what this column contains")
-    String description,
-
     @Schema(description = "Data type of the column", example = "STRING")
     String dataType,
 
