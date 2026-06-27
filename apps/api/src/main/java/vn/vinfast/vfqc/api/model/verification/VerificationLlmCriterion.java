@@ -2,8 +2,6 @@ package vn.vinfast.vfqc.api.model.verification;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,20 +17,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A field-level verification rule that checks a specific response path against an expected value or
- * dataset column. Uses expectedColumnKey (UUID) for stable column reference that survives renames.
+ * One LLM judge criterion. The runner maps each enabled criterion to one model-graded assertion so
+ * QC can see pass/fail per criterion.
  *
  * @author nghlong3004 (Long Nguyen Hoang)
- * @since 6/27/2026
+ * @since 6/28/2026
  */
 @Entity
-@Table(name = "field_checks")
+@Table(name = "verification_llm_criteria")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FieldCheckRule {
+public class VerificationLlmCriterion {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,31 +40,16 @@ public class FieldCheckRule {
   @Builder.Default
   private UUID publicId = UUID.randomUUID();
 
-  @Column(name = "verification_config_id", nullable = false)
-  private Long verificationConfigId;
+  @Column(name = "verification_item_id", nullable = false)
+  private Long verificationItemId;
 
-  @Column(name = "response_path", nullable = false, length = 500)
-  private String responsePath;
+  @Column(name = "name", nullable = false)
+  private String name;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "operator", nullable = false, length = 50)
-  private CheckOperator operator;
+  @Column(name = "description", nullable = false)
+  private String description;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "expected_source", nullable = false, length = 30)
-  private ExpectedSource expectedSource;
-
-  /** Stable reference to SchemaColumn.publicId — survives column renames. */
-  @Column(name = "expected_column_key")
-  private UUID expectedColumnKey;
-
-  @Column(name = "expected_value")
-  private String expectedValue;
-
-  @Column(name = "threshold", precision = 5, scale = 4)
-  private BigDecimal threshold;
-
-  @Column(name = "weight", nullable = false, precision = 5, scale = 4)
+  @Column(name = "weight", nullable = false, precision = 8, scale = 4)
   @Builder.Default
   private BigDecimal weight = BigDecimal.ONE;
 

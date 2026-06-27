@@ -53,7 +53,15 @@ public class VerificationConfigController {
   @GetMapping("/verification/operators")
   public List<OperatorCatalogResponse> listOperators() {
     return Arrays.stream(CheckOperator.values())
-        .map(op -> new OperatorCatalogResponse(op, op.getDisplayName(), op.getDescription()))
+        .map(
+            op ->
+                new OperatorCatalogResponse(
+                    op,
+                    op.getDisplayName(),
+                    op.getDescription(),
+                    op.getCategory(),
+                    op.isRequiresExpected(),
+                    op.getSupportedExpectedSources()))
         .toList();
   }
 }

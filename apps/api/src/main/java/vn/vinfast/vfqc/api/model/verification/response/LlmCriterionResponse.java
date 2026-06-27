@@ -5,15 +5,15 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
+ * LLM judge criterion response.
+ *
  * @author nghlong3004 (Long Nguyen Hoang)
- * @since 6/27/2026
+ * @since 6/28/2026
  */
-public record LlmRubricRuleResponse(
+public record LlmCriterionResponse(
     @Schema(description = "Public ID") UUID publicId,
-    @Schema(description = "Name") String name,
-    @Schema(description = "Target path") String targetPath,
-    @Schema(description = "Rubric") String rubric,
-    @Schema(description = "Threshold") BigDecimal threshold,
-    @Schema(description = "Weight") BigDecimal weight,
+    @Schema(description = "Criterion name") String name,
+    @Schema(description = "Criterion description") String description,
+    @Schema(description = "Criterion weight") BigDecimal weight,
     @Schema(description = "Enabled status") boolean enabled,
     @Schema(description = "Display order") Integer displayOrder) {}

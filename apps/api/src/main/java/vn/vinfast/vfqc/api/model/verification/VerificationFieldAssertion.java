@@ -19,19 +19,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Aggregate root for verification configuration per project.
+ * Primitive deterministic assertion. A top-level field item has one assertion; a group item has
+ * multiple assertions.
  *
  * @author nghlong3004 (Long Nguyen Hoang)
- * @since 6/27/2026
+ * @since 6/28/2026
  */
 @Entity
-@Table(name = "verification_configs")
+@Table(name = "verification_field_assertions")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class VerificationConfig {
+public class VerificationFieldAssertion {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,20 +42,43 @@ public class VerificationConfig {
   @Builder.Default
   private UUID publicId = UUID.randomUUID();
 
-  @Column(name = "project_id", nullable = false, unique = true)
-  private Long projectId;
+  @Column(name = "verification_item_id", nullable = false)
+  private Long verificationItemId;
 
-  @Column(name = "version", nullable = false)
-  @Builder.Default
-  private Integer version = 1;
+  @Column(name = "actual_path", nullable = false, length = 500)
+  private String actualPath;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "mode", nullable = false, length = 30)
-  private VerificationMode mode;
+  @Column(name = "operator", nullable = false, length = 50)
+  private CheckOperator operator;
 
-  @Column(name = "threshold", nullable = false, precision = 5, scale = 4)
+  @Enumerated(EnumType.STRING)
+  @Column(name = "expected_source", length = 30)
+  private ExpectedSource expectedSource;
+
+  @Column(name = "expected_column_key")
+  private UUID expectedColumnKey;
+
+  @Column(name = "expected_value")
+  private String expectedValue;
+
+  @Column(name = "expected_template")
+  private String expectedTemplate;
+
+  @Column(name = "threshold", precision = 5, scale = 4)
+  private BigDecimal threshold;
+
+  @Column(name = "weight", nullable = false, precision = 8, scale = 4)
   @Builder.Default
-  private BigDecimal threshold = new BigDecimal("0.8");
+  private BigDecimal weight = BigDecimal.ONE;
+
+  @Column(name = "enabled", nullable = false)
+  @Builder.Default
+  private boolean enabled = true;
+
+  @Column(name = "display_order", nullable = false)
+  @Builder.Default
+  private Integer displayOrder = 0;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default

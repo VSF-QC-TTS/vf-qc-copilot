@@ -7,8 +7,10 @@ package vn.vinfast.vfqc.api.model.verification;
  * @since 6/27/2026
  */
 public enum ExpectedSource {
-  /** Expected value is a hardcoded literal. */
-  LITERAL,
   /** Expected value comes from a dataset column. */
-  DATASET_COLUMN
+  DATASET_COLUMN,
+  /** Expected value is a hardcoded static value. */
+  STATIC_VALUE,
+  /** Expected value is a template that may include dataset placeholders. */
+  TEMPLATE
 }
