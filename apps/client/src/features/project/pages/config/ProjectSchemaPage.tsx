@@ -189,42 +189,151 @@ export function ProjectSchemaPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10" />
-                    <TableHead className="text-xs font-semibold uppercase">{t('config.schema.columnName')}</TableHead>
-                    <TableHead className="w-24 text-xs font-semibold uppercase">Kiểu</TableHead>
-                    <TableHead className="w-36 text-xs font-semibold uppercase">Vai trò</TableHead>
-                    <TableHead className="text-xs font-semibold uppercase">Giá trị mẫu</TableHead>
-                    <TableHead className="w-[100px] text-right text-xs font-semibold uppercase">Thao tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {columns.map((col) => (
-                    <TableRow key={col.publicId} className="group hover:bg-muted/30">
-                      <TableCell className="px-2">
-                        <GripVerticalIcon className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors cursor-grab" />
+              <div className="overflow-x-auto w-full">
+                <Table className="w-full min-w-[700px] lg:min-w-0">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10" />
+                      <TableHead className="text-xs font-semibold uppercase">{t('config.schema.columnName')}</TableHead>
+                      <TableHead className="w-24 text-xs font-semibold uppercase">Kiểu</TableHead>
+                      <TableHead className="w-36 text-xs font-semibold uppercase">Vai trò</TableHead>
+                      <TableHead className="text-xs font-semibold uppercase">Giá trị mẫu</TableHead>
+                      <TableHead className="w-[100px] text-right text-xs font-semibold uppercase">Thao tác</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {columns.map((col) => (
+                      <TableRow key={col.publicId} className="group hover:bg-muted/30">
+                        <TableCell className="px-2">
+                          <GripVerticalIcon className="text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors cursor-grab" />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            defaultValue={col.columnName}
+                            onBlur={(e) => {
+                              const val = e.target.value.trim()
+                              if (val && val !== col.columnName) {
+                                updateMutation.mutate({
+                                  columnId: col.publicId,
+                                  payload: { columnName: val },
+                                })
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur()
+                              }
+                            }}
+                            className="h-7 border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 focus:border-zinc-300 dark:focus:border-zinc-700 focus:bg-background bg-transparent text-sm px-2 py-1 rounded-lg transition-all focus:ring-1 focus:ring-ring w-full font-mono text-zinc-900 dark:text-zinc-100 font-semibold"
+                            placeholder="tên cột..."
+                          />
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <Select
+                            value={col.dataType || 'STRING'}
+                            onValueChange={(val) => {
+                              updateMutation.mutate({
+                                columnId: col.publicId,
+                                payload: { dataType: val },
+                              })
+                            }}
+                          >
+                            <SelectTrigger className="h-7 w-20 px-2 py-0 border-none shadow-none bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono text-[11px] rounded transition-colors focus:ring-1 focus:ring-ring">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="STRING">text</SelectItem>
+                              <SelectItem value="NUMBER">number</SelectItem>
+                              <SelectItem value="BOOLEAN">boolean</SelectItem>
+                              <SelectItem value="ENUM">enum</SelectItem>
+                              <SelectItem value="JSON">json</SelectItem>
+                              <SelectItem value="ARRAY">array</SelectItem>
+                              <SelectItem value="OBJECT">object</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <Select
+                            value={col.role || 'EXPECTED'}
+                            onValueChange={(val) => {
+                              updateMutation.mutate({
+                                columnId: col.publicId,
+                                payload: { role: val },
+                              })
+                            }}
+                          >
+                            <SelectTrigger className={`h-7 px-2.5 py-0 font-mono font-medium text-[10.5px] rounded-full shadow-none border cursor-pointer w-auto flex items-center justify-between gap-1 transition-all focus:ring-1 focus:ring-ring ${getRoleSelectTriggerClass(col.role)}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="INPUT">Input</SelectItem>
+                              <SelectItem value="EXPECTED">expected</SelectItem>
+                              <SelectItem value="CONTEXT">context</SelectItem>
+                              <SelectItem value="EVALUATION_PARAM">evaluation_param</SelectItem>
+                              <SelectItem value="METADATA">metadata</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="py-1">
+                          <Input
+                            defaultValue={col.sampleValue || ''}
+                            onBlur={(e) => {
+                              const val = e.target.value
+                              if (val !== (col.sampleValue || '')) {
+                                updateMutation.mutate({
+                                  columnId: col.publicId,
+                                  payload: { sampleValue: val || null },
+                                })
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.currentTarget.blur()
+                              }
+                            }}
+                            className="h-7 border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 focus:border-zinc-300 dark:focus:border-zinc-700 focus:bg-background bg-transparent text-xs px-2 py-1 rounded-lg transition-all focus:ring-1 focus:ring-ring w-full font-mono text-zinc-700 dark:text-zinc-300"
+                            placeholder="giá trị mẫu..."
+                          />
+                        </TableCell>
+                        <TableCell className="text-right py-1">
+                          <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 rounded-lg active:scale-90 transition-transform"
+                              onClick={() => handleOpenEdit(col)}
+                            >
+                              <PencilIcon className="size-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-90 transition-transform"
+                              onClick={() => setDeleteTarget(col)}
+                            >
+                              <TrashIcon className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                    {/* Inline quick-add row */}
+                    <TableRow className="bg-muted/5 border-t border-dashed hover:bg-muted/10">
+                      <TableCell className="px-2" />
+                      <TableCell className="py-2">
+                        <Input
+                          ref={nameInputRef}
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="column_name"
+                          className="h-8 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background"
+                        />
                       </TableCell>
-                      <TableCell>
-                        <span
-                          onClick={() => handleOpenEdit(col)}
-                          className="font-mono font-medium text-sm text-zinc-900 dark:text-zinc-100 hover:text-primary cursor-pointer transition-colors"
-                        >
-                          {col.columnName}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-1">
-                        <Select
-                          value={col.dataType || 'STRING'}
-                          onValueChange={(val) => {
-                            updateMutation.mutate({
-                              columnId: col.publicId,
-                              payload: { dataType: val },
-                            })
-                          }}
-                        >
-                          <SelectTrigger className="h-7 w-20 px-2 py-0 border-none shadow-none bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono text-[11px] rounded transition-colors focus:ring-1 focus:ring-ring">
+                      <TableCell className="py-2">
+                        <Select value={newDataType} onValueChange={setNewDataType}>
+                          <SelectTrigger className="h-8 w-20 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -238,17 +347,9 @@ export function ProjectSchemaPage() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="py-1">
-                        <Select
-                          value={col.role || 'EXPECTED'}
-                          onValueChange={(val) => {
-                            updateMutation.mutate({
-                              columnId: col.publicId,
-                              payload: { role: val },
-                            })
-                          }}
-                        >
-                          <SelectTrigger className={`h-7 px-2.5 py-0 font-mono font-medium text-[10.5px] rounded-full shadow-none border cursor-pointer w-auto flex items-center justify-between gap-1 transition-all focus:ring-1 focus:ring-ring ${getRoleSelectTriggerClass(col.role)}`}>
+                      <TableCell className="py-2">
+                        <Select value={newRole} onValueChange={setNewRole}>
+                          <SelectTrigger className={`h-8 px-2.5 py-0 font-mono font-medium text-[11px] rounded-full shadow-none border-dashed focus:border-solid cursor-pointer w-auto flex items-center justify-between gap-1 transition-all focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background ${getRoleSelectTriggerClass(newRole)}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -260,111 +361,30 @@ export function ProjectSchemaPage() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="py-1">
+                      <TableCell className="py-2">
                         <Input
-                          defaultValue={col.sampleValue || ''}
-                          onBlur={(e) => {
-                            const val = e.target.value
-                            if (val !== (col.sampleValue || '')) {
-                              updateMutation.mutate({
-                                columnId: col.publicId,
-                                payload: { sampleValue: val || null },
-                              })
-                            }
-                          }}
-                          className="h-7 border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 focus:border-zinc-300 dark:focus:border-zinc-700 focus:bg-background bg-transparent text-xs px-2 py-1 rounded-lg transition-all focus:ring-1 focus:ring-ring w-full font-mono text-zinc-700 dark:text-zinc-300"
+                          value={newSample}
+                          onChange={(e) => setNewSample(e.target.value)}
+                          onKeyDown={handleKeyDown}
                           placeholder="giá trị mẫu..."
+                          className="h-8 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background"
                         />
                       </TableCell>
-                      <TableCell className="text-right py-1">
-                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7 rounded-lg active:scale-90 transition-transform"
-                            onClick={() => handleOpenEdit(col)}
-                          >
-                            <PencilIcon className="size-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-7 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10 active:scale-90 transition-transform"
-                            onClick={() => setDeleteTarget(col)}
-                          >
-                            <TrashIcon className="size-3.5" />
-                          </Button>
-                        </div>
+                      <TableCell className="py-2 text-right">
+                        <Button
+                          type="button"
+                          onClick={handleQuickAdd}
+                          size="icon"
+                          className="size-8 active:scale-[0.95] transition-transform rounded-lg"
+                          disabled={createMutation.isPending}
+                        >
+                          {createMutation.isPending ? <Spinner data-icon="inline-start" /> : <PlusIcon />}
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
-
-                  {/* Inline quick-add row */}
-                  <TableRow className="bg-muted/5 border-t border-dashed hover:bg-muted/10">
-                    <TableCell className="px-2" />
-                    <TableCell className="py-2">
-                      <Input
-                        ref={nameInputRef}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="column_name"
-                        className="h-8 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <Select value={newDataType} onValueChange={setNewDataType}>
-                        <SelectTrigger className="h-8 w-20 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="STRING">text</SelectItem>
-                          <SelectItem value="NUMBER">number</SelectItem>
-                          <SelectItem value="BOOLEAN">boolean</SelectItem>
-                          <SelectItem value="ENUM">enum</SelectItem>
-                          <SelectItem value="JSON">json</SelectItem>
-                          <SelectItem value="ARRAY">array</SelectItem>
-                          <SelectItem value="OBJECT">object</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <Select value={newRole} onValueChange={setNewRole}>
-                        <SelectTrigger className={`h-8 text-xs border-dashed focus:border-solid flex items-center justify-between gap-1 rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background ${getRoleSelectTriggerClass(newRole)}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="INPUT">Input</SelectItem>
-                          <SelectItem value="EXPECTED">expected</SelectItem>
-                          <SelectItem value="CONTEXT">context</SelectItem>
-                          <SelectItem value="EVALUATION_PARAM">evaluation_param</SelectItem>
-                          <SelectItem value="METADATA">metadata</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <Input
-                        value={newSample}
-                        onChange={(e) => setNewSample(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="giá trị mẫu..."
-                        className="h-8 text-xs border-dashed focus:border-solid font-mono rounded-lg focus:ring-1 focus:ring-ring bg-background/50 focus:bg-background"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2 text-right">
-                      <Button
-                        type="button"
-                        onClick={handleQuickAdd}
-                        size="icon"
-                        className="size-8 active:scale-[0.95] transition-transform rounded-lg"
-                        disabled={createMutation.isPending}
-                      >
-                        {createMutation.isPending ? <Spinner data-icon="inline-start" /> : <PlusIcon />}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
 
