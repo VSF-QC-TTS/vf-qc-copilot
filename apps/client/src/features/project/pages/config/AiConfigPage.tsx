@@ -57,18 +57,19 @@ export function AiConfigPage() {
 
   useEffect(() => {
     if (config) {
-      form.reset({
-        provider: config.provider || 'OPENAI',
-        keySource: config.keySource || 'PLATFORM',
-        evaluationModel: config.evaluationModel || '',
-        generationModel: config.generationModel || '',
-        apiKey: config.hasApiKey ? 'SECRET_REDACTED' : '',
-        baseUrl: config.baseUrl || '',
-        temperature: config.temperature ?? 0.0,
-        maxTokens: config.maxTokens ?? 2048,
-        timeout: (config.timeoutMs ?? 30000) / 1000,
-        retryCount: config.retryCount ?? 3,
-      })
+      // Use setTimeout to ensure form is fully mounted and registered before setting values
+      setTimeout(() => {
+        form.setValue('provider', config.provider || 'OPENAI')
+        form.setValue('keySource', config.keySource || 'PLATFORM')
+        form.setValue('evaluationModel', config.evaluationModel || '')
+        form.setValue('generationModel', config.generationModel || '')
+        form.setValue('apiKey', config.hasApiKey ? 'SECRET_REDACTED' : '')
+        form.setValue('baseUrl', config.baseUrl || '')
+        form.setValue('temperature', config.temperature ?? 0.0)
+        form.setValue('maxTokens', config.maxTokens ?? 2048)
+        form.setValue('timeout', config.timeoutMs ? config.timeoutMs / 1000 : 30)
+        form.setValue('retryCount', config.retryCount ?? 3)
+      }, 0)
     }
   }, [config, form])
 
@@ -167,9 +168,9 @@ export function AiConfigPage() {
                         <FieldLabel>AI Provider</FieldLabel>
                         <Select value={field.value} onValueChange={(val) => {
                           field.onChange(val)
-                          if (!config || val !== config.provider) {
-                            form.setValue('evaluationModel', DEFAULT_MODELS[val] || '', { shouldValidate: true })
-                            form.setValue('generationModel', '', { shouldValidate: true })
+                          if (val !== form.getValues('provider')) {
+                            form.setValue('evaluationModel', DEFAULT_MODELS[val] || '')
+                            form.setValue('generationModel', '')
                           }
                         }}>
                           <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Chọn nhà cung cấp" /></SelectTrigger>
