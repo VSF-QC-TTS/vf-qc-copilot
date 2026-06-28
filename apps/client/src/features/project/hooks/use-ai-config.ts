@@ -21,7 +21,7 @@ export function useSaveAiConfig(publicId: string | undefined) {
   return useMutation({
     mutationFn: (data: SaveAiConfigRequest) => saveAiConfig(publicId!, data),
     onSuccess: () => {
-      toast.success(t('config.ai.saveSuccess'))
+      toast.success(t('config.judge.saveSuccess'))
       queryClient.invalidateQueries({ queryKey: ['aiConfig', publicId] })
       queryClient.invalidateQueries({ queryKey: ['projects', publicId, 'setupStatus'] })
     },

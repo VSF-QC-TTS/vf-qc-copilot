@@ -94,7 +94,7 @@
       "testConnection": "Kiểm tra kết nối",
       "testPassed": "Kiểm tra thành công: HTTP {{status}} ({{latency}}ms)",
       "testFailed": "Kiểm tra thất bại: HTTP {{status}}",
-      "saveSuccess": "Đã lưu cấu hình API đích"
+      "saveSuccess": "Đã lưu cấu hình API"
     },
     "judge": {
       "title": "Cấu hình LLM Judge",
