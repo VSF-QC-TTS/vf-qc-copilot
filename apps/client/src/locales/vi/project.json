@@ -216,39 +216,39 @@
       "operators": {
         "equals": {
           "name": "Bằng",
-          "desc": "Exact string, boolean, number, or JSON value match"
+          "desc": "So khớp chính xác giá trị chuỗi, boolean, số hoặc JSON"
         },
         "not_equals": {
           "name": "Khác",
-          "desc": "Checks that the actual value differs from the expected value"
+          "desc": "Kiểm tra giá trị thực tế khác với giá trị kỳ vọng"
         },
         "contains": {
           "name": "Chứa",
-          "desc": "Checks that the actual text contains the expected text"
+          "desc": "Kiểm tra văn bản thực tế có chứa văn bản kỳ vọng"
         },
         "not_contains": {
           "name": "Không chứa",
-          "desc": "Checks that the actual text does not contain the expected text"
+          "desc": "Kiểm tra văn bản thực tế không chứa văn bản kỳ vọng"
         },
         "regex": {
           "name": "Regex",
-          "desc": "Checks that the actual text matches a regular expression"
+          "desc": "Kiểm tra văn bản thực tế khớp với biểu thức chính quy (Regex)"
         },
         "greater_than": {
           "name": "Lớn hơn",
-          "desc": "Checks that the actual numeric value is greater than expected"
+          "desc": "Kiểm tra giá trị số thực tế lớn hơn kỳ vọng"
         },
         "greater_than_or_equals": {
           "name": "Lớn hơn hoặc bằng",
-          "desc": "Checks that the actual numeric value is greater than or equal to expected"
+          "desc": "Kiểm tra giá trị số thực tế lớn hơn hoặc bằng kỳ vọng"
         },
         "less_than": {
           "name": "Nhỏ hơn",
-          "desc": "Checks that the actual numeric value is less than expected"
+          "desc": "Kiểm tra giá trị số thực tế nhỏ hơn kỳ vọng"
         },
         "less_than_or_equals": {
           "name": "Nhỏ hơn hoặc bằng",
-          "desc": "Checks that the actual numeric value is less than or equal to expected"
+          "desc": "Kiểm tra giá trị số thực tế nhỏ hơn hoặc bằng kỳ vọng"
         }
       }
     }
