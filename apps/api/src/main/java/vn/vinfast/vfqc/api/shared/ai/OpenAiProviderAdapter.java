@@ -94,7 +94,7 @@ public class OpenAiProviderAdapter implements AiProviderPort {
               .post()
               .uri(CHAT_COMPLETIONS_PATH)
               .contentType(MediaType.APPLICATION_JSON)
-              .body(body)
+              .body(body.toString())
               .retrieve()
               .body(String.class);
 

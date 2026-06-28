@@ -78,7 +78,7 @@ public class AnthropicProviderAdapter implements AiProviderPort {
               .header("x-api-key", request.apiKey())
               .header("anthropic-version", API_VERSION)
               .contentType(MediaType.APPLICATION_JSON)
-              .body(body)
+              .body(body.toString())
               .retrieve()
               .body(String.class);
 

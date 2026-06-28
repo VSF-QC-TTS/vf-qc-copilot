@@ -87,7 +87,7 @@ public class CustomProviderAdapter implements AiProviderPort {
         requestSpec.header(HttpHeaders.AUTHORIZATION, "Bearer " + request.apiKey());
       }
 
-      String responseStr = requestSpec.body(body).retrieve().body(String.class);
+      String responseStr = requestSpec.body(body.toString()).retrieve().body(String.class);
 
       long latency = System.currentTimeMillis() - startTime;
 

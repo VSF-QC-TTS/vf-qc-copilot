@@ -82,7 +82,7 @@ public class GeminiProviderAdapter implements AiProviderPort {
               .uri(url)
               .header("x-goog-api-key", request.apiKey())
               .contentType(MediaType.APPLICATION_JSON)
-              .body(body)
+              .body(body.toString())
               .retrieve()
               .body(String.class);
 
