@@ -2,10 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AlertCircleIcon, DatabaseIcon, FileSpreadsheetIcon, PlusIcon, TablePropertiesIcon, Target, AlertTriangle } from 'lucide-react'
 
+import { motion } from 'motion/react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -75,19 +77,47 @@ export function DatasetListPage() {
       </div>
 
       {!hasProjectSchema ? (
-        <Alert>
-          <AlertCircleIcon className="size-4" />
-          <AlertTitle>Cần cấu hình dataset schema trước</AlertTitle>
-          <AlertDescription>
-            Dataset phải gắn với schema để import, sinh rows và validate từng cột. Tạo schema xong rồi quay lại tạo dataset.
-          </AlertDescription>
-        </Alert>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        >
+          <Alert variant="destructive" className="border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200">
+            <AlertCircleIcon className="size-4 animate-pulse text-amber-600 dark:text-amber-400" />
+            <AlertTitle>Cần cấu hình dataset schema trước</AlertTitle>
+            <AlertDescription>
+              Dataset phải gắn với schema để import, sinh rows và validate từng cột. Tạo schema xong rồi quay lại tạo dataset.
+            </AlertDescription>
+          </Alert>
+        </motion.div>
       ) : null}
 
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="h-44 animate-pulse rounded-xl border border-muted" />
-          <Card className="h-44 animate-pulse rounded-xl border border-muted" />
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="rounded-xl border border-muted-foreground/10 bg-card p-5 shadow-sm flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Skeleton className="size-10 rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
+                    <Skeleton className="h-5 w-32 rounded" />
+                    <Skeleton className="h-3 w-48 rounded" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+              <div className="flex gap-1.5 border-t border-muted/50 pt-3">
+                <Skeleton className="h-5 w-16 rounded" />
+                <Skeleton className="h-5 w-20 rounded" />
+                <Skeleton className="h-5 w-12 rounded" />
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-t border-muted/50 pt-3">
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-14 rounded-lg" />
+              </div>
+            </Card>
+          ))}
         </div>
       ) : datasets.length === 0 ? (
         <div className="rounded-xl border bg-card p-10">
@@ -107,91 +137,98 @@ export function DatasetListPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {datasets.map((dataset) => {
+          {datasets.map((dataset, index) => {
             const total = dataset.latestVersion?.totalRows ?? 0
             const invalid = dataset.latestVersion?.invalidRows ?? 0
             const cleanliness = total > 0 ? Math.round(((total - invalid) / total) * 100) : 100
 
             return (
-              <Link key={dataset.publicId} to={`/projects/${publicId}/datasets/${dataset.publicId}`}>
-                <Card className="group h-full rounded-xl border border-muted-foreground/10 bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted/60 transition-colors group-hover:bg-primary/5">
-                          <FileSpreadsheetIcon className="size-5 text-muted-foreground transition-colors group-hover:text-primary" />
+              <motion.div
+                key={dataset.publicId}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: index * 0.04, ease: 'easeOut' }}
+              >
+                <Link to={`/projects/${publicId}/datasets/${dataset.publicId}`}>
+                  <Card className="group h-full rounded-xl border border-muted-foreground/10 bg-card p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted/60 transition-colors group-hover:bg-primary/5">
+                            <FileSpreadsheetIcon className="size-5 text-muted-foreground transition-colors group-hover:text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <CardTitle className="truncate text-base font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                              {dataset.name}
+                            </CardTitle>
+                            <CardDescription className="truncate text-xs text-muted-foreground">
+                              {dataset.description ?? 'Không có mô tả'}
+                            </CardDescription>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <CardTitle className="truncate text-base font-semibold text-card-foreground group-hover:text-primary transition-colors">
-                            {dataset.name}
-                          </CardTitle>
-                          <CardDescription className="truncate text-xs text-muted-foreground">
-                            {dataset.description ?? 'Không có mô tả'}
-                          </CardDescription>
+                        <StatusBadge value={dataset.status} />
+                      </div>
+
+                      {/* Columns Tags Preview */}
+                      {schemaColumns.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 border-t border-muted/50 pt-3">
+                          {schemaColumns.map((col) => {
+                            const isEvaluated = col.role?.toUpperCase() === 'EXPECTED' || col.role?.toUpperCase() === 'GROUND_TRUTH'
+                            return (
+                              <Badge
+                                key={col.columnName}
+                                variant="outline"
+                                className={`h-5 text-[10px] font-mono px-2 py-0 border-muted-foreground/15 rounded-md ${
+                                  isEvaluated
+                                    ? 'bg-primary/5 text-primary border-primary/20'
+                                    : 'bg-muted/30 text-muted-foreground'
+                                }`}
+                              >
+                                {isEvaluated && <Target className="mr-1 size-2.5" />}
+                                {col.columnName}
+                              </Badge>
+                            )
+                          })}
                         </div>
-                      </div>
-                      <StatusBadge value={dataset.status} />
-                    </div>
-
-                    {/* Columns Tags Preview */}
-                    {schemaColumns.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 border-t border-muted/50 pt-3">
-                        {schemaColumns.map((col) => {
-                          const isEvaluated = col.role?.toUpperCase() === 'EXPECTED' || col.role?.toUpperCase() === 'GROUND_TRUTH'
-                          return (
-                            <Badge
-                              key={col.columnName}
-                              variant="outline"
-                              className={`h-5 text-[10px] font-mono px-2 py-0 border-muted-foreground/15 rounded-md ${
-                                isEvaluated
-                                  ? 'bg-primary/5 text-primary border-primary/20'
-                                  : 'bg-muted/30 text-muted-foreground'
-                              }`}
-                            >
-                              {isEvaluated && <Target className="mr-1 size-2.5" />}
-                              {col.columnName}
-                            </Badge>
-                          )
-                        })}
-                      </div>
-                    )}
-
-                    {/* Bento Metrics Section */}
-                    <div className="grid grid-cols-3 gap-2 border-t border-muted/50 pt-3 text-sm">
-                      <div className="rounded-lg bg-muted/30 px-3 py-2 border border-muted/30 transition-colors group-hover:bg-muted/40">
-                        <div className="text-[11px] font-medium text-muted-foreground">Tổng số testcase</div>
-                        <div className="mt-1 text-lg font-bold text-card-foreground">{total}</div>
-                      </div>
-
-                      <div className="rounded-lg bg-muted/30 px-3 py-2 border border-muted/30 transition-colors group-hover:bg-muted/40">
-                        <div className="text-[11px] font-medium text-muted-foreground">Độ sạch dữ liệu</div>
-                        <div className="mt-1 text-lg font-bold text-card-foreground">
-                          {total > 0 ? `${cleanliness}%` : '-'}
-                        </div>
-                      </div>
-
-                      <div className={`rounded-lg px-3 py-2 border transition-colors ${
-                        invalid > 0
-                          ? 'bg-destructive/5 border-destructive/20 text-destructive'
-                          : 'bg-muted/30 border-muted/30 text-muted-foreground group-hover:bg-muted/40'
-                      }`}>
-                        <div className="text-[11px] font-medium opacity-80">Số dòng lỗi</div>
-                        <div className={`mt-1 text-lg font-bold flex items-center gap-1 ${invalid > 0 ? 'text-destructive' : 'text-card-foreground'}`}>
-                          {invalid > 0 && <AlertTriangle className="size-4 shrink-0 text-destructive animate-pulse" />}
-                          {invalid}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
-                      <span>Phiên bản active: {dataset.latestVersion ? `v${dataset.latestVersion.versionNumber}` : '-'}</span>
-                      {dataset.latestVersion?.createdAt && (
-                        <span>Cập nhật: {new Date(dataset.latestVersion.createdAt).toLocaleDateString('vi-VN')}</span>
                       )}
+
+                      {/* Bento Metrics Section */}
+                      <div className="grid grid-cols-3 gap-2 border-t border-muted/50 pt-3 text-sm">
+                        <div className="rounded-lg bg-muted/30 px-3 py-2 border border-muted/30 transition-colors group-hover:bg-muted/40">
+                          <div className="text-[11px] font-medium text-muted-foreground">Tổng số testcase</div>
+                          <div className="mt-1 text-lg font-bold text-card-foreground">{total}</div>
+                        </div>
+
+                        <div className="rounded-lg bg-muted/30 px-3 py-2 border border-muted/30 transition-colors group-hover:bg-muted/40">
+                          <div className="text-[11px] font-medium text-muted-foreground">Độ sạch dữ liệu</div>
+                          <div className="mt-1 text-lg font-bold text-card-foreground">
+                            {total > 0 ? `${cleanliness}%` : '-'}
+                          </div>
+                        </div>
+
+                        <div className={`rounded-lg px-3 py-2 border transition-colors ${
+                          invalid > 0
+                            ? 'bg-destructive/5 border-destructive/20 text-destructive'
+                            : 'bg-muted/30 border-muted/30 text-muted-foreground group-hover:bg-muted/40'
+                        }`}>
+                          <div className="text-[11px] font-medium opacity-80">Số dòng lỗi</div>
+                          <div className={`mt-1 text-lg font-bold flex items-center gap-1 ${invalid > 0 ? 'text-destructive' : 'text-card-foreground'}`}>
+                            {invalid > 0 && <AlertTriangle className="size-4 shrink-0 text-destructive animate-pulse" />}
+                            {invalid}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                        <span>Phiên bản active: {dataset.latestVersion ? `v${dataset.latestVersion.versionNumber}` : '-'}</span>
+                        {dataset.latestVersion?.createdAt && (
+                          <span>Cập nhật: {new Date(dataset.latestVersion.createdAt).toLocaleDateString('vi-VN')}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              </Link>
+                  </Card>
+                </Link>
+              </motion.div>
             )
           })}
         </div>

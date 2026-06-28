@@ -19,7 +19,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarSeparator } from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
 import { useSidebar } from '@/components/ui/sidebar-context'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ProjectSwitcher } from './ProjectSwitcher'
@@ -232,38 +232,6 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                 </SidebarMenuItem>
               )
             })}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      
-      <SidebarSeparator />
-      
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu className="gap-1">
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                asChild
-                className={cn(
-                  "relative transition-all duration-200 select-none",
-                  location.pathname === `/projects/${publicId}/settings` ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
-                )}
-              >
-                <Link to={`/projects/${publicId}/settings`}>
-                  <div className="flex items-center gap-2 z-10">
-                    <Settings />
-                    <span>{t('nav.settings')}</span>
-                  </div>
-                  {location.pathname === `/projects/${publicId}/settings` && (
-                    <motion.div
-                      layoutId="active-sidebar-pill"
-                      className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
