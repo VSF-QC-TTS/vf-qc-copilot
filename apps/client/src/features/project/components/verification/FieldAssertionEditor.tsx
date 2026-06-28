@@ -40,9 +40,13 @@ export function FieldAssertionEditor({
   
   const responseOptions = normalizedResponseFields.map((field) => {
     const isAnswer = field.path.toLowerCase().includes('answer')
-    const displayLabel = isAnswer
-      ? t('config.verification.aliasResponseField', { path: field.path })
-      : t('config.verification.aliasResponseFieldDefault', { path: field.path })
+    const prefix = isAnswer ? '★ ' : ''
+    const displayLabel = field.example
+      ? t('config.verification.fieldWithExample', {
+          path: `${prefix}${field.path}`,
+          example: field.example.length > 30 ? `${field.example.slice(0, 30)}...` : field.example,
+        })
+      : `${prefix}${field.path}`
     return { value: field.path, label: displayLabel }
   })
   
@@ -104,10 +108,12 @@ export function FieldAssertionEditor({
               </SelectTrigger>
               <SelectContent>
                 {columns.map((column) => {
-                  const isGroundTruth = column.columnName.toLowerCase().includes('ground_truth')
-                  const displayLabel = isGroundTruth
-                    ? t('config.verification.aliasDatasetColumn', { column: column.columnName })
-                    : t('config.verification.aliasDatasetColumnDefault', { column: column.columnName })
+                  const displayLabel = column.sampleValue
+                    ? t('config.verification.columnWithExample', {
+                        column: column.columnName,
+                        example: column.sampleValue.length > 30 ? `${column.sampleValue.slice(0, 30)}...` : column.sampleValue,
+                      })
+                    : column.columnName
                   return (
                     <SelectItem key={column.publicId} value={column.publicId}>
                       {displayLabel}
