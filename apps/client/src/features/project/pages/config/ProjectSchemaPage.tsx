@@ -143,9 +143,9 @@ export function ProjectSchemaPage() {
                             <TooltipTrigger asChild>
                               <HelpCircleIcon className="size-3.5 text-zinc-400 cursor-help" />
                             </TooltipTrigger>
-                            <TooltipContent className="max-w-[280px] p-3 space-y-2">
-                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">Các vai trò của biến:</p>
-                              <ul className="list-disc pl-4 space-y-1 text-zinc-600 dark:text-zinc-400">
+                            <TooltipContent className="max-w-[280px] p-3 flex flex-col items-start gap-2 text-left">
+                              <p className="font-semibold">Các vai trò của biến:</p>
+                              <ul className="list-disc pl-4 space-y-1 opacity-90 text-[11px] leading-relaxed">
                                 <li><strong>Input:</strong> Dữ liệu truyền vào prompt gọi model.</li>
                                 <li><strong>expected:</strong> Câu trả lời mẫu chuẩn dùng để đối chiếu.</li>
                                 <li><strong>context:</strong> Dữ liệu ngữ cảnh bổ sung cho prompt.</li>
