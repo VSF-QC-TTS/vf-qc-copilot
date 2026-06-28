@@ -17,6 +17,7 @@ import vn.vinfast.vfqc.api.model.project.response.ProjectSetupStatus;
 import vn.vinfast.vfqc.api.repository.JpaAiConfigRepository;
 import vn.vinfast.vfqc.api.repository.JpaDatasetRepository;
 import vn.vinfast.vfqc.api.repository.JpaProjectSchemaRepository;
+import vn.vinfast.vfqc.api.repository.JpaTestRunRepository;
 import vn.vinfast.vfqc.api.repository.JpaVerificationConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
@@ -41,6 +42,7 @@ public class ProjectServiceImpl implements ProjectService {
   private final JpaProjectSchemaRepository projectSchemaRepository;
   private final JpaVerificationConfigRepository verificationConfigRepository;
   private final JpaDatasetRepository datasetRepository;
+  private final JpaTestRunRepository testRunRepository;
 
   @Override
   @Transactional
@@ -119,7 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
         projectSchemaRepository.existsByProjectId(projectId),
         verificationConfigRepository.existsByProjectId(projectId),
         datasetRepository.existsByProjectId(projectId),
-        0 // totalTestRuns (Phase 3)
+        Math.toIntExact(testRunRepository.countByProjectId(projectId))
         );
   }
 

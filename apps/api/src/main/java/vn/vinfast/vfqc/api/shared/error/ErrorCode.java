@@ -213,6 +213,12 @@ public enum ErrorCode {
       "Verification Config Not Found",
       "No verification configuration found for this project."),
 
+  TEST_RUN_NOT_FOUND(
+      HttpStatus.NOT_FOUND,
+      "test-run-not-found",
+      "Test Run Not Found",
+      "The requested test run was not found."),
+
   MISSING_TARGET_CONFIG(
       HttpStatus.UNPROCESSABLE_ENTITY,
       "missing-target-config",

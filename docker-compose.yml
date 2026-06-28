@@ -27,6 +27,7 @@ services:
       fi'
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      RUNNER_INTERNAL_TOKEN: ${RUNNER_INTERNAL_TOKEN:-dev-internal-token}
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
@@ -74,6 +75,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  runner:
+    build:
+      context: ./apps/runner
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      BACKEND_BASE_URL: http://api:8080/api/v1
+      RUNNER_INTERNAL_TOKEN: ${RUNNER_INTERNAL_TOKEN:-dev-internal-token}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      RUNNER_REDIS_STREAM: ${RUNNER_REDIS_STREAM:-eval.run.requested}
+      RUNNER_REDIS_GROUP: ${RUNNER_REDIS_GROUP:-vfqc-runner}
+    depends_on:
+      api:
+        condition: service_started
       redis:
         condition: service_healthy
 
