@@ -29,6 +29,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import vn.vinfast.vfqc.api.model.ai.AiConfig;
@@ -198,7 +200,7 @@ public class DatasetServiceImpl {
                 .message("Queued Excel import")
                 .build());
     byte[] bytes = readFileBytes(file);
-    taskExecutor.execute(() -> runImport(job.getPublicId(), bytes));
+    executeAfterCommit(() -> runImport(job.getPublicId(), bytes));
     return toJobResponse(job);
   }
 
@@ -208,7 +210,7 @@ public class DatasetServiceImpl {
     if (job.getStatus() != DatasetJobStatus.NEEDS_CONFIRMATION) {
       throw ResourceException.of(ErrorCode.BAD_REQUEST, "Import job is not waiting for confirmation.");
     }
-    taskExecutor.execute(() -> runImportConfirmation(jobPublicId, request));
+    executeAfterCommit(() -> runImportConfirmation(jobPublicId, request));
     return toJobResponse(job);
   }
 
@@ -226,7 +228,7 @@ public class DatasetServiceImpl {
                 .createdBy(user.getId())
                 .message("Queued AI generation")
                 .build());
-    taskExecutor.execute(() -> runGeneration(job.getPublicId()));
+    executeAfterCommit(() -> runGeneration(job.getPublicId()));
     return toJobResponse(job);
   }
 
@@ -248,8 +250,22 @@ public class DatasetServiceImpl {
                 .createdBy(user.getId())
                 .message("Queued Excel export")
                 .build());
-    taskExecutor.execute(() -> runExport(job.getPublicId()));
+    executeAfterCommit(() -> runExport(job.getPublicId()));
     return toJobResponse(job);
+  }
+
+  private void executeAfterCommit(Runnable task) {
+    if (TransactionSynchronizationManager.isActualTransactionActive()) {
+      TransactionSynchronizationManager.registerSynchronization(
+          new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              taskExecutor.execute(task);
+            }
+          });
+    } else {
+      taskExecutor.execute(task);
+    }
   }
 
   @Transactional
