@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence, type Variants } from 'motion/react'
-import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon, Sparkles } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, CopyIcon, CheckIcon } from 'lucide-react'
+import { BrandedLoading } from '@/components/BrandedLoading'
 
 import {
   Dialog,
@@ -24,83 +25,7 @@ const LOADING_PHRASES = [
   'Sắp hoàn tất...',
 ]
 
-function LoadingTypingEffect() {
-  const [phraseIndex, setPhraseIndex] = useState(0)
-  const [text, setText] = useState('')
 
-  useEffect(() => {
-    let currentText = ''
-    let charIndex = 0
-    const targetPhrase = LOADING_PHRASES[phraseIndex]
-
-    const typingInterval = setInterval(() => {
-      if (charIndex < targetPhrase.length) {
-        currentText += targetPhrase.charAt(charIndex)
-        setText(currentText)
-        charIndex++
-      } else {
-        clearInterval(typingInterval)
-      }
-    }, 35)
-
-    const nextPhraseTimeout = setTimeout(() => {
-      setPhraseIndex((i) => (i + 1) % LOADING_PHRASES.length)
-    }, 2500)
-
-    return () => {
-      clearInterval(typingInterval)
-      clearTimeout(nextPhraseTimeout)
-    }
-  }, [phraseIndex])
-
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 w-full max-w-sm mx-auto p-6">
-      {/* Premium Orb */}
-      <div className="relative flex items-center justify-center size-14 mb-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 rounded-full border-[1.5px] border-primary/10 border-t-primary"
-        />
-        <motion.div
-          animate={{ scale: [0.85, 1.15, 0.85], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute inset-2 rounded-full bg-primary/20 blur-md"
-        />
-        <Sparkles className="size-5 text-primary relative z-10" />
-      </div>
-
-      {/* Typing Text */}
-      <p className="text-sm font-medium text-foreground tracking-tight flex items-center h-6">
-        {text}
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-          className="inline-block w-[2px] h-4 ml-0.5 bg-primary"
-        />
-      </p>
-
-      {/* Skeletal hint */}
-      <div className="w-full mt-6 space-y-3 opacity-20">
-        <motion.div 
-          animate={{ opacity: [0.1, 0.3, 0.1] }} 
-          transition={{ duration: 2, repeat: Infinity, delay: 0 }}
-          className="h-2 bg-foreground rounded-full w-full" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.1, 0.3, 0.1] }} 
-          transition={{ duration: 2, repeat: Infinity, delay: 0.2 }}
-          className="h-2 bg-foreground rounded-full w-[85%]" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.1, 0.3, 0.1] }} 
-          transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-          className="h-2 bg-foreground rounded-full w-[60%]" 
-        />
-      </div>
-    </div>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // Result view
@@ -235,7 +160,7 @@ export function TestResultDialog({ open, onOpenChange, isPending, result }: Test
                 exit={{ opacity: 0 }}
                 className="flex items-center justify-center py-8"
               >
-                <LoadingTypingEffect />
+                <BrandedLoading phrases={LOADING_PHRASES} />
               </motion.div>
             ) : result ? (
               <motion.div
