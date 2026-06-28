@@ -15,7 +15,7 @@ export type CheckOperator =
   | 'NOT_EMPTY'
   | 'IS_JSON'
 
-export type ExpectedSource = 'DATASET_COLUMN' | 'STATIC_VALUE' | 'TEMPLATE'
+export type ExpectedSource = 'DATASET_COLUMN'
 
 export type VerificationMode = 'FIELD_CHECKS' | 'LLM_JUDGE' | 'COMBINED'
 

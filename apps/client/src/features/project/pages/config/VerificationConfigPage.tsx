@@ -71,7 +71,7 @@ const FALLBACK_OPERATORS: OperatorCatalogResponse[] = [
   makeOperator('NOT_EQUALS', 'Khác', 'Giá trị thực tế khác kỳ vọng', 'TEXT', true),
   makeOperator('CONTAINS', 'Chứa', 'Giá trị thực tế chứa kỳ vọng', 'TEXT', true),
   makeOperator('NOT_CONTAINS', 'Không chứa', 'Giá trị thực tế không chứa kỳ vọng', 'TEXT', true),
-  makeOperator('REGEX', 'Regex', 'Giá trị thực tế khớp biểu thức chính quy', 'TEXT', true, ['STATIC_VALUE', 'TEMPLATE']),
+  makeOperator('REGEX', 'Regex', 'Giá trị thực tế khớp biểu thức chính quy', 'TEXT', true),
   makeOperator('GREATER_THAN', 'Lớn hơn', 'So sánh số lớn hơn kỳ vọng', 'NUMBER', true),
   makeOperator('GREATER_THAN_OR_EQUALS', 'Lớn hơn hoặc bằng', 'So sánh số lớn hơn hoặc bằng kỳ vọng', 'NUMBER', true),
   makeOperator('LESS_THAN', 'Nhỏ hơn', 'So sánh số nhỏ hơn kỳ vọng', 'NUMBER', true),
@@ -714,11 +714,10 @@ function AssertionSentence({
   columns: SchemaColumnResponse[]
 }): ReactElement {
   const expected = assertion.expected
-  const columnName = expected?.source === 'DATASET_COLUMN'
-    ? columns.find((column) => column.publicId === expected.columnKey)?.columnName ?? 'dataset column'
-    : expected?.source === 'STATIC_VALUE'
-      ? expected.value ?? 'static value'
-      : expected?.template ?? 'template'
+  const columnName =
+    expected?.source === 'DATASET_COLUMN'
+      ? columns.find((column) => column.publicId === expected.columnKey)?.columnName ?? 'dataset column'
+      : 'dataset column'
 
   return (
     <div className="rounded-lg border bg-muted/20 p-3 text-sm">
@@ -842,20 +841,19 @@ function validateAssertionPreview(
   const operator = operators.find((item) => item.operator === assertion.operator)
   const requiresExpected = operator?.requiresExpected ?? !['NOT_EMPTY', 'IS_JSON'].includes(assertion.operator)
   if (!requiresExpected) {
+    errors.push('Rule phải so sánh với một cột dataset.')
     return
   }
   if (!assertion.expected) {
     errors.push('Rule cần dữ liệu kỳ vọng.')
     return
   }
+  if (assertion.expected.source !== 'DATASET_COLUMN') {
+    errors.push('Rule chỉ được so với cột dataset.')
+    return
+  }
   if (assertion.expected.source === 'DATASET_COLUMN' && !assertion.expected.columnKey) {
     errors.push('Rule cần chọn cột dataset.')
-  }
-  if (assertion.expected.source === 'STATIC_VALUE' && !assertion.expected.value?.trim()) {
-    errors.push('Rule cần giá trị tĩnh.')
-  }
-  if (assertion.expected.source === 'TEMPLATE' && !assertion.expected.template?.trim()) {
-    errors.push('Rule cần template.')
   }
 }
 
@@ -901,7 +899,7 @@ function makeOperator(
   description: string,
   category: OperatorCatalogResponse['category'],
   requiresExpected: boolean,
-  supportedExpectedSources: OperatorCatalogResponse['supportedExpectedSources'] = ['DATASET_COLUMN', 'STATIC_VALUE', 'TEMPLATE'],
+  supportedExpectedSources: OperatorCatalogResponse['supportedExpectedSources'] = ['DATASET_COLUMN'],
 ): OperatorCatalogResponse {
   return { operator, displayName, description, category, requiresExpected, supportedExpectedSources }
 }

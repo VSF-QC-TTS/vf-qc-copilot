@@ -237,14 +237,34 @@ class VerificationConfigServiceImplTest {
                             "$.title",
                             CheckOperator.CONTAINS,
                             new ExpectedValueRequest(
-                                ExpectedSource.STATIC_VALUE, null, "keyword", null),
+                                ExpectedSource.DATASET_COLUMN, expectedAnswerKey, null, null),
                             0),
                         assertion(
                             "$.summary",
                             CheckOperator.CONTAINS,
                             new ExpectedValueRequest(
-                                ExpectedSource.STATIC_VALUE, null, "keyword", null),
+                                ExpectedSource.DATASET_COLUMN, contextKey, null, null),
                             1)))));
+
+    assertThatThrownBy(() -> service.save(projectPublicId, request))
+        .isInstanceOf(ResourceException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.BAD_REQUEST);
+  }
+
+  @Test
+  void save_StaticExpectedValue_ThrowsBadRequest() {
+    SaveVerificationRequest request =
+        new SaveVerificationRequest(
+            VerificationMode.FIELD_CHECKS,
+            new BigDecimal("0.8"),
+            List.of(
+                fieldItem(
+                    "Static value is no longer allowed",
+                    "$.status",
+                    CheckOperator.EQUALS,
+                    new ExpectedValueRequest(ExpectedSource.STATIC_VALUE, null, "ACTIVE", null),
+                    false,
+                    0)));
 
     assertThatThrownBy(() -> service.save(projectPublicId, request))
         .isInstanceOf(ResourceException.class)
@@ -270,12 +290,12 @@ class VerificationConfigServiceImplTest {
                     assertion(
                         "$.title",
                         CheckOperator.CONTAINS,
-                        new ExpectedValueRequest(ExpectedSource.STATIC_VALUE, null, "VinFast", null),
+                        new ExpectedValueRequest(ExpectedSource.DATASET_COLUMN, expectedAnswerKey, null, null),
                         0),
                     assertion(
                         "$.summary",
                         CheckOperator.CONTAINS,
-                        new ExpectedValueRequest(ExpectedSource.TEMPLATE, null, null, "{{expected_answer}}"),
+                        new ExpectedValueRequest(ExpectedSource.DATASET_COLUMN, contextKey, null, null),
                         1))),
             llmItem()));
   }

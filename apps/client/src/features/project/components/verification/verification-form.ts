@@ -52,7 +52,7 @@ export const ITEM_TYPE_LABELS: Record<VerificationItemType, string> = {
 }
 
 const expectedSchema = z.object({
-  source: z.enum(['DATASET_COLUMN', 'STATIC_VALUE', 'TEMPLATE']),
+  source: z.literal('DATASET_COLUMN'),
   columnKey: z.string().nullable(),
   value: z.string().nullable(),
   template: z.string().nullable(),
@@ -237,7 +237,8 @@ export function createLlmItem(displayOrder: number): VerificationItemRequest {
     fieldAssertions: null,
     targetPaths: [],
     referenceColumnKeys: [],
-    rubric: 'Chấm câu trả lời dựa trên các trường tham chiếu và tiêu chí bên dưới.',
+    rubric:
+      'Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm câu trả lời theo các tiêu chí bên dưới. Trả về điểm và lý do ngắn gọn.',
     criteria: [createCriterion(0)],
   }
 }
@@ -396,6 +397,7 @@ function validateAssertion(
   const operator = operatorMap.get(assertion.operator)
   const requiresExpected = operator?.requiresExpected ?? !['NOT_EMPTY', 'IS_JSON'].includes(assertion.operator)
   if (!requiresExpected) {
+    errors.push(`Rule "${assertion.actualPath || assertion.operator}" phải so sánh với một cột dataset.`)
     return
   }
   const expected = assertion.expected
@@ -403,13 +405,11 @@ function validateAssertion(
     errors.push(`Rule "${assertion.actualPath || assertion.operator}" cần dữ liệu kỳ vọng.`)
     return
   }
+  if (expected.source !== 'DATASET_COLUMN') {
+    errors.push(`Rule "${assertion.actualPath || assertion.operator}" chỉ được so với cột dataset.`)
+    return
+  }
   if (expected.source === 'DATASET_COLUMN' && !expected.columnKey) {
     errors.push(`Rule "${assertion.actualPath || assertion.operator}" cần chọn cột dataset.`)
-  }
-  if (expected.source === 'STATIC_VALUE' && !expected.value?.trim()) {
-    errors.push(`Rule "${assertion.actualPath || assertion.operator}" cần giá trị tĩnh.`)
-  }
-  if (expected.source === 'TEMPLATE' && !expected.template?.trim()) {
-    errors.push(`Rule "${assertion.actualPath || assertion.operator}" cần template.`)
   }
 }

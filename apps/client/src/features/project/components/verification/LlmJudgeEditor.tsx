@@ -49,8 +49,25 @@ export function LlmJudgeEditor({
     })
   }
 
-  function appendRubricToken(token: string): void {
-    patchItem({ rubric: `${item.rubric ?? ''} ${token}` })
+  function appendTokenToPrompt(token: string): string {
+    const currentRubric = item.rubric?.trimEnd() ?? ''
+    return currentRubric ? `${currentRubric} ${token}` : token
+  }
+
+  function insertResponseToken(path: string): void {
+    patchItem({
+      targetPaths: targetPaths.includes(path) ? targetPaths : [...targetPaths, path],
+      rubric: appendTokenToPrompt(`$response.${path}`),
+    })
+  }
+
+  function insertDatasetToken(column: SchemaColumnResponse): void {
+    patchItem({
+      referenceColumnKeys: referenceColumnKeys.includes(column.publicId)
+        ? referenceColumnKeys
+        : [...referenceColumnKeys, column.publicId],
+      rubric: appendTokenToPrompt(`$dataset.${column.columnName}`),
+    })
   }
 
   function updateCriterion(index: number, patch: Partial<LlmCriterionRequest>): void {
@@ -71,98 +88,55 @@ export function LlmJudgeEditor({
 
   return (
     <div className="space-y-5">
-      <Field>
-        <FieldLabel className="text-xs font-semibold">Trường response cần chấm</FieldLabel>
-        <div className="flex flex-wrap gap-1.5">
-          {responseFields.length > 0 ? (
-            responseFields.map((path) => {
-              const selected = targetPaths.includes(path)
-              return (
-                <Button
-                  key={path}
-                  type="button"
-                  variant={selected ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-8 rounded-full px-3 font-mono text-[11px]"
-                  onClick={() => toggleTargetPath(path)}
-                >
-                  {path}
-                </Button>
-              )
-            })
-          ) : (
-            <Badge variant="outline" className="rounded-full">
-              Chưa có response fields
-            </Badge>
-          )}
-        </div>
-      </Field>
-
-      <Field>
-        <FieldLabel className="text-xs font-semibold">Cột dataset tham chiếu</FieldLabel>
-        <div className="flex flex-wrap gap-1.5">
-          {columns.map((column) => {
-            const selected = referenceColumnKeys.includes(column.publicId)
-            return (
-              <Button
-                key={column.publicId}
-                type="button"
-                variant={selected ? 'default' : 'outline'}
-                size="sm"
-                className="h-8 rounded-full px-3 text-[11px]"
-                onClick={() => toggleReferenceColumn(column.publicId)}
-              >
-                {column.columnName}
-              </Button>
-            )
-          })}
-        </div>
-      </Field>
-
-      <Field>
-        <FieldLabel className="text-xs font-semibold">Rubric chung</FieldLabel>
-        <Textarea
-          value={item.rubric ?? ''}
-          onChange={(event) => patchItem({ rubric: event.target.value })}
-          className="min-h-[118px] rounded-lg font-mono text-xs"
-          placeholder="Mô tả cách AI Judge nên chấm câu trả lời..."
+      <div className="grid gap-3 xl:grid-cols-[220px_minmax(0,1fr)_220px]">
+        <TokenRail
+          title="Response fields"
+          emptyText="Chưa có response fields"
+          items={responseFields.map((path) => ({
+            key: path,
+            label: path,
+            token: `$response.${path}`,
+            selected: targetPaths.includes(path),
+            onInsert: () => insertResponseToken(path),
+            onToggle: () => toggleTargetPath(path),
+          }))}
         />
-        <div className="flex flex-wrap gap-1.5">
-          {targetPaths.map((path) => (
-            <Button
-              key={path}
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 rounded-full px-2 font-mono text-[11px]"
-              onClick={() => appendRubricToken(`{{response.${path}}}`)}
-            >
-              {`{{response.${path}}}`}
-            </Button>
-          ))}
-          {columns
-            .filter((column) => referenceColumnKeys.includes(column.publicId))
-            .map((column) => (
-              <Button
-                key={column.publicId}
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 rounded-full px-2 font-mono text-[11px]"
-                onClick={() => appendRubricToken(`{{${column.columnName}}}`)}
-              >
-                {`{{${column.columnName}}}`}
-              </Button>
-            ))}
-        </div>
-      </Field>
+
+        <Field>
+          <FieldLabel className="text-xs font-semibold">Prompt chấm điểm</FieldLabel>
+          <Textarea
+            value={item.rubric ?? ''}
+            onChange={(event) => patchItem({ rubric: event.target.value })}
+            className="min-h-[260px] rounded-lg font-mono text-xs leading-relaxed"
+            placeholder={
+              'Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm câu trả lời theo các tiêu chí bên dưới. Trả về điểm và lý do ngắn gọn.'
+            }
+          />
+          <div className="rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            Bấm token hai bên để chèn nhanh vào prompt. Token được lưu cùng danh sách field tham chiếu.
+          </div>
+        </Field>
+
+        <TokenRail
+          title="Dataset schema"
+          emptyText="Chưa có schema columns"
+          items={columns.map((column) => ({
+            key: column.publicId,
+            label: column.columnName,
+            token: `$dataset.${column.columnName}`,
+            selected: referenceColumnKeys.includes(column.publicId),
+            onInsert: () => insertDatasetToken(column),
+            onToggle: () => toggleReferenceColumn(column.publicId),
+          }))}
+        />
+      </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-sm font-semibold">Tiêu chí chấm độc lập</h4>
+            <h4 className="text-sm font-semibold">Rubric con</h4>
             <p className="text-xs text-muted-foreground">
-              Mỗi tiêu chí sẽ có kết quả pass hoặc fail riêng.
+              Mỗi dòng là một tiêu chí để judge tham chiếu khi cho điểm.
             </p>
           </div>
           <Button type="button" variant="outline" size="sm" className="h-8 rounded-lg" onClick={addCriterion}>
@@ -224,6 +198,71 @@ export function LlmJudgeEditor({
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+interface TokenRailItem {
+  key: string
+  label: string
+  token: string
+  selected: boolean
+  onInsert: () => void
+  onToggle: () => void
+}
+
+function TokenRail({
+  title,
+  emptyText,
+  items,
+}: {
+  title: string
+  emptyText: string
+  items: TokenRailItem[]
+}): ReactElement {
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
+        <Badge variant="outline">{items.filter((item) => item.selected).length}</Badge>
+      </div>
+      <div className="flex max-h-[260px] flex-col gap-2 overflow-auto pr-1">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <div
+              key={item.key}
+              className={[
+                'rounded-md border bg-background p-2 transition-colors',
+                item.selected ? 'border-primary/40 ring-1 ring-primary/15' : '',
+              ].join(' ')}
+            >
+              <button
+                type="button"
+                className="block w-full truncate text-left font-mono text-xs font-medium"
+                onClick={item.onInsert}
+              >
+                {item.token}
+              </button>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="truncate text-[11px] text-muted-foreground">{item.label}</span>
+                <Button
+                  type="button"
+                  variant={item.selected ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-6 rounded-md px-2 text-[11px]"
+                  onClick={item.onToggle}
+                >
+                  {item.selected ? 'Dùng' : 'Chọn'}
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-md border border-dashed bg-background px-3 py-6 text-center text-xs text-muted-foreground">
+            {emptyText}
+          </div>
+        )}
       </div>
     </div>
   )

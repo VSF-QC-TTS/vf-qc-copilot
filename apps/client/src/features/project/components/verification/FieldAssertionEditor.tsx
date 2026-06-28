@@ -1,4 +1,4 @@
-import { TrashIcon } from 'lucide-react'
+import { ArrowRightIcon, TrashIcon } from 'lucide-react'
 import type { ReactElement } from 'react'
 
 import type { CheckOperator, FieldAssertionRequest, OperatorCatalogResponse, SchemaColumnResponse } from '@/types/config'
@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Field, FieldLabel } from '@/components/ui/field'
 
-import { ExpectedValueEditor } from './ExpectedValueEditor'
 import { defaultExpectedValue } from './verification-form'
 
 interface FieldAssertionEditorProps {
@@ -34,8 +33,12 @@ export function FieldAssertionEditor({
   onChange,
   onRemove,
 }: FieldAssertionEditorProps): ReactElement {
-  const selectedOperator = operators.find((operator) => operator.operator === assertion.operator)
+  const comparableOperators = operators.filter((operator) => operator.requiresExpected)
+  const currentOperator = comparableOperators.some((operator) => operator.operator === assertion.operator)
+    ? assertion.operator
+    : comparableOperators[0]?.operator ?? assertion.operator
   const responseOptions = responseFields.map((field) => ({ value: field, label: field }))
+  const datasetColumnId = assertion.expected?.source === 'DATASET_COLUMN' ? assertion.expected.columnKey ?? undefined : undefined
 
   function patchAssertion(patch: Partial<FieldAssertionRequest>): void {
     onChange({ ...assertion, ...patch })
@@ -43,38 +46,46 @@ export function FieldAssertionEditor({
 
   function handleOperatorChange(operatorValue: string): void {
     const operator = operatorValue as CheckOperator
-    const nextOperator = operators.find((item) => item.operator === operator)
     patchAssertion({
       operator,
-      expected:
-        nextOperator?.requiresExpected === false
-          ? null
-          : assertion.expected ?? defaultExpectedValue(),
+      expected: assertion.expected?.source === 'DATASET_COLUMN' ? assertion.expected : defaultExpectedValue(),
+    })
+  }
+
+  function handleDatasetColumnChange(columnKey: string): void {
+    patchAssertion({
+      operator: currentOperator,
+      expected: {
+        source: 'DATASET_COLUMN',
+        columnKey,
+        value: null,
+        template: null,
+      },
     })
   }
 
   return (
-    <div className="rounded-xl border bg-background p-3">
-      <div className="grid gap-3 lg:grid-cols-[1.4fr_180px_120px_auto]">
+    <div className="rounded-lg border bg-background p-3">
+      <div className="grid gap-2 xl:grid-cols-[minmax(220px,1fr)_160px_minmax(220px,1fr)_100px_auto] xl:items-end">
         <Field>
-          <FieldLabel className="text-xs font-semibold">Trường response</FieldLabel>
+          <FieldLabel className="text-xs font-semibold">Response field</FieldLabel>
           <Combobox
             options={responseOptions}
             value={assertion.actualPath || undefined}
             onChange={(actualPath) => patchAssertion({ actualPath })}
-            placeholder="Chọn response path..."
+            placeholder="response.answer..."
             emptyText="Chưa có response path"
           />
         </Field>
 
         <Field>
           <FieldLabel className="text-xs font-semibold">Toán tử</FieldLabel>
-          <Select value={assertion.operator} onValueChange={handleOperatorChange}>
+          <Select value={currentOperator} onValueChange={handleOperatorChange}>
             <SelectTrigger className="h-9 rounded-lg">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {operators.map((operator) => (
+              {comparableOperators.map((operator) => (
                 <SelectItem key={operator.operator} value={operator.operator}>
                   {operator.displayName}
                 </SelectItem>
@@ -84,7 +95,26 @@ export function FieldAssertionEditor({
         </Field>
 
         <Field>
-          <FieldLabel className="text-xs font-semibold">Mức ảnh hưởng</FieldLabel>
+          <FieldLabel className="text-xs font-semibold">Dataset schema column</FieldLabel>
+          <div className="grid grid-cols-[auto_1fr] items-center gap-2">
+            <ArrowRightIcon className="size-4 text-muted-foreground" />
+            <Select value={datasetColumnId} onValueChange={handleDatasetColumnChange}>
+              <SelectTrigger className="h-9 rounded-lg">
+                <SelectValue placeholder="dataset.ground_truth..." />
+              </SelectTrigger>
+              <SelectContent>
+                {columns.map((column) => (
+                  <SelectItem key={column.publicId} value={column.publicId}>
+                    {column.columnName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </Field>
+
+        <Field>
+          <FieldLabel className="text-xs font-semibold">Weight</FieldLabel>
           <Input
             type="number"
             min="0"
@@ -113,15 +143,11 @@ export function FieldAssertionEditor({
           ) : null}
         </div>
       </div>
-
-      <div className={compact ? 'mt-3' : 'mt-4'}>
-        <ExpectedValueEditor
-          value={assertion.expected}
-          operator={selectedOperator}
-          columns={columns}
-          onChange={(expected) => patchAssertion({ expected })}
-        />
-      </div>
+      {compact ? null : (
+        <div className="mt-2 rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          So sánh giá trị từ response với dữ liệu kỳ vọng trong từng row dataset.
+        </div>
+      )}
     </div>
   )
 }

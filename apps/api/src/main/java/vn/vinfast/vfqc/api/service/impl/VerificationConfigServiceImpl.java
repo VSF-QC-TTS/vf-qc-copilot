@@ -215,39 +215,29 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
   private void validateFieldAssertion(
       FieldAssertionRequest assertion, Set<UUID> validColumnKeys) {
     CheckOperator operator = assertion.operator();
-    if (operator.isRequiresExpected()) {
-      if (assertion.expected() == null) {
-        throw ResourceException.of(ErrorCode.BAD_REQUEST, "expected is required for this operator.");
-      }
-      validateExpected(assertion.expected(), operator, validColumnKeys);
-      return;
+    if (!operator.isRequiresExpected()) {
+      throw ResourceException.of(
+          ErrorCode.BAD_REQUEST,
+          "Field assertions must compare a response field with a dataset schema column.");
     }
-
-    if (assertion.expected() != null && assertion.expected().source() != null) {
-      validateExpected(assertion.expected(), operator, validColumnKeys);
+    if (assertion.expected() == null) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "expected dataset column is required.");
     }
+    validateExpected(assertion.expected(), operator, validColumnKeys);
   }
 
   private void validateExpected(
       ExpectedValueRequest expected, CheckOperator operator, Set<UUID> validColumnKeys) {
+    if (expected.source() != ExpectedSource.DATASET_COLUMN) {
+      throw ResourceException.of(
+          ErrorCode.BAD_REQUEST, "Field assertions must compare against a dataset schema column.");
+    }
     if (!operator.getSupportedExpectedSources().contains(expected.source())) {
       throw ResourceException.of(
           ErrorCode.BAD_REQUEST, "Expected source is not supported by this operator.");
     }
 
-    switch (expected.source()) {
-      case DATASET_COLUMN -> requireValidColumnKey(expected.columnKey(), validColumnKeys);
-      case STATIC_VALUE -> {
-        if (!StringUtils.hasText(expected.value())) {
-          throw ResourceException.of(ErrorCode.BAD_REQUEST, "expected.value is required.");
-        }
-      }
-      case TEMPLATE -> {
-        if (!StringUtils.hasText(expected.template())) {
-          throw ResourceException.of(ErrorCode.BAD_REQUEST, "expected.template is required.");
-        }
-      }
-    }
+    requireValidColumnKey(expected.columnKey(), validColumnKeys);
   }
 
   private void requireValidColumnKey(UUID key, Set<UUID> validColumnKeys) {
