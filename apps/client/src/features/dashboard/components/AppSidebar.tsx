@@ -40,15 +40,15 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex flex-col gap-2 pt-2 select-none">
           {state !== 'collapsed' ? (
-            <div className="flex h-8 items-center gap-2.5 px-4">
-              <img src="/logo.png" className="size-5 object-contain" alt="VinFast Logo" />
-              <span className="font-semibold text-foreground/80 tracking-tight text-sm">
+            <div className="flex h-8 items-center justify-center gap-2.5 px-4">
+              <img src="/logo.png" className="sidebar-logo" alt="VinFast Logo" />
+              <span className="font-semibold text-foreground/80 tracking-tight text-sm flex items-center">
                 {t('app.name')}
               </span>
             </div>
           ) : (
             <div className="flex h-8 items-center justify-center">
-              <img src="/logo.png" className="size-5 object-contain" alt="VinFast Logo" />
+              <img src="/logo.png" className="sidebar-logo" alt="VinFast Logo" />
             </div>
           )}
           <ProjectSwitcher />

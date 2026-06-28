@@ -66,7 +66,9 @@
     "selectProject": "Select a project",
     "switchLabel": "Switch project",
     "noResults": "No projects found.",
-    "loadMore": "Load more..."
+    "loadMore": "Load more...",
+    "workspaceLabel": "QC Workspace",
+    "defaultDesc": "QC Copilot Project"
   },
   "welcome": {
     "title": "Select a project to get started",

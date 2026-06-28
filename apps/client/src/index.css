@@ -149,3 +149,9 @@
     color: var(--foreground);
   }
 }
+
+.sidebar-logo {
+  height: 1.375rem; /* 22px */
+  width: auto;
+  object-fit: contain;
+}
