@@ -1,4 +1,5 @@
-import type { ReactElement } from 'react'
+import { useState, type ReactElement } from 'react'
+import { Eye, Search } from 'lucide-react'
 
 import type { ResponseFieldExampleResponse, SchemaColumnResponse, VerificationItemRequest } from '@/types/config'
 
@@ -6,6 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Field, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 interface LlmJudgeEditorProps {
   item: VerificationItemRequest
@@ -50,7 +53,7 @@ export function LlmJudgeEditor({
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[260px_minmax(0,1fr)_260px]">
+    <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
       <TokenRail
         title="Response field"
         emptyText="Chạy test target để lấy response field."
@@ -58,6 +61,7 @@ export function LlmJudgeEditor({
           key: field.path,
           token: toResponseToken(field.path),
           example: field.example,
+          description: 'Trường dữ liệu trích xuất từ phản hồi của mô hình/hệ thống.',
           selected: targetPaths.includes(field.path),
           onInsert: () => insertResponseToken(field),
         }))}
@@ -85,6 +89,7 @@ export function LlmJudgeEditor({
           key: column.publicId,
           token: `$dataset.${column.columnName}`,
           example: column.sampleValue,
+          description: `Vai trò: ${column.role} | Kiểu dữ liệu: ${column.dataType}`,
           selected: referenceColumnKeys.includes(column.publicId),
           onInsert: () => insertDatasetToken(column),
         }))}
@@ -97,6 +102,7 @@ interface TokenRailItem {
   key: string
   token: string
   example?: string | null
+  description?: string | null
   selected: boolean
   onInsert: () => void
 }
@@ -110,33 +116,92 @@ function TokenRail({
   emptyText: string
   items: TokenRailItem[]
 }): ReactElement {
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.toLowerCase()
+    return (
+      item.token.toLowerCase().includes(query) ||
+      (item.example && item.example.toLowerCase().includes(query)) ||
+      (item.description && item.description.toLowerCase().includes(query))
+    )
+  })
+
   return (
-    <div className="rounded-lg border bg-muted/20 p-3">
+    <div className="rounded-lg border bg-muted/20 p-3 flex flex-col min-w-0">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h4 className="text-xs font-semibold uppercase text-muted-foreground">{title}</h4>
+        <h4 className="text-xs font-semibold uppercase text-muted-foreground truncate">{title}</h4>
         <Badge variant="outline">{items.filter((item) => item.selected).length}</Badge>
       </div>
+
+      <div className="relative mb-3">
+        <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Input
+          type="text"
+          placeholder="Tìm kiếm..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-8 pl-8 pr-3 text-xs rounded-lg"
+        />
+      </div>
+
       <div className="flex max-h-[430px] flex-col gap-2 overflow-auto pr-1">
-        {items.length > 0 ? (
-          items.map((item) => (
-            <Button
-              key={item.key}
-              type="button"
-              variant={item.selected ? 'default' : 'outline'}
-              className="h-auto justify-start rounded-lg px-3 py-2 text-left"
-              onClick={item.onInsert}
-            >
-              <span className="min-w-0">
-                <span className="block truncate font-mono text-xs">{item.token}</span>
-                {item.example ? (
-                  <span className="mt-1 block truncate text-[11px] opacity-70">{item.example}</span>
-                ) : null}
-              </span>
-            </Button>
+        {filteredItems.length > 0 ? (
+          filteredItems.map((item) => (
+            <div key={item.key} className="flex items-center gap-1.5 min-w-0">
+              <Button
+                type="button"
+                variant={item.selected ? 'default' : 'outline'}
+                className="h-auto flex-1 justify-start rounded-lg px-3 py-2 text-left min-w-0"
+                onClick={item.onInsert}
+              >
+                <span className="min-w-0 w-full">
+                  <span className="block truncate font-mono text-xs">{item.token}</span>
+                  {item.example ? (
+                    <span className="mt-0.5 block truncate text-[10px] opacity-70">{item.example}</span>
+                  ) : null}
+                </span>
+              </Button>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0 rounded-lg hover:bg-muted/80 text-muted-foreground"
+                  >
+                    <Eye className="size-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="end" className="w-80 p-3">
+                  <div className="space-y-2.5">
+                    <div>
+                      <div className="font-mono text-xs font-semibold text-primary">{item.token}</div>
+                      {item.description ? (
+                        <div className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
+                          {item.description}
+                        </div>
+                      ) : null}
+                    </div>
+                    {item.example ? (
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-semibold uppercase text-muted-foreground">Ví dụ dữ liệu:</div>
+                        <pre className="max-h-36 overflow-auto rounded bg-muted/50 p-2 font-mono text-[10px] leading-relaxed break-all whitespace-pre-wrap">
+                          {item.example}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] italic text-muted-foreground">Không có dữ liệu ví dụ.</div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           ))
         ) : (
           <div className="rounded-md border border-dashed bg-background px-3 py-6 text-center text-xs text-muted-foreground">
-            {emptyText}
+            {searchQuery ? 'Không tìm thấy kết quả' : emptyText}
           </div>
         )}
       </div>
