@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react'
+import { useState, useRef, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Eye, Search } from 'lucide-react'
 
@@ -67,6 +67,7 @@ export function LlmJudgeEditor({
   onChange,
 }: LlmJudgeEditorProps): ReactElement {
   const { t } = useTranslation('project')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const targetPaths = item.targetPaths ?? []
   const referenceColumnKeys = item.referenceColumnKeys ?? []
   const normalizedResponseFields = responseFields.map(normalizeResponseField)
@@ -75,15 +76,32 @@ export function LlmJudgeEditor({
     onChange({ ...item, ...patch })
   }
 
-  function appendTokenToPrompt(token: string): string {
-    const currentRubric = item.rubric?.trimEnd() ?? ''
-    return currentRubric ? `${currentRubric} ${token}` : token
+  function insertTokenAtCursor(token: string): string {
+    const textarea = textareaRef.current
+    const currentRubric = item.rubric ?? ''
+    if (!textarea) {
+      return currentRubric ? `${currentRubric} ${token}` : token
+    }
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const before = currentRubric.substring(0, start)
+    const after = currentRubric.substring(end)
+    const nextRubric = `${before}${token}${after}`
+
+    setTimeout(() => {
+      textarea.focus()
+      const nextCursorPos = start + token.length
+      textarea.setSelectionRange(nextCursorPos, nextCursorPos)
+    }, 0)
+
+    return nextRubric
   }
 
   function insertResponseToken(field: ResponseFieldExampleResponse): void {
     patchItem({
       targetPaths: targetPaths.includes(field.path) ? targetPaths : [...targetPaths, field.path],
-      rubric: appendTokenToPrompt(toResponseToken(field.path)),
+      rubric: insertTokenAtCursor(toResponseToken(field.path)),
     })
   }
 
@@ -92,7 +110,7 @@ export function LlmJudgeEditor({
       referenceColumnKeys: referenceColumnKeys.includes(column.publicId)
         ? referenceColumnKeys
         : [...referenceColumnKeys, column.publicId],
-      rubric: appendTokenToPrompt(`$dataset.${column.columnName}`),
+      rubric: insertTokenAtCursor(`$dataset.${column.columnName}`),
     })
   }
 
@@ -135,6 +153,7 @@ export function LlmJudgeEditor({
           </Select>
         </div>
         <Textarea
+          ref={textareaRef}
           value={item.rubric ?? ''}
           onChange={(event) => patchItem({ rubric: event.target.value })}
           className="min-h-[360px] rounded-lg font-mono text-xs leading-relaxed"
