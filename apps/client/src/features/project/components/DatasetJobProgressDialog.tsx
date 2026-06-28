@@ -64,7 +64,7 @@ export function DatasetJobProgressDialog({
 }: DatasetJobProgressDialogProps) {
   const [event, setEvent] = useState<DatasetJobEventResponse | null>(null)
   const [mappings, setMappings] = useState<DatasetColumnMappingRequest[]>([])
-  const confirmMutation = useConfirmDatasetImport(datasetPublicId, event?.publicId)
+  const confirmMutation = useConfirmDatasetImport(datasetPublicId)
 
   const currentStatus = event?.status ?? job?.status ?? 'QUEUED'
   const currentProgress = event?.progress ?? job?.progress ?? 0
@@ -142,7 +142,12 @@ export function DatasetJobProgressDialog({
   }
 
   function handleConfirm(): void {
-    confirmMutation.mutate({ mappings })
+    const targetJobId = event?.publicId ?? job?.publicId
+    if (!targetJobId) {
+      toast.error('Không tìm thấy ID của job để xác nhận')
+      return
+    }
+    confirmMutation.mutate({ jobPublicId: targetJobId, data: { mappings } })
   }
 
   async function handleCancel(): Promise<void> {

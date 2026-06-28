@@ -93,9 +93,10 @@ export function useImportDatasetExcel(datasetPublicId: string | undefined) {
   })
 }
 
-export function useConfirmDatasetImport(datasetPublicId: string | undefined, jobPublicId: string | undefined) {
+export function useConfirmDatasetImport(datasetPublicId: string | undefined) {
   return useMutation({
-    mutationFn: (data: ConfirmDatasetImportRequest) => confirmDatasetImport(datasetPublicId!, jobPublicId!, data),
+    mutationFn: ({ jobPublicId, data }: { jobPublicId: string; data: ConfirmDatasetImportRequest }) =>
+      confirmDatasetImport(datasetPublicId!, jobPublicId, data),
     onError: (error: Error) => toast.error(error.message),
   })
 }
