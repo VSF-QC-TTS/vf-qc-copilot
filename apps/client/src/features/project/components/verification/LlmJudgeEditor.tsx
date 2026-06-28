@@ -4,7 +4,6 @@ import { Eye, Search } from 'lucide-react'
 
 import type { ResponseFieldExampleResponse, SchemaColumnResponse, VerificationItemRequest } from '@/types/config'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Field, FieldLabel } from '@/components/ui/field'
@@ -196,7 +195,6 @@ function TokenRail({
     <div className="rounded-lg border bg-muted/20 p-3 flex flex-col min-w-0">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h4 className="text-xs font-semibold uppercase text-muted-foreground truncate">{title}</h4>
-        <Badge variant="outline">{items.filter((item) => item.selected).length}</Badge>
       </div>
 
       <div className="relative mb-3">
@@ -216,8 +214,8 @@ function TokenRail({
             <div key={item.key} className="flex items-center gap-1.5 min-w-0">
               <Button
                 type="button"
-                variant={item.selected ? 'default' : 'outline'}
-                className="h-auto flex-1 justify-start rounded-lg px-3 py-2 text-left min-w-0"
+                variant="outline"
+                className="h-auto flex-1 justify-start rounded-lg px-3 py-2 text-left min-w-0 hover:bg-muted/50 transition-colors"
                 onClick={item.onInsert}
               >
                 <span className="min-w-0 w-full">
