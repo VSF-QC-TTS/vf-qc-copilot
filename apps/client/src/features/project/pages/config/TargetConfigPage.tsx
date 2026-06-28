@@ -4,7 +4,7 @@ import { motion } from 'motion/react'
 import { SaveIcon, Info, ChevronDown, Check } from 'lucide-react'
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
@@ -126,21 +126,25 @@ export function TargetConfigPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="bg-muted/30 border-border/60">
-                  <CardHeader className="pb-3 border-b border-border/40 mb-4 bg-background/50 rounded-t-xl">
-                    <CardTitle className="text-base font-semibold flex items-center gap-1.5">
-                      Response Path
+                <Card className="border-border/60 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20 bg-card overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <h3 className="font-bold text-sm tracking-tight text-foreground">Response Path</h3>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="size-4 text-muted-foreground" />
+                          <Info className="size-3.5 text-muted-foreground/75 cursor-help hover:text-foreground transition-colors" />
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">Đường dẫn JSON Path để trích xuất dữ liệu từ response API. Ví dụ: $.candidates[0].content</p>
+                        <TooltipContent className="max-w-[280px] p-2.5 text-left flex flex-col gap-1 text-[11.5px] leading-relaxed">
+                          <p className="font-semibold text-foreground">Đường dẫn JSON Path</p>
+                          <p className="opacity-95">Dùng để trích xuất mảng dữ liệu testcases từ phản hồi API.</p>
+                          <p className="opacity-75 font-mono text-[10px] mt-1 bg-muted px-1.5 py-0.5 rounded">Ví dụ: $.candidates[0].content</p>
                         </TooltipContent>
                       </Tooltip>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                      Đường dẫn JSON Path để trích xuất dữ liệu từ response API.
+                    </p>
+
                     <div className="flex flex-col gap-4">
                       <Popover open={autocompleteOpen} onOpenChange={setAutocompleteOpen}>
                         <PopoverTrigger asChild>
@@ -150,22 +154,22 @@ export function TargetConfigPage() {
                               onChange={(e) => setResponsePath(e.target.value)}
                               onFocus={() => setAutocompleteOpen(true)}
                               placeholder="Ví dụ: $.data.items"
-                              className="font-mono text-sm pr-10"
+                              className="font-mono text-sm pr-10 focus-visible:ring-1 transition-all"
                             />
-                            <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 opacity-50" />
+                            <ChevronDown className="absolute right-3 top-3 h-4 w-4 opacity-40 cursor-pointer pointer-events-none" />
                           </div>
                         </PopoverTrigger>
                         <PopoverContent 
-                          className="p-0 w-[--radix-popover-trigger-width] max-h-[300px]" 
+                          className="p-0 w-[--radix-popover-trigger-width] max-h-[260px] overflow-hidden" 
                           align="start"
                           onOpenAutoFocus={(e) => e.preventDefault()}
                         >
                           <Command shouldFilter={false}>
                             <CommandList>
                               {filteredFields.length === 0 ? (
-                                <CommandEmpty className="py-3 text-center text-sm text-muted-foreground">Không tìm thấy đường dẫn phù hợp.</CommandEmpty>
+                                <CommandEmpty className="py-4 text-center text-xs text-muted-foreground select-none">Không tìm thấy đường dẫn phù hợp.</CommandEmpty>
                               ) : (
-                                <CommandGroup>
+                                <CommandGroup heading="Đường dẫn gợi ý">
                                   {filteredFields.map(field => (
                                     <CommandItem 
                                       key={field} 
@@ -174,15 +178,17 @@ export function TargetConfigPage() {
                                         setResponsePath(val)
                                         setAutocompleteOpen(false) 
                                       }}
-                                      className="font-mono text-[13px] py-2"
+                                      className="font-mono text-[11.5px] py-2 cursor-pointer flex items-center justify-between"
                                     >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4 shrink-0",
-                                          responsePath === field ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      <span className="truncate">{field}</span>
+                                      <div className="flex items-center truncate min-w-0">
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-3.5 w-3.5 shrink-0 text-primary",
+                                            responsePath === field ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        <span className="truncate">{field}</span>
+                                      </div>
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
@@ -192,14 +198,16 @@ export function TargetConfigPage() {
                         </PopoverContent>
                       </Popover>
                       
-                      <Button
-                        onClick={handleSaveResponsePath}
-                        disabled={saveMutation.isPending || responsePath === config.responsePath}
-                        className="w-full"
-                      >
-                        {saveMutation.isPending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
-                        {responsePath === config.responsePath ? 'Đã lưu cấu hình' : 'Lưu cấu hình'}
-                      </Button>
+                      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full">
+                        <Button
+                          onClick={handleSaveResponsePath}
+                          disabled={saveMutation.isPending || responsePath === config.responsePath}
+                          className="w-full shadow-sm font-semibold cursor-pointer text-xs"
+                        >
+                          {saveMutation.isPending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
+                          {responsePath === config.responsePath ? 'Đã lưu cấu hình' : 'Lưu cấu hình'}
+                        </Button>
+                      </motion.div>
                     </div>
                   </CardContent>
                 </Card>
