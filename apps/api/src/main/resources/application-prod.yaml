@@ -7,6 +7,10 @@ spring:
   threads:
     virtual:
       enabled: true
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
 
   lifecycle:
     timeout-per-shutdown-phase: 30s
