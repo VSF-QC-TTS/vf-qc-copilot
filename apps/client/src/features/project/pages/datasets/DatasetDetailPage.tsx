@@ -9,6 +9,11 @@ import {
   FileUpIcon,
   PencilIcon,
   PlayIcon,
+  Target,
+  LayoutGrid,
+  BookOpen,
+  TableProperties,
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -41,6 +46,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
 import { useProjectSchema } from '../../hooks/use-project-schema'
+import { useVerificationConfig } from '../../hooks/use-verification-config'
 import {
   useActivateDatasetVersion,
   useDataset,
@@ -83,6 +89,9 @@ export function DatasetDetailPage() {
   const [sheetSelectOpen, setSheetSelectOpen] = useState(false)
   const [selectedSheet, setSelectedSheet] = useState('')
   const [isReadingSheets, setIsReadingSheets] = useState(false)
+  const { data: verificationConfig } = useVerificationConfig(publicId)
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'library'>('table')
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number>(0)
 
   const columns = schema?.columns ?? EMPTY_COLUMNS
   const rows = rowsQuery.data?.content ?? EMPTY_ROWS
@@ -92,6 +101,28 @@ export function DatasetDetailPage() {
     }
     return Array.from(new Set(rows.flatMap((row) => Object.keys(row.data))))
   }, [columns, rows])
+
+  const evaluatedColumns = useMemo(() => {
+    const cols = new Set<string>()
+    columns.forEach((col) => {
+      const role = col.role?.toUpperCase()
+      if (role === 'EXPECTED' || role === 'GROUND_TRUTH') {
+        cols.add(col.columnName)
+      }
+    })
+    if (verificationConfig?.items) {
+      for (const item of verificationConfig.items) {
+        if (item.referenceColumnKeys) {
+          item.referenceColumnKeys.forEach((key) => cols.add(key))
+        }
+      }
+    }
+    return cols
+  }, [columns, verificationConfig])
+
+  useEffect(() => {
+    setSelectedRowIndex(0)
+  }, [selectedVersionId])
 
   useEffect(() => {
     if (latestVersionId && !selectedVersionId) {
@@ -223,6 +254,242 @@ export function DatasetDetailPage() {
     }
   }
 
+  const renderRowsContent = () => {
+    if (dataset!.versions.length === 0) {
+      return (
+        <div className="p-10">
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>Chưa có version dữ liệu</EmptyTitle>
+              <EmptyDescription>Import Excel hoặc AI generate để tạo version đầu tiên.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      )
+    }
+
+    if (rows.length === 0) {
+      return <div className="p-10 text-center text-sm text-muted-foreground">Version này chưa có row.</div>
+    }
+
+    if (viewMode === 'grid') {
+      return (
+        <div className="grid gap-4 p-5 md:grid-cols-2 lg:grid-cols-3 bg-muted/10">
+          {rows.map((row) => {
+            const isInvalid = row.validationStatus === 'INVALID'
+            return (
+              <Card
+                key={row.publicId}
+                className={`flex flex-col rounded-xl border shadow-sm transition-all hover:shadow-md ${
+                  isInvalid ? 'border-destructive/30 bg-destructive/5' : 'border-muted/50 bg-card'
+                }`}
+              >
+                <CardHeader className="flex flex-row items-center justify-between border-b p-4">
+                  <span className="font-mono text-xs font-bold text-muted-foreground">Testcase #{row.rowIndex + 1}</span>
+                  <RowStatusBadge value={row.validationStatus} />
+                </CardHeader>
+                <div className="flex flex-1 flex-col gap-3 p-4 text-xs">
+                  {displayColumns.map((column) => {
+                    const isEvaluated = evaluatedColumns.has(column)
+                    return (
+                      <div
+                        key={column}
+                        className={`rounded-lg p-2.5 border ${
+                          isEvaluated
+                            ? 'bg-primary/5 border-primary/20'
+                            : 'bg-muted/30 border-muted/20'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground uppercase font-bold mb-1">
+                          <span>{column}</span>
+                          {isEvaluated && (
+                            <span className="flex items-center gap-1 text-primary text-[9px] font-sans font-medium">
+                              <Target className="size-2.5" />
+                              Trường chấm
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono whitespace-pre-wrap break-all text-card-foreground">
+                          {formatCell(row.data[column]) || <span className="italic text-muted-foreground">Trống</span>}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {isInvalid && (
+                    <div className="mt-auto flex items-start gap-1.5 rounded-lg bg-destructive/10 p-3 text-destructive border border-destructive/15">
+                      <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-0.5">
+                        <div className="font-bold text-[10px] uppercase">Lỗi validation</div>
+                        <div>{row.validationErrors.map((error) => error.message).join('; ')}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      )
+    }
+
+    if (viewMode === 'library') {
+      const selectedRow = rows[selectedRowIndex]
+      return (
+        <div className="grid min-h-[460px] grid-cols-1 divide-y md:grid-cols-[280px_1fr] md:divide-y-0 md:divide-x border-t">
+          {/* Master list */}
+          <div className="h-[460px] overflow-y-auto bg-card">
+            {rows.map((row, idx) => {
+              const isSelected = idx === selectedRowIndex
+              const firstKey = displayColumns[0]
+              const snippet = firstKey ? formatCell(row.data[firstKey]) : ''
+
+              return (
+                <button
+                  key={row.publicId}
+                  type="button"
+                  onClick={() => setSelectedRowIndex(idx)}
+                  className={`w-full text-left p-4 transition-all flex flex-col gap-2 border-b last:border-b-0 ${
+                    isSelected
+                      ? 'bg-primary/5 border-l-4 border-l-primary'
+                      : 'hover:bg-muted/40 border-l-4 border-l-transparent'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-mono text-xs font-bold text-muted-foreground">#{row.rowIndex + 1}</span>
+                    <RowStatusBadge value={row.validationStatus} />
+                  </div>
+                  {snippet && (
+                    <p className="text-xs text-muted-foreground line-clamp-2 break-all font-mono">
+                      {snippet}
+                    </p>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Detail panel */}
+          <div className="p-6 overflow-y-auto h-[460px] bg-muted/5 flex flex-col gap-6">
+            {selectedRow ? (
+              <>
+                <div className="flex items-center justify-between border-b pb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-card-foreground">Chi tiết Testcase #{selectedRow.rowIndex + 1}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">ID: {selectedRow.publicId}</p>
+                  </div>
+                  <RowStatusBadge value={selectedRow.validationStatus} />
+                </div>
+
+                {selectedRow.validationStatus === 'INVALID' && (
+                  <div className="flex items-start gap-2.5 rounded-xl bg-destructive/10 p-4 text-destructive border border-destructive/20 shadow-sm">
+                    <AlertTriangle className="size-5 shrink-0 mt-0.5 text-destructive" />
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-destructive/90">Lỗi kiểm tra tính hợp lệ</h4>
+                      <ul className="list-disc list-inside mt-1.5 text-xs flex flex-col gap-1.5">
+                        {selectedRow.validationErrors.map((error, idx) => (
+                          <li key={idx}>
+                            <span className="font-mono font-bold text-destructive/90">{error.columnName}</span>: {error.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {displayColumns.map((column) => {
+                    const isEvaluated = evaluatedColumns.has(column)
+                    return (
+                      <div
+                        key={column}
+                        className={`rounded-xl border p-4 shadow-sm bg-card ${
+                          isEvaluated ? 'border-primary/20 ring-1 ring-primary/5' : 'border-muted/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground uppercase font-bold border-b pb-2 mb-3">
+                          <span>{column}</span>
+                          {isEvaluated && (
+                            <span className="flex items-center gap-1 text-primary text-[10px] font-sans font-medium">
+                              <Target className="size-3 text-primary" />
+                              Cột chấm điểm
+                            </span>
+                          )}
+                        </div>
+                        <div className="font-mono text-sm whitespace-pre-wrap break-all leading-relaxed text-card-foreground">
+                          {formatCell(selectedRow.data[column]) || <span className="italic text-muted-foreground">Trống</span>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+                Vui lòng chọn một testcase ở danh sách bên trái.
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    // Default Table view
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[70px]">#</TableHead>
+            <TableHead className="w-[110px]">Trạng thái</TableHead>
+            {displayColumns.map((column) => {
+              const isEvaluated = evaluatedColumns.has(column)
+              return (
+                <TableHead key={column} className={isEvaluated ? 'text-primary font-semibold' : ''}>
+                  <div className="flex items-center gap-1.5">
+                    {column}
+                    {isEvaluated && (
+                      <span className="flex items-center gap-0.5 rounded bg-primary/10 px-1 py-0.5 text-[9px] text-primary border border-primary/20 font-medium">
+                        <Target className="size-2.5" />
+                        Được chấm
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+              )
+            })}
+            <TableHead className="min-w-[240px]">Chi tiết lỗi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow
+              key={row.publicId}
+              className={row.validationStatus === 'INVALID' ? 'bg-destructive/5 hover:bg-destructive/10' : ''}
+            >
+              <TableCell className="font-mono text-xs">{row.rowIndex + 1}</TableCell>
+              <TableCell>
+                <RowStatusBadge value={row.validationStatus} />
+              </TableCell>
+              {displayColumns.map((column) => (
+                <TableCell key={column} className="max-w-[260px] truncate font-mono text-xs">
+                  {formatCell(row.data[column])}
+                </TableCell>
+              ))}
+              <TableCell className="max-w-[360px] whitespace-normal text-xs font-medium text-destructive">
+                {row.validationErrors.length > 0 ? (
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="size-3.5 shrink-0" />
+                    <span>{row.validationErrors.map((error) => error.message).join('; ')}</span>
+                  </div>
+                ) : '-'}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
+  }
+
   if (isLoading || !dataset) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-6">
@@ -282,23 +549,62 @@ export function DatasetDetailPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <MetricCard label="Total rows" value={dataset.latestVersion?.totalRows ?? 0} />
-        <MetricCard label="Valid rows" value={dataset.latestVersion?.validRows ?? 0} />
-        <MetricCard label="Invalid rows" value={dataset.latestVersion?.invalidRows ?? 0} />
-        <MetricCard label="Versions" value={dataset.versions.length} />
+      <div className="grid gap-4 md:grid-cols-4">
+        <MetricCard label="Tổng số câu test" value={dataset.latestVersion?.totalRows ?? 0} />
+        <MetricCard label="Hợp lệ" value={dataset.latestVersion?.validRows ?? 0} />
+        <MetricCard
+          label="Số dòng lỗi"
+          value={dataset.latestVersion?.invalidRows ?? 0}
+          isAlert={!!dataset.latestVersion?.invalidRows}
+        />
+        <MetricCard label="Tổng số phiên bản" value={dataset.versions.length} />
       </div>
 
-      <Card className="rounded-lg">
-        <CardHeader className="border-b">
+      <Card className="rounded-xl border border-muted/50 overflow-hidden">
+        <CardHeader className="border-b bg-card">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <CardTitle>Dataset rows</CardTitle>
-              <CardDescription>QC nhìn được từng field, trạng thái validation và lỗi của từng dòng.</CardDescription>
+              <CardTitle className="text-base font-semibold">Dataset rows</CardTitle>
+              <CardDescription className="text-xs">QC nhìn được từng field, trạng thái validation và lỗi của từng dòng.</CardDescription>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* View Mode Toggle Buttons */}
+              <div className="flex items-center gap-1 rounded-lg bg-muted p-1 text-xs">
+                <Button
+                  type="button"
+                  variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-2.5 rounded-md text-xs"
+                  onClick={() => setViewMode('table')}
+                >
+                  <TableProperties className="mr-1.5 size-3.5" />
+                  Bảng
+                </Button>
+                <Button
+                  type="button"
+                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-2.5 rounded-md text-xs"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <LayoutGrid className="mr-1.5 size-3.5" />
+                  Thẻ Grid
+                </Button>
+                <Button
+                  type="button"
+                  variant={viewMode === 'library' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-2.5 rounded-md text-xs"
+                  onClick={() => setViewMode('library')}
+                >
+                  <BookOpen className="mr-1.5 size-3.5" />
+                  Thư viện
+                </Button>
+              </div>
+
+              {/* Version Selector */}
               <Select value={selectedVersionId} onValueChange={setSelectedVersionId}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] h-9">
                   <SelectValue placeholder="Chọn version" />
                 </SelectTrigger>
                 <SelectContent>
@@ -309,9 +615,12 @@ export function DatasetDetailPage() {
                   ))}
                 </SelectContent>
               </Select>
+              
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
+                className="h-9"
                 onClick={() => activateMutation.mutate()}
                 disabled={!selectedVersionId || activateMutation.isPending}
               >
@@ -322,56 +631,17 @@ export function DatasetDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {dataset.versions.length === 0 ? (
-            <div className="p-10">
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>Chưa có version dữ liệu</EmptyTitle>
-                  <EmptyDescription>Import Excel hoặc AI generate để tạo version đầu tiên.</EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            </div>
-          ) : rows.length === 0 ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">Version này chưa có row.</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[70px]">#</TableHead>
-                  <TableHead className="w-[110px]">Status</TableHead>
-                  {displayColumns.map((column) => (
-                    <TableHead key={column}>{column}</TableHead>
-                  ))}
-                  <TableHead className="min-w-[240px]">Errors</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.publicId}>
-                    <TableCell>{row.rowIndex + 1}</TableCell>
-                    <TableCell>
-                      <RowStatusBadge value={row.validationStatus} />
-                    </TableCell>
-                    {displayColumns.map((column) => (
-                      <TableCell key={column} className="max-w-[260px] truncate">
-                        {formatCell(row.data[column])}
-                      </TableCell>
-                    ))}
-                    <TableCell className="max-w-[360px] whitespace-normal text-xs text-destructive">
-                      {row.validationErrors.map((error) => error.message).join(' ')}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          {renderRowsContent()}
         </CardContent>
       </Card>
 
       {dataset.latestVersion?.invalidRows ? (
-        <Alert>
-          <AlertTitle>Dataset còn lỗi validation</AlertTitle>
-          <AlertDescription>Version có dòng invalid sẽ không được active. Mở từng row để sửa hoặc import/generate lại.</AlertDescription>
+        <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20 rounded-xl">
+          <AlertTriangle className="size-4" />
+          <AlertTitle className="font-bold">Dataset còn lỗi validation</AlertTitle>
+          <AlertDescription className="text-xs">
+            Phiên bản có các dòng dữ liệu không hợp lệ (Invalid) sẽ không được phép kích hoạt (Active). Hãy kiểm tra chi tiết từng hàng hoặc tiến hành nhập lại dữ liệu sạch.
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -485,12 +755,16 @@ export function DatasetDetailPage() {
   )
 }
 
-function MetricCard({ label, value }: { label: string; value: number | string }) {
+function MetricCard({ label, value, isAlert }: { label: string; value: number | string; isAlert?: boolean }) {
   return (
-    <Card className="rounded-lg">
-      <CardContent className="p-4">
-        <div className="text-xs font-medium text-muted-foreground">{label}</div>
-        <div className="mt-2 text-2xl font-semibold">{value}</div>
+    <Card className={`rounded-xl transition-all border ${
+      isAlert
+        ? 'bg-destructive/5 border-destructive/20 text-destructive shadow-sm animate-pulse'
+        : 'bg-card border-muted/50'
+    }`}>
+      <CardContent className="p-5">
+        <div className={`text-xs font-semibold ${isAlert ? 'text-destructive/80' : 'text-muted-foreground'}`}>{label}</div>
+        <div className="mt-2 text-3xl font-extrabold tracking-tight">{value}</div>
       </CardContent>
     </Card>
   )
