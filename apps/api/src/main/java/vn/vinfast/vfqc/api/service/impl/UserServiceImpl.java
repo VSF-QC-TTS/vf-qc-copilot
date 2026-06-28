@@ -40,6 +40,9 @@ public class UserServiceImpl implements UserService {
   @Value("${vfqc.client.base-url}")
   private String clientBaseUrl;
 
+  @Value("${vfqc.user.default-avatar-url}")
+  private String defaultAvatarUrl;
+
   @Override
   @Transactional
   public void register(RegisterRequest request) {
@@ -55,6 +58,7 @@ public class UserServiceImpl implements UserService {
             .email(email)
             .passwordHash(passwordEncoder.encode(request.password()))
             .displayName(resolveDisplayName(request.displayName(), email))
+            .avatarUrl(defaultAvatarUrl)
             .status(UserStatus.PENDING_EMAIL_VERIFICATION)
             .build();
 
