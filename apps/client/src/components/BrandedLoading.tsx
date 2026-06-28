@@ -77,14 +77,29 @@ export function BrandedLoading({
           className="absolute inset-0 bg-gradient-to-tr from-blue-600 via-primary to-emerald-500 opacity-85 shadow-[0_0_20px_rgba(59,130,246,0.25)]"
         />
 
-        {/* Inner white/dark container for the logo */}
-        <div className="absolute size-14 rounded-full bg-card/90 dark:bg-zinc-900/90 shadow-inner flex items-center justify-center z-10 border border-border/10">
+        {/* Inner Morphing Glass Container (Morphs in sync, but does not rotate so logo stays upright) */}
+        <motion.div
+          animate={{
+            borderRadius: [
+              '42% 58% 70% 30% / 45% 45% 55% 55%',
+              '70% 30% 52% 48% / 60% 40% 60% 40%',
+              '28% 72% 38% 62% / 40% 60% 40% 60%',
+              '42% 58% 70% 30% / 45% 45% 55% 55%',
+            ],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute inset-1.5 bg-card/95 dark:bg-zinc-900/95 flex items-center justify-center z-10 border border-border/10 shadow-inner select-none"
+        >
           <img
             src="/logo.png"
-            className="size-7 object-contain filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.15)] dark:brightness-110"
+            className="size-9 object-contain filter drop-shadow-[0_1px_2px_rgba(0,0,0,0.15)] dark:brightness-110"
             alt="VinFast Logo"
           />
-        </div>
+        </motion.div>
       </div>
 
       {/* Typing Text */}
