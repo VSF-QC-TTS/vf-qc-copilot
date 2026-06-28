@@ -49,6 +49,11 @@ export interface TargetConfigResponse {
   updatedAt: string
 }
 
+export interface ResponseFieldExampleResponse {
+  path: string
+  example: string | null
+}
+
 export interface SaveTargetConfigRequest {
   method: string
   url: string

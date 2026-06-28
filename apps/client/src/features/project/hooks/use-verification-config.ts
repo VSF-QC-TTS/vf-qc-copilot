@@ -2,7 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
-import { getVerificationConfig, saveVerificationConfig, getResponseFields, getOperators } from '@/lib/config-api'
+import {
+  getVerificationConfig,
+  saveVerificationConfig,
+  getResponseFields,
+  getResponseFieldExamples,
+  getOperators,
+} from '@/lib/config-api'
 import type { SaveVerificationRequest } from '@/types/config'
 
 export function useVerificationConfig(publicId: string | undefined) {
@@ -35,6 +41,14 @@ export function useResponseFields(publicId: string | undefined) {
   return useQuery({
     queryKey: ['responseFields', publicId],
     queryFn: () => getResponseFields(publicId!),
+    enabled: !!publicId,
+  })
+}
+
+export function useResponseFieldExamples(publicId: string | undefined) {
+  return useQuery({
+    queryKey: ['responseFieldExamples', publicId],
+    queryFn: () => getResponseFieldExamples(publicId!),
     enabled: !!publicId,
   })
 }

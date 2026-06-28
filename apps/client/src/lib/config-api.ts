@@ -16,6 +16,7 @@ import type {
   VerificationConfigResponse,
   SaveVerificationRequest,
   OperatorCatalogResponse,
+  ResponseFieldExampleResponse,
 } from '@/types/config'
 
 // ==========================================
@@ -49,6 +50,10 @@ export async function testTargetConfig(publicId: string, data: TestTargetConfigR
 
 export async function getResponseFields(publicId: string): Promise<string[]> {
   return apiClient(`/projects/${publicId}/config/target/response-fields`)
+}
+
+export async function getResponseFieldExamples(publicId: string): Promise<ResponseFieldExampleResponse[]> {
+  return apiClient(`/projects/${publicId}/config/target/response-field-examples`)
 }
 
 // ==========================================

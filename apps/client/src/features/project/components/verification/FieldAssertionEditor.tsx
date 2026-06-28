@@ -1,7 +1,13 @@
 import { ArrowRightIcon, TrashIcon } from 'lucide-react'
 import type { ReactElement } from 'react'
 
-import type { CheckOperator, FieldAssertionRequest, OperatorCatalogResponse, SchemaColumnResponse } from '@/types/config'
+import type {
+  CheckOperator,
+  FieldAssertionRequest,
+  OperatorCatalogResponse,
+  ResponseFieldExampleResponse,
+  SchemaColumnResponse,
+} from '@/types/config'
 
 import { Button } from '@/components/ui/button'
 import { Combobox } from '@/components/ui/combobox'
@@ -14,7 +20,7 @@ import { defaultExpectedValue } from './verification-form'
 
 interface FieldAssertionEditorProps {
   assertion: FieldAssertionRequest
-  responseFields: string[]
+  responseFields: Array<string | ResponseFieldExampleResponse>
   columns: SchemaColumnResponse[]
   operators: OperatorCatalogResponse[]
   compact?: boolean
@@ -37,7 +43,9 @@ export function FieldAssertionEditor({
   const currentOperator = comparableOperators.some((operator) => operator.operator === assertion.operator)
     ? assertion.operator
     : comparableOperators[0]?.operator ?? assertion.operator
-  const responseOptions = responseFields.map((field) => ({ value: field, label: field }))
+  const normalizedResponseFields = responseFields.map(normalizeResponseField)
+  const selectedResponseField = normalizedResponseFields.find((field) => field.path === assertion.actualPath)
+  const responseOptions = normalizedResponseFields.map((field) => ({ value: field.path, label: field.path }))
   const datasetColumnId = assertion.expected?.source === 'DATASET_COLUMN' ? assertion.expected.columnKey ?? undefined : undefined
 
   function patchAssertion(patch: Partial<FieldAssertionRequest>): void {
@@ -144,10 +152,16 @@ export function FieldAssertionEditor({
         </div>
       </div>
       {compact ? null : (
-        <div className="mt-2 rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          So sánh giá trị từ response với dữ liệu kỳ vọng trong từng row dataset.
+        <div className="mt-2 break-words rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          {selectedResponseField?.example
+            ? `Example: ${selectedResponseField.example}`
+            : 'So sánh giá trị từ response với dữ liệu kỳ vọng trong từng row dataset.'}
         </div>
       )}
     </div>
   )
+}
+
+function normalizeResponseField(field: string | ResponseFieldExampleResponse): ResponseFieldExampleResponse {
+  return typeof field === 'string' ? { path: field, example: null } : field
 }

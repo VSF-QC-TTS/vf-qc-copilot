@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { DatabaseIcon, FileSpreadsheetIcon, PlusIcon } from 'lucide-react'
+import { AlertCircleIcon, DatabaseIcon, FileSpreadsheetIcon, PlusIcon, TablePropertiesIcon } from 'lucide-react'
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,10 +19,12 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { useCreateDataset, useDatasets } from '../../hooks/use-datasets'
+import { useSetupStatus } from '../../hooks/use-projects'
 
 export function DatasetListPage() {
   const { publicId } = useParams<{ publicId: string }>()
   const { data, isLoading } = useDatasets(publicId)
+  const { data: setupStatus } = useSetupStatus(publicId)
   const createMutation = useCreateDataset(publicId)
   const [createOpen, setCreateOpen] = useState(false)
   const [name, setName] = useState('')
@@ -42,6 +45,7 @@ export function DatasetListPage() {
   }
 
   const datasets = data?.content ?? []
+  const hasProjectSchema = setupStatus?.hasProjectSchema ?? false
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -52,11 +56,30 @@ export function DatasetListPage() {
             Quản lý dữ liệu test để import từ Excel, sinh bằng AI và xuất lại cho QC kiểm tra.
           </p>
         </div>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          <PlusIcon data-icon="inline-start" />
-          Tạo dataset
-        </Button>
+        {hasProjectSchema ? (
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            <PlusIcon data-icon="inline-start" />
+            Tạo dataset
+          </Button>
+        ) : (
+          <Button asChild type="button" variant="outline">
+            <Link to={`/projects/${publicId}/config/schema`}>
+              <TablePropertiesIcon data-icon="inline-start" />
+              Cấu hình schema
+            </Link>
+          </Button>
+        )}
       </div>
+
+      {!hasProjectSchema ? (
+        <Alert>
+          <AlertCircleIcon className="size-4" />
+          <AlertTitle>Cần cấu hình dataset schema trước</AlertTitle>
+          <AlertDescription>
+            Dataset phải gắn với schema để import, sinh rows và validate từng cột. Tạo schema xong rồi quay lại tạo dataset.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {isLoading ? (
         <div className="grid gap-3 md:grid-cols-2">
@@ -71,7 +94,11 @@ export function DatasetListPage() {
                 <DatabaseIcon className="size-6 text-muted-foreground" />
               </div>
               <EmptyTitle>Chưa có dataset</EmptyTitle>
-              <EmptyDescription>Tạo dataset rồi import Excel hoặc dùng AI generate test rows.</EmptyDescription>
+              <EmptyDescription>
+                {hasProjectSchema
+                  ? 'Tạo dataset rồi import Excel hoặc dùng AI generate test rows.'
+                  : 'Cấu hình dataset schema trước để tạo dataset.'}
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         </div>
@@ -107,7 +134,7 @@ export function DatasetListPage() {
         </div>
       )}
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog open={createOpen && hasProjectSchema} onOpenChange={setCreateOpen}>
         <DialogContent>
           <form onSubmit={handleSubmit}>
             <DialogHeader>

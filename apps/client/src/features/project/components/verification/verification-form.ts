@@ -131,7 +131,7 @@ const itemSchema = z.discriminatedUnion('type', [
     targetPaths: z.array(z.string()),
     referenceColumnKeys: z.array(z.string()),
     rubric: z.string(),
-    criteria: z.array(llmCriterionSchema),
+    criteria: z.array(llmCriterionSchema).nullable().optional(),
   }),
 ])
 
@@ -238,8 +238,8 @@ export function createLlmItem(displayOrder: number): VerificationItemRequest {
     targetPaths: [],
     referenceColumnKeys: [],
     rubric:
-      'Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm câu trả lời theo các tiêu chí bên dưới. Trả về điểm và lý do ngắn gọn.',
-    criteria: [createCriterion(0)],
+      'Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm câu trả lời theo tiêu chí nghiệp vụ. Trả về điểm 0-1 và lý do ngắn gọn.',
+    criteria: [],
   }
 }
 
@@ -261,14 +261,14 @@ export function normalizeResponseItem(item: VerificationItemResponse): Verificat
           publicId: item.fieldAssertion.publicId,
         }
       : null,
-    fieldAssertions: item.fieldAssertions.map((assertion) => ({
+    fieldAssertions: (item.fieldAssertions ?? []).map((assertion) => ({
       ...assertion,
       publicId: assertion.publicId,
     })),
     targetPaths: item.targetPaths,
     referenceColumnKeys: item.referenceColumnKeys,
     rubric: item.rubric,
-    criteria: item.criteria.map((criterion) => ({
+    criteria: (item.criteria ?? []).map((criterion) => ({
       ...criterion,
       publicId: criterion.publicId,
     })),
@@ -364,19 +364,8 @@ export function validateVerificationForm(
       }
     }
     if (item.type === 'LLM_JUDGE') {
-      if ((item.targetPaths ?? []).length === 0) {
-        errors.push(`AI Judge "${item.name}" cần ít nhất một trường response để chấm.`)
-      }
       if (!item.rubric?.trim()) {
-        errors.push(`AI Judge "${item.name}" cần rubric.`)
-      }
-      if ((item.criteria ?? []).filter((criterion) => criterion.enabled).length === 0) {
-        errors.push(`AI Judge "${item.name}" cần ít nhất một tiêu chí đang bật.`)
-      }
-      for (const criterion of item.criteria ?? []) {
-        if (criterion.enabled && (!criterion.name.trim() || !criterion.description.trim())) {
-          errors.push(`Tiêu chí trong "${item.name}" cần tên và mô tả.`)
-        }
+        errors.push(`AI Judge "${item.name}" cần prompt.`)
       }
     }
   }
