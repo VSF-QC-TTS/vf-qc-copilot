@@ -3,6 +3,7 @@ package vn.vinfast.vfqc.api.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.security.Principal;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import lombok.RequiredArgsConstructor;
@@ -92,8 +93,19 @@ public class DatasetController {
   public DatasetJobResponse importExcel(
       @PathVariable UUID datasetPublicId,
       @RequestPart("file") MultipartFile file,
+      @RequestParam(value = "sheetName", required = false) String sheetName,
       Principal principal) {
-    return datasetService.startImport(datasetPublicId, file, principal.getName());
+    return datasetService.startImport(datasetPublicId, file, sheetName, principal.getName());
+  }
+
+  @Operation(summary = "Get Excel sheet names")
+  @PostMapping(
+      value = "/datasets/{datasetPublicId}/imports/excel/sheets",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public List<String> getExcelSheets(
+      @PathVariable UUID datasetPublicId,
+      @RequestPart("file") MultipartFile file) {
+    return datasetService.getExcelSheets(file);
   }
 
   @Operation(summary = "Confirm Excel import column mappings")

@@ -100,10 +100,25 @@ export function cancelDatasetJob(jobPublicId: string): Promise<DatasetJobRespons
   })
 }
 
-export async function importDatasetExcel(datasetPublicId: string, file: File): Promise<DatasetJobResponse> {
+export async function getExcelSheets(datasetPublicId: string, file: File): Promise<string[]> {
   const body = new FormData()
   body.append('file', file)
-  const res = await authorizedFetch(`/datasets/${datasetPublicId}/imports/excel`, {
+  const res = await authorizedFetch(`/datasets/${datasetPublicId}/imports/excel/sheets`, {
+    method: 'POST',
+    body,
+  })
+  return readJsonResponse<string[]>(res)
+}
+
+export async function importDatasetExcel(
+  datasetPublicId: string,
+  file: File,
+  sheetName?: string | null,
+): Promise<DatasetJobResponse> {
+  const body = new FormData()
+  body.append('file', file)
+  const queryParam = sheetName ? `?sheetName=${encodeURIComponent(sheetName)}` : ''
+  const res = await authorizedFetch(`/datasets/${datasetPublicId}/imports/excel${queryParam}`, {
     method: 'POST',
     body,
   })

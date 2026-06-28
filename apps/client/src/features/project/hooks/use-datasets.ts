@@ -88,7 +88,8 @@ export function useArchiveDataset(projectPublicId: string | undefined) {
 
 export function useImportDatasetExcel(datasetPublicId: string | undefined) {
   return useMutation({
-    mutationFn: (file: File) => importDatasetExcel(datasetPublicId!, file),
+    mutationFn: ({ file, sheetName }: { file: File; sheetName?: string | null }) =>
+      importDatasetExcel(datasetPublicId!, file, sheetName),
     onError: (error: Error) => toast.error(error.message),
   })
 }

@@ -187,7 +187,7 @@ public class DatasetServiceImpl {
   }
 
   @Transactional
-  public DatasetJobResponse startImport(UUID datasetPublicId, MultipartFile file, String email) {
+  public DatasetJobResponse startImport(UUID datasetPublicId, MultipartFile file, String sheetName, String email) {
     Dataset dataset = getDatasetOrThrow(datasetPublicId);
     User user = getUser(email);
     DatasetJob job =
@@ -196,12 +196,26 @@ public class DatasetServiceImpl {
                 .projectId(dataset.getProjectId())
                 .datasetId(dataset.getId())
                 .type(DatasetJobType.IMPORT_EXCEL)
+                .payload(writeJson(Map.of("sheetName", sheetName != null ? sheetName : "")))
                 .createdBy(user.getId())
                 .message("Queued Excel import")
                 .build());
     byte[] bytes = readFileBytes(file);
     executeAfterCommit(() -> runImport(job.getPublicId(), bytes));
     return toJobResponse(job);
+  }
+
+  public List<String> getExcelSheets(MultipartFile file) {
+    try (var input = file.getInputStream();
+        var workbook = WorkbookFactory.create(input)) {
+      List<String> sheets = new ArrayList<>();
+      for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+        sheets.add(workbook.getSheetName(i));
+      }
+      return sheets;
+    } catch (Exception e) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "Failed to parse Excel sheet names: " + e.getMessage());
+    }
   }
 
   @Transactional
@@ -359,7 +373,14 @@ public class DatasetServiceImpl {
       return;
     }
     try {
-      ImportPayload payload = parseExcel(bytes);
+      String sheetName = null;
+      if (StringUtils.hasText(job.getPayload())) {
+        try {
+          Map<String, String> payloadMap = objectMapper.readValue(job.getPayload(), new TypeReference<>() {});
+          sheetName = payloadMap.get("sheetName");
+        } catch (Exception ignored) {}
+      }
+      ImportPayload payload = parseExcel(bytes, sheetName);
       Dataset dataset = getDatasetById(job.getDatasetId());
       List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
       List<DatasetColumnMappingSuggestionResponse> suggestions = suggestMappings(payload.headers(), columns);
@@ -518,10 +539,16 @@ public class DatasetServiceImpl {
     return version;
   }
 
-  private ImportPayload parseExcel(byte[] bytes) throws IOException {
+  private ImportPayload parseExcel(byte[] bytes, String sheetName) throws IOException {
     try (var input = new java.io.ByteArrayInputStream(bytes);
         var workbook = WorkbookFactory.create(input)) {
       var sheet = workbook.getSheetAt(0);
+      if (StringUtils.hasText(sheetName)) {
+        var targetSheet = workbook.getSheet(sheetName);
+        if (targetSheet != null) {
+          sheet = targetSheet;
+        }
+      }
       Row headerRow = sheet.getRow(0);
       if (headerRow == null) {
         throw ResourceException.of(ErrorCode.BAD_REQUEST, "Excel file must contain a header row.");

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { downloadDatasetVersionExcel } from '@/lib/dataset-api'
+import { downloadDatasetVersionExcel, getExcelSheets } from '@/lib/dataset-api'
 import type { SchemaColumnResponse } from '@/types/config'
 import type { DatasetJobEventResponse, DatasetJobResponse, DatasetRowResponse } from '@/types/dataset'
 
@@ -78,6 +78,11 @@ export function DatasetDetailPage() {
   const [notes, setNotes] = useState('')
   const [rowCount, setRowCount] = useState(10)
   const [rowsJson, setRowsJson] = useState('[]')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [sheets, setSheets] = useState<string[]>([])
+  const [sheetSelectOpen, setSheetSelectOpen] = useState(false)
+  const [selectedSheet, setSelectedSheet] = useState('')
+  const [isReadingSheets, setIsReadingSheets] = useState(false)
 
   const columns = schema?.columns ?? EMPTY_COLUMNS
   const rows = rowsQuery.data?.content ?? EMPTY_ROWS
@@ -127,12 +132,53 @@ export function DatasetDetailPage() {
     if (!file) {
       return
     }
-    importMutation.mutate(file, {
-      onSuccess: (nextJob) => {
-        setJob(nextJob)
-        setJobOpen(true)
-      },
-    })
+
+    setIsReadingSheets(true)
+    getExcelSheets(datasetId!, file)
+      .then((sheetNames) => {
+        setIsReadingSheets(false)
+        if (sheetNames.length <= 1) {
+          const defaultSheet = sheetNames[0] || null
+          importMutation.mutate({ file, sheetName: defaultSheet }, {
+            onSuccess: (nextJob) => {
+              setJob(nextJob)
+              setJobOpen(true)
+            },
+          })
+        } else {
+          setPendingFile(file)
+          setSheets(sheetNames)
+          setSelectedSheet(sheetNames[0])
+          setSheetSelectOpen(true)
+        }
+      })
+      .catch((err: any) => {
+        setIsReadingSheets(false)
+        toast.error(err instanceof Error ? err.message : 'Không đọc được danh sách sheet từ file Excel')
+      })
+  }
+
+  function handleSheetConfirm(): void {
+    if (!pendingFile || !selectedSheet) {
+      return
+    }
+    importMutation.mutate(
+      { file: pendingFile, sheetName: selectedSheet },
+      {
+        onSuccess: (nextJob) => {
+          setJob(nextJob)
+          setJobOpen(true)
+          setSheetSelectOpen(false)
+          setPendingFile(null)
+          setSheets([])
+        },
+        onError: () => {
+          setSheetSelectOpen(false)
+          setPendingFile(null)
+          setSheets([])
+        }
+      }
+    )
   }
 
   function handleGenerateSubmit(event: FormEvent<HTMLFormElement>): void {
@@ -208,8 +254,17 @@ export function DatasetDetailPage() {
 
         <div className="flex flex-wrap gap-2">
           <input ref={inputRef} type="file" accept=".xlsx" className="hidden" onChange={handleFileChange} />
-          <Button type="button" variant="outline" onClick={handleImportClick} disabled={importMutation.isPending}>
-            {importMutation.isPending ? <Spinner data-icon="inline-start" /> : <FileUpIcon data-icon="inline-start" />}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleImportClick}
+            disabled={importMutation.isPending || isReadingSheets}
+          >
+            {importMutation.isPending || isReadingSheets ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <FileUpIcon data-icon="inline-start" />
+            )}
             Import Excel
           </Button>
           <Button type="button" variant="outline" onClick={() => setGenerateOpen(true)}>
@@ -385,7 +440,39 @@ export function DatasetDetailPage() {
           </form>
         </DialogContent>
       </Dialog>
-
+      <Dialog open={sheetSelectOpen} onOpenChange={setSheetSelectOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Chọn sheet dữ liệu</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              File Excel của bạn chứa nhiều sheet. Vui lòng chọn sheet muốn nhập dữ liệu:
+            </p>
+            <Select value={selectedSheet} onValueChange={setSelectedSheet}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn sheet" />
+              </SelectTrigger>
+              <SelectContent>
+                {sheets.map((sheet) => (
+                  <SelectItem key={sheet} value={sheet}>
+                    {sheet}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setSheetSelectOpen(false)}>
+              Hủy
+            </Button>
+            <Button type="button" onClick={handleSheetConfirm} disabled={importMutation.isPending}>
+              {importMutation.isPending ? <Spinner data-icon="inline-start" /> : null}
+              Tiến hành nhập
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <DatasetJobProgressDialog
         open={jobOpen}
         onOpenChange={setJobOpen}
