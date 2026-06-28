@@ -185,6 +185,7 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
   private List<VerificationItem> recreateItems(
       Long configId, List<VerificationItemRequest> requests) {
     itemRepository.deleteByVerificationConfigId(configId);
+    itemRepository.flush();
     if (requests == null || requests.isEmpty()) {
       return List.of();
     }
