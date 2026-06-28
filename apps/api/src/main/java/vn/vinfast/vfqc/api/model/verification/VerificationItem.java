@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * One verification item. Field items store a single deterministic assertion; LLM items store one
@@ -48,9 +50,11 @@ public class VerificationItem {
   @Column(name = "type", nullable = false, length = 40)
   private VerificationItemType type;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "target_paths", columnDefinition = "jsonb")
   private String targetPaths;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "reference_column_keys", columnDefinition = "jsonb")
   private String referenceColumnKeys;
 
