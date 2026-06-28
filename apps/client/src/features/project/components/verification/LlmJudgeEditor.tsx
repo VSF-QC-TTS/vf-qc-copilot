@@ -1,4 +1,5 @@
 import { useState, type ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Eye, Search } from 'lucide-react'
 
 import type { ResponseFieldExampleResponse, SchemaColumnResponse, VerificationItemRequest } from '@/types/config'
@@ -10,6 +11,13 @@ import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+interface LlmJudgeEditorProps {
+  item: VerificationItemRequest
+  responseFields: Array<string | ResponseFieldExampleResponse>
+  columns: SchemaColumnResponse[]
+  onChange: (item: VerificationItemRequest) => void
+}
 
 const PROMPT_TEMPLATES = {
   accuracy: `Bạn là QC/Tester. Hãy đánh giá độ chính xác của câu trả lời từ Bot ($response.answer) đối chiếu với dữ liệu kỳ vọng ($dataset.ground_truth).
@@ -53,19 +61,13 @@ Tiêu chí đánh giá:
 - Kèm theo lý do ngắn gọn.`
 }
 
-interface LlmJudgeEditorProps {
-  item: VerificationItemRequest
-  responseFields: Array<string | ResponseFieldExampleResponse>
-  columns: SchemaColumnResponse[]
-  onChange: (item: VerificationItemRequest) => void
-}
-
 export function LlmJudgeEditor({
   item,
   responseFields,
   columns,
   onChange,
 }: LlmJudgeEditorProps): ReactElement {
+  const { t } = useTranslation('project')
   const targetPaths = item.targetPaths ?? []
   const referenceColumnKeys = item.referenceColumnKeys ?? []
   const normalizedResponseFields = responseFields.map(normalizeResponseField)
@@ -105,13 +107,13 @@ export function LlmJudgeEditor({
   return (
     <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
       <TokenRail
-        title="Response field"
-        emptyText="Chạy test target để lấy response field."
+        title={t('verification.responseFields')}
+        emptyText={t('verification.noResponseFields')}
         items={normalizedResponseFields.map((field) => ({
           key: field.path,
           token: toResponseToken(field.path),
           example: field.example,
-          description: 'Trường dữ liệu trích xuất từ phản hồi của mô hình/hệ thống.',
+          description: t('verification.fieldResponseDesc'),
           selected: targetPaths.includes(field.path),
           onInsert: () => insertResponseToken(field),
         }))}
@@ -119,17 +121,17 @@ export function LlmJudgeEditor({
 
       <Field>
         <div className="flex items-center justify-between gap-2 mb-1.5">
-          <FieldLabel className="text-xs font-semibold m-0">Prompt LLM Judge</FieldLabel>
+          <FieldLabel className="text-xs font-semibold m-0">{t('verification.rubricPrompt')}</FieldLabel>
           
           <Select onValueChange={handleTemplateChange}>
             <SelectTrigger className="h-7 text-[11px] rounded-md border-dashed bg-muted/30 px-2.5 max-w-[200px] border-border/80">
-              <SelectValue placeholder="✨ Chọn Prompt mẫu..." />
+              <SelectValue placeholder={t('verification.selectTemplate')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="accuracy">🎯 Đánh giá độ chính xác (Accuracy)</SelectItem>
-              <SelectItem value="fluency">💬 Đánh giá trôi chảy & giọng điệu</SelectItem>
-              <SelectItem value="hallucination">🛡️ Kiểm tra bịa đặt (Hallucination)</SelectItem>
-              <SelectItem value="conciseness">⚡ Kiểm tra độ ngắn gọn/súc tích</SelectItem>
+              <SelectItem value="accuracy">{t('verification.promptTemplateAccuracy')}</SelectItem>
+              <SelectItem value="fluency">{t('verification.promptTemplateFluency')}</SelectItem>
+              <SelectItem value="hallucination">{t('verification.promptTemplateHallucination')}</SelectItem>
+              <SelectItem value="conciseness">{t('verification.promptTemplateConciseness')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -137,9 +139,7 @@ export function LlmJudgeEditor({
           value={item.rubric ?? ''}
           onChange={(event) => patchItem({ rubric: event.target.value })}
           className="min-h-[360px] rounded-lg font-mono text-xs leading-relaxed"
-          placeholder={
-            'Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm mức độ đúng nghiệp vụ, đầy đủ ý, đúng tone. Trả về điểm 0-1 và lý do ngắn gọn.'
-          }
+          placeholder={t('verification.rubricPrompt')}
         />
         <div className="rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
           Bấm token hai bên để chèn vào prompt. Backend lưu prompt này để runner đưa vào LLM Judge.
@@ -147,13 +147,13 @@ export function LlmJudgeEditor({
       </Field>
 
       <TokenRail
-        title="Dataset schema"
-        emptyText="Chưa có dataset schema."
+        title={t('verification.datasetColumns')}
+        emptyText={t('verification.noExpectedColumns')}
         items={columns.map((column) => ({
           key: column.publicId,
           token: `$dataset.${column.columnName}`,
           example: column.sampleValue,
-          description: `Vai trò: ${column.role} | Kiểu dữ liệu: ${column.dataType}`,
+          description: t('verification.datasetColumnDesc', { role: column.role, dataType: column.dataType }),
           selected: referenceColumnKeys.includes(column.publicId),
           onInsert: () => insertDatasetToken(column),
         }))}
@@ -180,6 +180,7 @@ function TokenRail({
   emptyText: string
   items: TokenRailItem[]
 }): ReactElement {
+  const { t } = useTranslation('project')
   const [searchQuery, setSearchQuery] = useState('')
 
   const filteredItems = items.filter((item) => {
@@ -202,7 +203,7 @@ function TokenRail({
         <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <Input
           type="text"
-          placeholder="Tìm kiếm..."
+          placeholder={t('verification.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="h-8 pl-8 pr-3 text-xs rounded-lg"
@@ -250,13 +251,13 @@ function TokenRail({
                     </div>
                     {item.example ? (
                       <div className="space-y-1">
-                        <div className="text-[10px] font-semibold uppercase text-muted-foreground">Ví dụ dữ liệu:</div>
+                        <div className="text-[10px] font-semibold uppercase text-muted-foreground">{t('verification.dataExample')}</div>
                         <pre className="max-h-36 overflow-auto rounded bg-muted/50 p-2 font-mono text-[10px] leading-relaxed break-all whitespace-pre-wrap">
                           {item.example}
                         </pre>
                       </div>
                     ) : (
-                      <div className="text-[10px] italic text-muted-foreground">Không có dữ liệu ví dụ.</div>
+                      <div className="text-[10px] italic text-muted-foreground">{t('verification.noDataExample')}</div>
                     )}
                   </div>
                 </PopoverContent>
@@ -265,7 +266,7 @@ function TokenRail({
           ))
         ) : (
           <div className="rounded-md border border-dashed bg-background px-3 py-6 text-center text-xs text-muted-foreground">
-            {searchQuery ? 'Không tìm thấy kết quả' : emptyText}
+            {searchQuery ? t('verification.noResults') : emptyText}
           </div>
         )}
       </div>

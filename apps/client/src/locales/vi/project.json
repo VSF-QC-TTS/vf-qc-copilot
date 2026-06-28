@@ -140,13 +140,13 @@
       "saveSuccess": "Đã lưu thông tin cột"
     },
     "verification": {
-      "title": "Quy tắc Đánh giá (Verification)",
-      "description": "Map các trường dữ liệu trả về từ API với các cột trong dataset hoặc dùng LLM Rubric.",
+      "title": "Quy tắc Đánh giá",
+      "description": "Ánh xạ các trường kết quả API với các cột trong bộ test (dataset) hoặc định nghĩa tiêu chuẩn LLM Judge.",
       "mode": "Chế độ kiểm tra",
-      "modeFieldChecks": "Kiểm tra theo trường (Xác định)",
-      "modeOverallRubric": "Rubric tổng thể (LLM Judge)",
-      "modeHybrid": "Kết hợp (Quy tắc + LLM)",
-      "responseFields": "Các trường trả về từ API",
+      "modeFieldChecks": "Kiểm tra theo trường",
+      "modeOverallRubric": "LLM Judge",
+      "modeHybrid": "Kết hợp",
+      "responseFields": "Trường kết quả",
       "datasetColumns": "Cột Dataset",
       "availableFields": "Các trường API khả dụng",
       "availableFieldsHint": "Kéo các trường từ phản hồi API để ánh xạ.",
@@ -171,7 +171,86 @@
       "passingThreshold": "Ngưỡng đạt",
       "weight": "Trọng số",
       "noRubrics": "Chưa có LLM Rubric nào.",
-      "saveSuccess": "Đã lưu cấu hình đánh giá"
+      "saveSuccess": "Đã lưu cấu hình đánh giá",
+      "fieldMatchTab": "Trường dữ liệu",
+      "llmJudgeTab": "AI Judge",
+      "addRule": "Thêm quy tắc",
+      "addPrompt": "Thêm prompt",
+      "save": "Lưu cấu hình",
+      "rule": "Quy tắc",
+      "prompt": "Prompt",
+      "validationErrorTitle": "Cần sửa lỗi trước khi lưu",
+      "invalidVerification": "Cấu hình đánh giá chưa hợp lệ",
+      "searchPlaceholder": "Tìm kiếm...",
+      "noResults": "Không tìm thấy kết quả",
+      "dataExample": "Ví dụ dữ liệu:",
+      "noDataExample": "Không có dữ liệu ví dụ.",
+      "comparisonMethod": "Cách so khớp ({{operator}}):",
+      "fieldResponseDesc": "Trường dữ liệu trích xuất từ phản hồi của mô hình/hệ thống.",
+      "datasetColumnDesc": "Vai trò: {{role}} | Kiểu dữ liệu: {{dataType}}",
+      "selectTemplate": "Chọn prompt mẫu...",
+      "promptTemplateAccuracy": "Đánh giá độ chính xác (Accuracy)",
+      "promptTemplateFluency": "Đánh giá trôi chảy & giọng điệu",
+      "promptTemplateHallucination": "Kiểm tra bịa đặt (Hallucination)",
+      "promptTemplateConciseness": "Kiểm tra độ ngắn gọn/súc tích",
+      "fieldMatchTitle": "Quy tắc so khớp trường dữ liệu (Deterministic)",
+      "llmJudgeTitle": "Đánh giá bằng AI (LLM Evaluation)",
+      "fieldLabelResponse": "Trường kết quả",
+      "fieldLabelOperator": "Toán tử so sánh",
+      "fieldLabelDataset": "Cột dữ liệu mẫu",
+      "chooseResponseField": "Chọn trường từ kết quả bot...",
+      "chooseDatasetColumn": "Chọn cột đối chiếu...",
+      "noResponsePath": "Chưa chọn trường kết quả",
+      "actualSampleData": "Dữ liệu thực tế mẫu:",
+      "matchingRule": "Cách so khớp ({{operator}}):",
+      "aliasResponseField": "Phản hồi bot ({{path}})",
+      "aliasDatasetColumn": "Cột dữ liệu ({{column}})",
+      "aliasResponseFieldDefault": "Trường dữ liệu ({{path}})",
+      "aliasDatasetColumnDefault": "Cột dữ liệu ({{column}})",
+      "noFieldMatch": "Chưa có quy tắc so khớp nào",
+      "noFieldMatchHint": "Thêm quy tắc để chọn trường kết quả, toán tử và cột đối chiếu.",
+      "noLlmJudge": "Chưa cấu hình đánh giá bằng AI",
+      "noLlmJudgeHint": "Thêm prompt để chấm điểm câu trả lời bằng rubric ngôn ngữ tự nhiên.",
+      "promptPlaceholder": "Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm mức độ đúng nghiệp vụ, đầy đủ ý, đúng tone. Trả về điểm 0-1 và lý do ngắn gọn.",
+      "promptHint": "Bấm token hai bên để chèn vào prompt. Backend lưu prompt này để runner đưa vào LLM Judge.",
+      "operators": {
+        "equals": {
+          "name": "Bằng",
+          "desc": "So khớp chính xác"
+        },
+        "not_equals": {
+          "name": "Khác",
+          "desc": "Giá trị thực tế khác kỳ vọng"
+        },
+        "contains": {
+          "name": "Chứa",
+          "desc": "Giá trị thực tế chứa kỳ vọng"
+        },
+        "not_contains": {
+          "name": "Không chứa",
+          "desc": "Giá trị thực tế không chứa kỳ vọng"
+        },
+        "regex": {
+          "name": "Regex",
+          "desc": "Giá trị thực tế khớp biểu thức chính quy"
+        },
+        "greater_than": {
+          "name": "Lớn hơn",
+          "desc": "So sánh số lớn hơn kỳ vọng"
+        },
+        "greater_than_or_equals": {
+          "name": "Lớn hơn hoặc bằng",
+          "desc": "So sánh số lớn hơn hoặc bằng kỳ vọng"
+        },
+        "less_than": {
+          "name": "Nhỏ hơn",
+          "desc": "So sánh số nhỏ hơn kỳ vọng"
+        },
+        "less_than_or_equals": {
+          "name": "Nhỏ hơn hoặc bằng",
+          "desc": "So sánh số nhỏ hơn hoặc bằng kỳ vọng"
+        }
+      }
     }
   }
 }

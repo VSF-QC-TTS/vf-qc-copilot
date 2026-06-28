@@ -143,9 +143,9 @@
       "title": "Verification Rules",
       "description": "Map API response fields to dataset columns or define LLM Rubrics.",
       "mode": "Verification Mode",
-      "modeFieldChecks": "Field Checks (Deterministic)",
-      "modeOverallRubric": "Overall Rubric (LLM Judge)",
-      "modeHybrid": "Hybrid (Rules + LLM)",
+      "modeFieldChecks": "Field Checks",
+      "modeOverallRubric": "LLM Judge",
+      "modeHybrid": "Combined",
       "responseFields": "Response Fields",
       "datasetColumns": "Dataset Columns",
       "availableFields": "Available API Fields",
@@ -171,7 +171,86 @@
       "passingThreshold": "Passing Threshold",
       "weight": "Weight",
       "noRubrics": "No LLM Rubrics defined.",
-      "saveSuccess": "Verification rules saved"
+      "saveSuccess": "Verification rules saved",
+      "fieldMatchTab": "Field Match",
+      "llmJudgeTab": "AI Judge",
+      "addRule": "Add Rule",
+      "addPrompt": "Add Prompt",
+      "save": "Save",
+      "rule": "Rule",
+      "prompt": "Prompt",
+      "validationErrorTitle": "Please fix errors before saving",
+      "invalidVerification": "Verification configuration is invalid",
+      "searchPlaceholder": "Search...",
+      "noResults": "No results found",
+      "dataExample": "Sample Data:",
+      "noDataExample": "No sample data available.",
+      "comparisonMethod": "Comparison rule ({{operator}}):",
+      "fieldResponseDesc": "Extracted field from model/system response.",
+      "datasetColumnDesc": "Role: {{role}} | Data Type: {{dataType}}",
+      "selectTemplate": "Select prompt template...",
+      "promptTemplateAccuracy": "Accuracy Evaluation (Accuracy)",
+      "promptTemplateFluency": "Fluency & Tone Evaluation",
+      "promptTemplateHallucination": "Hallucination Check",
+      "promptTemplateConciseness": "Conciseness Check",
+      "fieldMatchTitle": "Field Match (Deterministic rules)",
+      "llmJudgeTitle": "AI Judge (LLM Evaluation)",
+      "fieldLabelResponse": "Response Field",
+      "fieldLabelOperator": "Comparison Operator",
+      "fieldLabelDataset": "Dataset Column",
+      "chooseResponseField": "Select field from bot response...",
+      "chooseDatasetColumn": "Select column to compare...",
+      "noResponsePath": "No response path configured",
+      "actualSampleData": "Actual Sample Data:",
+      "matchingRule": "Comparison rule ({{operator}}):",
+      "aliasResponseField": "Bot response ({{path}})",
+      "aliasDatasetColumn": "Dataset column ({{column}})",
+      "aliasResponseFieldDefault": "Data field ({{path}})",
+      "aliasDatasetColumnDefault": "Data column ({{column}})",
+      "noFieldMatch": "No validation rules configured",
+      "noFieldMatchHint": "Add a rule to match response fields with dataset columns.",
+      "noLlmJudge": "No LLM Evaluation configured",
+      "noLlmJudgeHint": "Add a prompt to evaluate response with natural rubrics.",
+      "promptPlaceholder": "You are an evaluator. Based on $response.answer and $dataset.ground_truth, evaluate correct tone and factual correctness. Return a score 0 or 1 and a brief reason.",
+      "promptHint": "Click tokens on both sides to insert them into the prompt. This prompt is used by the runner to evaluate targets.",
+      "operators": {
+        "equals": {
+          "name": "Equals",
+          "desc": "Exact matching"
+        },
+        "not_equals": {
+          "name": "Not Equals",
+          "desc": "Value is not equal"
+        },
+        "contains": {
+          "name": "Contains",
+          "desc": "Value contains substring"
+        },
+        "not_contains": {
+          "name": "Not Contains",
+          "desc": "Value does not contain substring"
+        },
+        "regex": {
+          "name": "Regex",
+          "desc": "Regex pattern matching"
+        },
+        "greater_than": {
+          "name": "Greater Than",
+          "desc": "Numeric value is greater"
+        },
+        "greater_than_or_equals": {
+          "name": "Greater Than or Equal",
+          "desc": "Numeric value is greater or equal"
+        },
+        "less_than": {
+          "name": "Less Than",
+          "desc": "Numeric value is less"
+        },
+        "less_than_or_equals": {
+          "name": "Less Than or Equal",
+          "desc": "Numeric value is less or equal"
+        }
+      }
     }
   }
 }

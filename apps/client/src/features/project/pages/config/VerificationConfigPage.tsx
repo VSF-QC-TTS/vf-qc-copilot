@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent, ReactElement } from 'react'
-import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useParams as useReactParams } from 'react-router-dom'
 import {
   AlertCircleIcon,
   BotIcon,
@@ -63,7 +64,8 @@ const FALLBACK_OPERATORS: OperatorCatalogResponse[] = [
 ]
 
 export function VerificationConfigPage(): ReactElement {
-  const { publicId } = useParams<{ publicId: string }>()
+  const { t } = useTranslation(['project', 'validation'])
+  const { publicId } = useReactParams<{ publicId: string }>()
   const { data: config, isLoading } = useVerificationConfig(publicId)
   const { data: schemaData } = useProjectSchema(publicId)
   const { data: responseFieldData } = useResponseFieldExamples(publicId)
@@ -72,6 +74,7 @@ export function VerificationConfigPage(): ReactElement {
 
   const [values, setValues] = useState<VerificationFormValues>(EMPTY_FORM_VALUES)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
+  const [activeTab, setActiveTab] = useState<'field_checks' | 'llm_judge'>('field_checks')
 
   const columns = schemaData?.columns ?? []
   const responseFields = responseFieldData ?? []
@@ -85,6 +88,15 @@ export function VerificationConfigPage(): ReactElement {
     .filter((entry) => entry.item.type === 'LLM_JUDGE')
   const mode = deriveMode(items, values.mode)
 
+  const localizedOperators = operators.map((op) => {
+    const key = `verification.operators.${op.operator.toLowerCase()}`
+    return {
+      ...op,
+      displayName: t(`${key}.name`, { defaultValue: op.displayName }),
+      description: t(`${key}.desc`, { defaultValue: op.description }),
+    }
+  })
+
   useEffect(() => {
     if (!config) {
       return
@@ -95,6 +107,15 @@ export function VerificationConfigPage(): ReactElement {
       items: nextItems,
     })
     setValidationErrors([])
+    
+    // Automatically focus the tab that has content
+    const hasField = nextItems.some((item) => item.type === 'FIELD_ASSERTION')
+    const hasLlm = nextItems.some((item) => item.type === 'LLM_JUDGE')
+    if (hasLlm && !hasField) {
+      setActiveTab('llm_judge')
+    } else {
+      setActiveTab('field_checks')
+    }
   }, [config])
 
   function updateValues(patch: Partial<VerificationFormValues>): void {
@@ -138,7 +159,7 @@ export function VerificationConfigPage(): ReactElement {
     const errors = validateVerificationForm(submitValues, operators)
     setValidationErrors(errors)
     if (errors.length > 0) {
-      toast.error('Verification chưa hợp lệ')
+      toast.error(t('verification.invalidVerification'))
       return
     }
     saveMutation.mutate(submitValues)
@@ -150,142 +171,194 @@ export function VerificationConfigPage(): ReactElement {
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 p-4 lg:p-6">
-      <Card className="rounded-lg shadow-sm">
-        <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_360px] lg:items-center">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-foreground text-background">
-                <ShieldCheckIcon data-icon="inline-start" />
-                Verification
-              </Badge>
-              <Badge variant="outline">{modeLabel(mode)}</Badge>
-            </div>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight">Cấu hình chấm kết quả chatbot</h1>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <Badge variant="secondary">{fieldItems.length} field match</Badge>
-              <Badge variant="secondary">{llmItems.length} LLM judge</Badge>
-              <Badge variant="secondary">{responseFields.length} response fields</Badge>
-              <Badge variant="secondary">{columns.length} dataset columns</Badge>
-            </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-4 border-border/65">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="bg-foreground text-background font-normal py-0.5 px-2">
+              <ShieldCheckIcon data-icon="inline-start" />
+              Verification
+            </Badge>
+            <Badge variant="outline" className="font-normal py-0.5 px-2">
+              {modeLabel(mode, t)}
+            </Badge>
           </div>
-
-          <div className="flex justify-end">
-            <Button type="submit" className="h-10 rounded-lg" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? <Spinner className="size-4" /> : <SaveIcon className="size-4" />}
-              Lưu
-            </Button>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{t('verification.title')}</h1>
+          <div className="mt-2.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <Badge variant="secondary" className="font-normal py-0.5 px-2">
+              {fieldItems.length} {t('verification.fieldMatchTab').toLowerCase()}
+            </Badge>
+            <Badge variant="secondary" className="font-normal py-0.5 px-2">
+              {llmItems.length} {t('verification.llmJudgeTab').toLowerCase()}
+            </Badge>
+            <Badge variant="secondary" className="font-normal py-0.5 px-2">
+              {responseFields.length} {t('verification.responseFields').toLowerCase()}
+            </Badge>
+            <Badge variant="secondary" className="font-normal py-0.5 px-2">
+              {columns.length} {t('verification.datasetColumns').toLowerCase()}
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {validationErrors.length > 0 ? <ValidationAlert errors={validationErrors} /> : null}
-
-      <Card className="rounded-lg shadow-sm">
-        <CardHeader className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ListChecksIcon className="size-4" />
-            Field match
-          </CardTitle>
-          <Button type="button" variant="outline" size="sm" className="h-9 rounded-lg" onClick={addFieldRule}>
-            <PlusIcon className="size-4" />
-            Thêm rule
+        <div className="flex shrink-0 items-center justify-end">
+          <Button type="submit" className="h-9 px-4 rounded-lg font-medium" disabled={saveMutation.isPending}>
+            {saveMutation.isPending ? <Spinner className="size-4" /> : <SaveIcon className="size-4" />}
+            {t('verification.save')}
           </Button>
-        </CardHeader>
-        <CardContent className="space-y-3 p-4">
-          {fieldItems.length > 0 ? (
-            fieldItems.map(({ item, index }, displayIndex) =>
-              item.fieldAssertion ? (
-                <div key={item.publicId ?? `field-${index}`} className="space-y-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <Badge variant="outline">Rule {displayIndex + 1}</Badge>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => removeItem(index)}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
+        </div>
+      </div>
+
+      {validationErrors.length > 0 ? <ValidationAlert errors={validationErrors} t={t} /> : null}
+
+      <div className="flex border-b border-border/80 gap-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('field_checks')}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-all ${
+            activeTab === 'field_checks'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <ListChecksIcon className="size-4" />
+          <span>{t('verification.fieldMatchTab')}</span>
+          <Badge variant="secondary" className="ml-1 h-5 rounded-full px-1.5 text-[10px] font-normal">
+            {fieldItems.length}
+          </Badge>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('llm_judge')}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-all ${
+            activeTab === 'llm_judge'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <BotIcon className="size-4" />
+          <span>{t('verification.llmJudgeTab')}</span>
+          <Badge variant="secondary" className="ml-1 h-5 rounded-full px-1.5 text-[10px] font-normal">
+            {llmItems.length}
+          </Badge>
+        </button>
+      </div>
+
+      <div className="mt-2">
+        {activeTab === 'field_checks' && (
+          <Card className="rounded-lg border shadow-sm">
+            <CardHeader className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <ListChecksIcon className="size-4 text-muted-foreground" />
+                {t('verification.fieldMatchTitle')}
+              </CardTitle>
+              <Button type="button" variant="outline" size="sm" className="h-8 rounded-md text-xs font-normal" onClick={addFieldRule}>
+                <PlusIcon className="size-3.5" />
+                {t('verification.addRule')}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4">
+              {fieldItems.length > 0 ? (
+                fieldItems.map(({ item, index }, displayIndex) =>
+                  item.fieldAssertion ? (
+                    <div key={item.publicId ?? `field-${index}`} className="space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <Badge variant="outline" className="font-normal text-[11px] px-2 py-0.5">
+                          {t('verification.rule')} {displayIndex + 1}
+                        </Badge>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => removeItem(index)}
+                        >
+                          <TrashIcon className="size-3.5" />
+                        </Button>
+                      </div>
+                      <FieldAssertionEditor
+                        assertion={item.fieldAssertion}
+                        responseFields={responseFields}
+                        columns={columns}
+                        operators={localizedOperators}
+                        compact={false}
+                        onChange={(assertion) => handleFieldChange(index, assertion)}
+                      />
+                    </div>
+                  ) : null,
+                )
+              ) : (
+                <Empty className="rounded-lg border border-dashed py-12">
+                  <EmptyHeader>
+                    <EmptyTitle className="text-sm font-medium">{t('verification.noFieldMatch')}</EmptyTitle>
+                    <EmptyDescription className="text-xs text-muted-foreground max-w-xs">{t('verification.noFieldMatchHint')}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'llm_judge' && (
+          <Card className="rounded-lg border shadow-sm">
+            <CardHeader className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <BotIcon className="size-4 text-muted-foreground" />
+                {t('verification.llmJudgeTitle')}
+              </CardTitle>
+              <Button type="button" variant="outline" size="sm" className="h-8 rounded-md text-xs font-normal" onClick={addLlmJudge}>
+                <PlusIcon className="size-3.5" />
+                {t('verification.addPrompt')}
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4">
+              {llmItems.length > 0 ? (
+                llmItems.map(({ item, index }, displayIndex) => (
+                  <div key={item.publicId ?? `llm-${index}`} className="rounded-lg border bg-background overflow-hidden">
+                    <div className="flex items-center justify-between gap-3 border-b bg-muted/15 p-2 px-3">
+                      <Badge variant="outline" className="font-normal text-[11px] px-2 py-0.5">
+                        {t('verification.prompt')} {displayIndex + 1}
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 rounded-md text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => removeItem(index)}
+                      >
+                        <TrashIcon className="size-3.5" />
+                      </Button>
+                    </div>
+                    <div className="p-3">
+                      <LlmJudgeEditor
+                        item={item}
+                        responseFields={responseFields}
+                        columns={columns}
+                        onChange={(nextItem) => patchItem(index, nextItem)}
+                      />
+                    </div>
                   </div>
-                  <FieldAssertionEditor
-                    assertion={item.fieldAssertion}
-                    responseFields={responseFields}
-                    columns={columns}
-                    operators={operators}
-                    compact={false}
-                    onChange={(assertion) => handleFieldChange(index, assertion)}
-                  />
-                </div>
-              ) : null,
-            )
-          ) : (
-            <Empty className="rounded-lg border border-dashed p-8">
-              <EmptyHeader>
-                <EmptyTitle>Chưa có rule so khớp</EmptyTitle>
-                <EmptyDescription>Thêm rule để chọn response field, operator và dataset column.</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-lg shadow-sm">
-        <CardHeader className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <BotIcon className="size-4" />
-            LLM Judge
-          </CardTitle>
-          <Button type="button" variant="outline" size="sm" className="h-9 rounded-lg" onClick={addLlmJudge}>
-            <PlusIcon className="size-4" />
-            Thêm prompt
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4 p-4">
-          {llmItems.length > 0 ? (
-            llmItems.map(({ item, index }, displayIndex) => (
-              <div key={item.publicId ?? `llm-${index}`} className="rounded-lg border bg-background">
-                <div className="flex items-center justify-between gap-3 border-b p-3">
-                  <Badge variant="outline">Prompt {displayIndex + 1}</Badge>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-9 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={() => removeItem(index)}
-                  >
-                    <TrashIcon className="size-4" />
-                  </Button>
-                </div>
-                <div className="p-3">
-                  <LlmJudgeEditor
-                    item={item}
-                    responseFields={responseFields}
-                    columns={columns}
-                    onChange={(nextItem) => patchItem(index, nextItem)}
-                  />
-                </div>
-              </div>
-            ))
-          ) : (
-            <Empty className="rounded-lg border border-dashed p-8">
-              <EmptyHeader>
-                <EmptyTitle>Chưa có LLM Judge</EmptyTitle>
-                <EmptyDescription>Thêm prompt để chấm bằng rubric tự nhiên.</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </CardContent>
-      </Card>
+                ))
+              ) : (
+                <Empty className="rounded-lg border border-dashed py-12">
+                  <EmptyHeader>
+                    <EmptyTitle className="text-sm font-medium">{t('verification.noLlmJudge')}</EmptyTitle>
+                    <EmptyDescription className="text-xs text-muted-foreground max-w-xs">{t('verification.noLlmJudgeHint')}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </form>
   )
 }
 
-function ValidationAlert({ errors }: { errors: string[] }): ReactElement {
+function ValidationAlert({ errors, t }: { errors: string[]; t: (key: string) => string }): ReactElement {
   return (
     <Alert variant="destructive">
       <AlertCircleIcon className="size-4" />
-      <AlertTitle>Cần sửa trước khi lưu</AlertTitle>
+      <AlertTitle>{t('verification.validationErrorTitle')}</AlertTitle>
       <AlertDescription>
         <ul className="list-disc space-y-1 pl-4">
           {errors.map((error) => (
@@ -328,14 +401,14 @@ function deriveMode(items: VerificationItemRequest[], fallback: VerificationMode
   return fallback
 }
 
-function modeLabel(mode: VerificationMode): string {
+function modeLabel(mode: VerificationMode, t: (key: string) => string): string {
   if (mode === 'COMBINED') {
-    return 'Kết hợp'
+    return t('verification.modeHybrid')
   }
   if (mode === 'LLM_JUDGE') {
-    return 'LLM Judge'
+    return t('verification.modeOverallRubric')
   }
-  return 'Field match'
+  return t('verification.modeFieldChecks')
 }
 
 function makeOperator(
