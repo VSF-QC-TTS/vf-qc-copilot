@@ -82,7 +82,7 @@ export interface DatasetJobResponse {
 }
 
 export interface DatasetJobEventResponse {
-  publicId: string
+  jobPublicId: string
   type: DatasetJobType
   status: DatasetJobStatus
   progress: number

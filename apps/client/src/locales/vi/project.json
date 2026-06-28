@@ -250,5 +250,27 @@
         }
       }
     }
+  },
+  "dataset": {
+    "jobs": {
+      "status": {
+        "QUEUED": "Đang chờ",
+        "RUNNING": "Đang chạy",
+        "NEEDS_CONFIRMATION": "Cần xác nhận",
+        "COMPLETED": "Hoàn tất",
+        "FAILED": "Thất bại",
+        "CANCEL_REQUESTED": "Đang dừng",
+        "CANCELLED": "Đã hủy"
+      },
+      "messages": {
+        "Confirm column mapping": "Xác nhận đối chiếu cột",
+        "Import completed": "Nhập dữ liệu hoàn tất",
+        "Queued Excel import": "Đã đưa vào hàng đợi nhập Excel",
+        "Queued AI generation": "Đã đưa vào hàng đợi sinh AI",
+        "AI generation completed": "Sinh AI hoàn tất",
+        "Queued Excel export": "Đã đưa vào hàng đợi xuất Excel",
+        "Export ready": "Xuất dữ liệu hoàn tất"
+      }
+    }
   }
 }

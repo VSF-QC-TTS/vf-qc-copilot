@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle2, CircleAlert, CircleX, FileSpreadsheet, Loader2, PauseCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -66,10 +67,17 @@ export function DatasetJobProgressDialog({
   const [mappings, setMappings] = useState<DatasetColumnMappingRequest[]>([])
   const confirmMutation = useConfirmDatasetImport(datasetPublicId)
 
+  const { t } = useTranslation('project')
+
   const currentStatus = event?.status ?? job?.status ?? 'QUEUED'
   const currentProgress = event?.progress ?? job?.progress ?? 0
   const isWaitingForMapping = currentStatus === 'NEEDS_CONFIRMATION'
   const isFinished = isTerminalStatus(currentStatus)
+
+  const rawMessage = event?.message ?? job?.message
+  const displayMessage = rawMessage 
+    ? t(`dataset.jobs.messages.${rawMessage}`, { defaultValue: rawMessage }) 
+    : 'Đang chuẩn bị job...'
 
   const suggestions = useMemo(
     () => event?.mappingSuggestions ?? job?.mappingSuggestions ?? [],
@@ -142,7 +150,7 @@ export function DatasetJobProgressDialog({
   }
 
   function handleConfirm(): void {
-    const targetJobId = event?.publicId ?? job?.publicId
+    const targetJobId = event?.jobPublicId ?? job?.publicId
     if (!targetJobId) {
       toast.error('Không tìm thấy ID của job để xác nhận')
       return
@@ -166,7 +174,7 @@ export function DatasetJobProgressDialog({
             <FileSpreadsheet className="size-4" />
             Tiến trình dataset
           </DialogTitle>
-          <DialogDescription>{event?.message ?? job?.message ?? 'Đang chuẩn bị job...'}</DialogDescription>
+          <DialogDescription>{displayMessage}</DialogDescription>
         </DialogHeader>
 
         <div className="grid min-h-[420px] gap-0 bg-muted/20 md:grid-cols-[280px_1fr]">
@@ -175,7 +183,7 @@ export function DatasetJobProgressDialog({
               <StatusBadge status={currentStatus} />
               <div>
                 <div className="mb-2 flex items-center justify-between text-xs font-medium text-muted-foreground">
-                  <span>{currentStatus}</span>
+                  <span>{t(`dataset.jobs.status.${currentStatus}`, { defaultValue: currentStatus })}</span>
                   <span>{currentProgress}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -321,11 +329,12 @@ function MappingConfirmation({
 }
 
 function StatusBadge({ status }: { status: DatasetJobStatus }) {
+  const { t } = useTranslation('project')
   if (status === 'COMPLETED') {
     return (
       <Badge className="w-fit bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
         <CheckCircle2 data-icon="inline-start" />
-        Hoàn tất
+        {t('dataset.jobs.status.COMPLETED')}
       </Badge>
     )
   }
@@ -333,7 +342,7 @@ function StatusBadge({ status }: { status: DatasetJobStatus }) {
     return (
       <Badge variant="destructive" className="w-fit">
         <CircleX data-icon="inline-start" />
-        Lỗi
+        {t('dataset.jobs.status.FAILED')}
       </Badge>
     )
   }
@@ -341,14 +350,14 @@ function StatusBadge({ status }: { status: DatasetJobStatus }) {
     return (
       <Badge className="w-fit bg-amber-500/10 text-amber-700 dark:text-amber-300">
         <PauseCircle data-icon="inline-start" />
-        Cần xác nhận
+        {t('dataset.jobs.status.NEEDS_CONFIRMATION')}
       </Badge>
     )
   }
   return (
     <Badge variant="outline" className="w-fit">
       <Loader2 data-icon="inline-start" className="animate-spin" />
-      Đang chạy
+      {t('dataset.jobs.status.RUNNING')}
     </Badge>
   )
 }
@@ -389,7 +398,7 @@ function createDefaultMappings(
 
 function toInitialEvent(job: DatasetJobResponse): DatasetJobEventResponse {
   return {
-    publicId: job.publicId,
+    jobPublicId: job.publicId,
     type: job.type,
     status: job.status,
     progress: job.progress,

@@ -250,5 +250,27 @@
         }
       }
     }
+  },
+  "dataset": {
+    "jobs": {
+      "status": {
+        "QUEUED": "Queued",
+        "RUNNING": "Running",
+        "NEEDS_CONFIRMATION": "Needs Confirmation",
+        "COMPLETED": "Completed",
+        "FAILED": "Failed",
+        "CANCEL_REQUESTED": "Cancelling",
+        "CANCELLED": "Cancelled"
+      },
+      "messages": {
+        "Confirm column mapping": "Confirm column mapping",
+        "Import completed": "Import completed",
+        "Queued Excel import": "Queued Excel import",
+        "Queued AI generation": "Queued AI generation",
+        "AI generation completed": "AI generation completed",
+        "Queued Excel export": "Queued Excel export",
+        "Export ready": "Export ready"
+      }
+    }
   }
 }
