@@ -216,39 +216,39 @@
       "operators": {
         "equals": {
           "name": "Bằng",
-          "desc": "So khớp chính xác"
+          "desc": "Exact string, boolean, number, or JSON value match"
         },
         "not_equals": {
           "name": "Khác",
-          "desc": "Giá trị thực tế khác kỳ vọng"
+          "desc": "Checks that the actual value differs from the expected value"
         },
         "contains": {
           "name": "Chứa",
-          "desc": "Giá trị thực tế chứa kỳ vọng"
+          "desc": "Checks that the actual text contains the expected text"
         },
         "not_contains": {
           "name": "Không chứa",
-          "desc": "Giá trị thực tế không chứa kỳ vọng"
+          "desc": "Checks that the actual text does not contain the expected text"
         },
         "regex": {
           "name": "Regex",
-          "desc": "Giá trị thực tế khớp biểu thức chính quy"
+          "desc": "Checks that the actual text matches a regular expression"
         },
         "greater_than": {
           "name": "Lớn hơn",
-          "desc": "So sánh số lớn hơn kỳ vọng"
+          "desc": "Checks that the actual numeric value is greater than expected"
         },
         "greater_than_or_equals": {
           "name": "Lớn hơn hoặc bằng",
-          "desc": "So sánh số lớn hơn hoặc bằng kỳ vọng"
+          "desc": "Checks that the actual numeric value is greater than or equal to expected"
         },
         "less_than": {
           "name": "Nhỏ hơn",
-          "desc": "So sánh số nhỏ hơn kỳ vọng"
+          "desc": "Checks that the actual numeric value is less than expected"
         },
         "less_than_or_equals": {
           "name": "Nhỏ hơn hoặc bằng",
-          "desc": "So sánh số nhỏ hơn hoặc bằng kỳ vọng"
+          "desc": "Checks that the actual numeric value is less than or equal to expected"
         }
       }
     }
