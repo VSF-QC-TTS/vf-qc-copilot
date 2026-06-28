@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ActivityIcon, BarChart3Icon, ClockIcon, PlayIcon, SettingsIcon, type LucideIcon } from 'lucide-react'
+import { motion } from 'motion/react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -13,14 +13,37 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
 } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 import { CreateTestRunDialog } from '../../components/CreateTestRunDialog'
 import { RunStatusBadge } from '../../components/RunStatusBadge'
 import { TestRunDetailSheet } from '../../components/TestRunDetailSheet'
 import { useSetupStatus } from '../../hooks/use-projects'
 import { useTestRuns } from '../../hooks/use-test-runs'
 import type { TestRunResponse } from '@/types/test-run'
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+    },
+  },
+} as const
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as const
 
 export function TestRunPage() {
   const { publicId } = useParams<{ publicId: string }>()
@@ -49,87 +72,182 @@ export function TestRunPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6"
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Test Runs</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Lượt chạy test</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Queue và theo dõi các lần chạy test qua backend runner.
+            Quản lý và theo dõi các phiên chạy test qua runner hệ thống.
           </p>
         </div>
-        <Button type="button" disabled={!isSetupComplete} onClick={() => setCreateOpen(true)}>
-          <PlayIcon data-icon="inline-start" />
-          New run
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button 
+            type="button" 
+            disabled={!isSetupComplete} 
+            onClick={() => setCreateOpen(true)}
+            className="shadow-sm transition-all cursor-pointer"
+          >
+            <PlayIcon data-icon="inline-start" />
+            Tạo lượt chạy
+          </Button>
+        </motion.div>
       </div>
 
       {!isSetupComplete ? (
-        <Alert>
-          <SettingsIcon className="size-4" />
-          <AlertTitle>Chưa đủ cấu hình để chạy test</AlertTitle>
-          <AlertDescription>
-            Hoàn tất API config, schema, verification và dataset active trước khi tạo run.
-          </AlertDescription>
-        </Alert>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        >
+          <Alert variant="destructive" className="border-amber-500/20 bg-amber-500/5 text-amber-800 dark:text-amber-200">
+            <SettingsIcon />
+            <AlertTitle>Chưa đủ cấu hình để chạy test</AlertTitle>
+            <AlertDescription>
+              Vui lòng hoàn tất API config, schema, verification và bộ dữ liệu (dataset) active trước khi tạo run.
+            </AlertDescription>
+          </Alert>
+        </motion.div>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <MetricCard icon={BarChart3Icon} label="Total runs" value={String(summary.totalRuns)} />
-        <MetricCard icon={ActivityIcon} label="Pass rate" value={summary.passRate} />
-        <MetricCard icon={ClockIcon} label="Avg duration" value={summary.avgDuration} />
-        <MetricCard icon={ActivityIcon} label="Active" value={String(summary.activeRuns)} />
-      </div>
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-2 md:grid-cols-4 border rounded-xl divide-x divide-y md:divide-y-0 overflow-hidden bg-card shadow-sm border-border/70"
+      >
+        <MetricCard 
+          icon={BarChart3Icon} 
+          label="Tổng số lượt chạy" 
+          value={String(summary.totalRuns)} 
+          index={0} 
+        />
+        <MetricCard 
+          icon={ActivityIcon} 
+          label="Tỷ lệ vượt qua" 
+          value={summary.passRate} 
+          index={1} 
+        />
+        <MetricCard 
+          icon={ClockIcon} 
+          label="Thời gian trung bình" 
+          value={summary.avgDuration} 
+          index={2} 
+        />
+        <MetricCard 
+          icon={ActivityIcon} 
+          label="Đang hoạt động" 
+          value={String(summary.activeRuns)} 
+          index={3} 
+        />
+      </motion.div>
 
       {runsQuery.isLoading ? (
-        <Skeleton className="h-80 rounded-lg" />
+        <div className="rounded-xl border bg-card p-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b pb-3 border-border/50">
+            <Skeleton className="h-5 w-32 rounded animate-pulse" />
+            <Skeleton className="h-5 w-24 rounded animate-pulse" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex gap-4 items-center py-3 border-b border-border/40 last:border-0">
+                <Skeleton className="h-4 flex-1 rounded animate-pulse" />
+                <Skeleton className="h-4 w-20 rounded animate-pulse" />
+                <Skeleton className="h-4 w-12 rounded animate-pulse" />
+                <Skeleton className="h-4 w-24 rounded animate-pulse" />
+                <Skeleton className="h-4 w-16 rounded animate-pulse" />
+                <Skeleton className="h-4 w-32 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : runs.length === 0 ? (
         <div className="rounded-xl border bg-card p-10">
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>Chưa có test run</EmptyTitle>
+              <EmptyTitle>Chưa có lượt chạy test</EmptyTitle>
               <EmptyDescription>
                 {isSetupComplete
-                  ? 'Tạo run đầu tiên để kiểm tra target API với dataset active.'
-                  : 'Hoàn tất cấu hình trước khi chạy test.'}
+                  ? 'Tạo lượt chạy đầu tiên để kiểm tra target API với dataset active.'
+                  : 'Vui lòng hoàn tất cấu hình trước khi chạy test.'}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
         </div>
       ) : (
-        <div className="rounded-xl border bg-card">
+        <div className="rounded-xl border bg-card overflow-hidden shadow-sm border-border/70">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Score</TableHead>
-                <TableHead>Cases</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
+            <TableHeader className="bg-muted/20">
+              <tr className="border-b">
+                <TableHead className="py-3 px-3">Tên lượt chạy</TableHead>
+                <TableHead className="py-3 px-3">Trạng thái</TableHead>
+                <TableHead className="py-3 px-3">Điểm số</TableHead>
+                <TableHead className="py-3 px-3">Ca test (Đạt/Lỗi/Hỏng/Tổng)</TableHead>
+                <TableHead className="py-3 px-3">Thời gian chạy</TableHead>
+                <TableHead className="py-3 px-3">Thời gian tạo</TableHead>
+              </tr>
             </TableHeader>
             <TableBody>
-              {runs.map((run) => (
-                <TableRow
-                  key={run.publicId}
-                  className="cursor-pointer"
-                  onClick={() => handleSelectRun(run)}
-                  aria-selected={selectedRun?.publicId === run.publicId}
-                >
-                  <TableCell className="max-w-[260px] truncate font-medium">{run.name}</TableCell>
-                  <TableCell>
-                    <RunStatusBadge status={run.status} />
-                  </TableCell>
-                  <TableCell>{formatScore(run.score)}</TableCell>
-                  <TableCell>
-                    <span className="font-mono text-xs">
-                      {run.passedCases}/{run.failedCases}/{run.errorCases} / {run.totalCases}
-                    </span>
-                  </TableCell>
-                  <TableCell>{formatDuration(run.durationMs)}</TableCell>
-                  <TableCell>{new Date(run.createdAt).toLocaleString('vi-VN')}</TableCell>
-                </TableRow>
-              ))}
+              {runs.map((run, index) => {
+                const isSelected = selectedRun?.publicId === run.publicId;
+                return (
+                  <motion.tr
+                    key={run.publicId}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.04 }}
+                    onClick={() => handleSelectRun(run)}
+                    aria-selected={isSelected}
+                    className={cn(
+                      "cursor-pointer border-b transition-colors hover:bg-muted/30 select-none",
+                      isSelected ? "bg-muted/65 font-medium border-l-2 border-l-primary" : ""
+                    )}
+                  >
+                    <TableCell className={cn("max-w-[260px] truncate py-3.5 px-3 font-medium", isSelected ? "text-primary" : "text-foreground")}>
+                      {run.name}
+                    </TableCell>
+                    <TableCell className="py-3.5 px-3">
+                      <RunStatusBadge status={run.status} />
+                    </TableCell>
+                    <TableCell className="py-3.5 px-3">
+                      <div className="flex items-center gap-2">
+                        {run.score !== null ? (
+                          <>
+                            <span className={cn(
+                              "size-1.5 rounded-full shrink-0",
+                              run.score >= 0.8 ? "bg-emerald-500" : run.score >= 0.5 ? "bg-amber-500" : "bg-destructive"
+                            )} />
+                            <span className="font-mono text-sm font-semibold">{formatScore(run.score)}</span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-3">
+                      <div className="flex items-center gap-1.5 font-mono text-xs">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold" title="Đạt">{run.passedCases}</span>
+                        <span className="text-muted-foreground/60">/</span>
+                        <span className="text-destructive font-semibold" title="Lỗi (Failed)">{run.failedCases}</span>
+                        <span className="text-muted-foreground/60">/</span>
+                        <span className="text-amber-500 font-semibold" title="Hỏng (Error)">{run.errorCases}</span>
+                        <span className="text-muted-foreground/60">/</span>
+                        <span className="text-muted-foreground/90 font-semibold" title="Tổng số">{run.totalCases}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-3 font-mono text-xs text-muted-foreground/90">
+                      {formatDuration(run.durationMs)}
+                    </TableCell>
+                    <TableCell className="py-3.5 px-3 text-xs text-muted-foreground/80">
+                      {new Date(run.createdAt).toLocaleString('vi-VN')}
+                    </TableCell>
+                  </motion.tr>
+                )
+              })}
             </TableBody>
           </Table>
         </div>
@@ -159,7 +277,7 @@ export function TestRunPage() {
         projectPublicId={publicId}
         run={selectedRun}
       />
-    </div>
+    </motion.div>
   )
 }
 
@@ -171,19 +289,23 @@ function MetricCard({
   icon: LucideIcon
   label: string
   value: string
+  index: number
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-3 p-4">
-        <div className="rounded-lg bg-muted/50 p-2 text-primary">
+    <motion.div
+      variants={itemVariants}
+      className="group relative flex flex-col justify-between p-5 transition-colors duration-300 hover:bg-muted/30"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold text-muted-foreground/80 uppercase tracking-wider">{label}</span>
+        <div className="rounded-lg bg-muted/60 p-1.5 text-muted-foreground group-hover:text-primary transition-colors">
           <Icon className="size-4" />
         </div>
-        <div className="min-w-0">
-          <div className="truncate font-mono text-lg font-semibold">{value}</div>
-          <div className="text-xs text-muted-foreground">{label}</div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="mt-4 flex items-baseline gap-2">
+        <span className="font-mono text-3xl font-semibold tracking-tight text-foreground">{value}</span>
+      </div>
+    </motion.div>
   )
 }
 

@@ -5,13 +5,13 @@ import {
   Globe,
   CheckSquare,
   Table,
-  CheckCircle2,
-  Circle,
+  Check,
   BarChart,
   LayoutDashboard,
   ChevronRight,
   Database,
 } from 'lucide-react'
+import { motion } from 'motion/react'
 
 import {
   Collapsible,
@@ -25,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ProjectSwitcher } from './ProjectSwitcher'
 import { UserNav } from './UserNav'
 import { useSetupStatus } from '@/features/project/hooks/use-projects'
+import { cn } from '@/lib/utils'
 
 export function AppSidebar() {
   const { t } = useTranslation('project')
@@ -35,7 +36,7 @@ export function AppSidebar() {
   const isProjectListMode = !publicId
 
   return (
-    <Sidebar collapsible="icon" className="border-r">
+    <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarHeader>
         <div className="flex flex-col gap-2 pt-2">
           {state !== 'collapsed' && (
@@ -57,8 +58,6 @@ export function AppSidebar() {
     </Sidebar>
   )
 }
-
-
 
 function ProjectNavSidebar({ publicId, location }: { publicId: string; location: any }) {
   const { t } = useTranslation('project')
@@ -84,16 +83,33 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
     status?.hasDatasets
   const defaultOpen = !isSetupComplete
 
+  const isOverviewActive = location.pathname === `/projects/${publicId}`
+
   return (
     <>
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu className="gap-1">
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={location.pathname === `/projects/${publicId}`}>
+              <SidebarMenuButton 
+                asChild 
+                className={cn(
+                  "relative transition-all duration-200 select-none",
+                  isOverviewActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                )}
+              >
                 <Link to={`/projects/${publicId}`}>
-                  <LayoutDashboard />
-                  <span>{t('nav.overview')}</span>
+                  <div className="flex items-center gap-2 z-10">
+                    <LayoutDashboard />
+                    <span>{t('nav.overview')}</span>
+                  </div>
+                  {isOverviewActive && (
+                    <motion.div
+                      layoutId="active-sidebar-pill"
+                      className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -104,7 +120,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
       <Collapsible defaultOpen={defaultOpen} className="group/collapsible">
         <SidebarGroup>
           <SidebarGroupLabel asChild>
-            <CollapsibleTrigger>
+            <CollapsibleTrigger className="hover:text-foreground transition-colors cursor-pointer select-none">
               {t('nav.setup')}
               <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
             </CollapsibleTrigger>
@@ -121,53 +137,89 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                         </div>
                       </SidebarMenuItem>
                     ))
-                    : setupItems.map((item) => {
-                        const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-                        return (
-                          <SidebarMenuItem key={item.path}>
-                            <SidebarMenuButton asChild isActive={isActive}>
-                              <Link to={item.path} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <item.icon />
-                                  <span>{item.name}</span>
-                                </div>
-                                {item.done !== undefined &&
-                                  (item.done ? (
-                                    <CheckCircle2 className="text-emerald-500" />
+                  : setupItems.map((item) => {
+                      const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+                      return (
+                        <SidebarMenuItem key={item.path}>
+                          <SidebarMenuButton 
+                            asChild 
+                            className={cn(
+                              "relative transition-all duration-200 select-none",
+                              isActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                            )}
+                          >
+                            <Link to={item.path} className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 z-10">
+                                <item.icon />
+                                <span>{item.name}</span>
+                              </div>
+                              {item.done !== undefined && (
+                                <div className="z-10 shrink-0">
+                                  {item.done ? (
+                                    <span className="flex size-4 items-center justify-center rounded-full bg-success-500/10 text-success-500">
+                                      <Check className="size-2.5" />
+                                    </span>
                                   ) : (
-                                    <Circle className="text-muted-foreground/50" />
-                                  ))}
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        )
-                      })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+                                    <span className="flex size-4 items-center justify-center rounded-full border border-muted-foreground/15 bg-muted/10 text-transparent" />
+                                  )}
+                                </div>
+                              )}
+                              {isActive && (
+                                <motion.div
+                                  layoutId="active-sidebar-pill"
+                                  className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </CollapsibleContent>
+        </SidebarGroup>
+      </Collapsible>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>{t('nav.execution')}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
-              {executionItems.map((item) => {
-                const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link to={item.path} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <item.icon />
-                          <span>{item.name}</span>
+      <SidebarGroup>
+        <SidebarGroupLabel className="select-none">{t('nav.execution')}</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu className="gap-1">
+            {executionItems.map((item) => {
+              const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+              return (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton 
+                    asChild
+                    className={cn(
+                      "relative transition-all duration-200 select-none",
+                      isActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                    )}
+                  >
+                    <Link to={item.path} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 z-10">
+                        <item.icon />
+                        <span>{item.name}</span>
+                      </div>
+                      {item.done !== undefined && (
+                        <div className="z-10 shrink-0">
+                          {item.done ? (
+                            <span className="flex size-4 items-center justify-center rounded-full bg-success-500/10 text-success-500">
+                              <Check className="size-2.5" />
+                            </span>
+                          ) : (
+                            <span className="flex size-4 items-center justify-center rounded-full border border-muted-foreground/15 bg-muted/10 text-transparent" />
+                          )}
                         </div>
-                      {item.done !== undefined &&
-                        (item.done ? (
-                          <CheckCircle2 className="text-emerald-500" />
-                        ) : (
-                          <Circle className="text-muted-foreground/50" />
-                        ))}
+                      )}
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-sidebar-pill"
+                          className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        />
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -176,15 +228,32 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
+      
       <SidebarSeparator />
+      
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu className="gap-1">
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={location.pathname === `/projects/${publicId}/settings`}>
+              <SidebarMenuButton 
+                asChild
+                className={cn(
+                  "relative transition-all duration-200 select-none",
+                  location.pathname === `/projects/${publicId}/settings` ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                )}
+              >
                 <Link to={`/projects/${publicId}/settings`}>
-                  <Settings />
-                  <span>{t('nav.settings')}</span>
+                  <div className="flex items-center gap-2 z-10">
+                    <Settings />
+                    <span>{t('nav.settings')}</span>
+                  </div>
+                  {location.pathname === `/projects/${publicId}/settings` && (
+                    <motion.div
+                      layoutId="active-sidebar-pill"
+                      className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
