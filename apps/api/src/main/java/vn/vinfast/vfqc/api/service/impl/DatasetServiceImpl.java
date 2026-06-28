@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import vn.vinfast.vfqc.api.model.ai.AiConfig;
@@ -105,25 +107,18 @@ public class DatasetServiceImpl {
   private final DatasetValidationServiceImpl validationService;
   private final ObjectMapper objectMapper;
   private final Executor taskExecutor;
+  private final TransactionTemplate transactionTemplate;
 
   @Transactional(readOnly = true)
   public PageResponse<DatasetSummaryResponse> list(UUID projectPublicId, int page, int size) {
     Project project = getProjectOrThrow(projectPublicId);
     int pageNumber = Math.max(page, 0);
     int pageSize = Math.min(Math.max(size, 1), 100);
-    List<DatasetSummaryResponse> content =
-        datasetRepository.findByProjectIdAndDeletedAtIsNullOrderByCreatedAtDesc(project.getId()).stream()
-            .map(this::toSummary)
-            .toList();
-    int from = Math.min(pageNumber * pageSize, content.size());
-    int to = Math.min(from + pageSize, content.size());
-    return new PageResponse<>(
-        content.subList(from, to),
-        pageNumber,
-        pageSize,
-        content.size(),
-        (int) Math.ceil(content.size() / (double) pageSize),
-        to >= content.size());
+    Pageable pageable = PageRequest.of(pageNumber, pageSize);
+    return PageResponse.of(
+        datasetRepository
+            .findByProjectIdAndDeletedAtIsNullOrderByCreatedAtDesc(project.getId(), pageable)
+            .map(this::toSummary));
   }
 
   @Transactional
@@ -181,8 +176,7 @@ public class DatasetServiceImpl {
   @Transactional
   public void archive(UUID datasetPublicId) {
     Dataset dataset = getDatasetOrThrow(datasetPublicId);
-    dataset.setStatus(DatasetStatus.ARCHIVED);
-    dataset.setDeletedAt(OffsetDateTime.now());
+    dataset.softDelete();
     datasetRepository.save(dataset);
   }
 
@@ -367,110 +361,122 @@ public class DatasetServiceImpl {
   }
 
   private void runImport(UUID jobPublicId, byte[] bytes) {
-    DatasetJob job = markRunning(jobPublicId, "Parsing Excel", 10);
-    if (isCancelRequested(job)) {
-      markCancelled(job);
-      return;
-    }
-    try {
-      String sheetName = null;
-      if (StringUtils.hasText(job.getPayload())) {
-        try {
-          Map<String, String> payloadMap = objectMapper.readValue(job.getPayload(), new TypeReference<>() {});
-          sheetName = payloadMap.get("sheetName");
-        } catch (Exception ignored) {}
-      }
-      ImportPayload payload = parseExcel(bytes, sheetName);
-      Dataset dataset = getDatasetById(job.getDatasetId());
-      List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
-      List<DatasetColumnMappingSuggestionResponse> suggestions = suggestMappings(payload.headers(), columns);
-      boolean needsConfirmation = suggestions.stream().anyMatch(DatasetColumnMappingSuggestionResponse::newColumn);
-      job.setPayload(writeJson(Map.of("headers", payload.headers(), "rows", payload.rows())));
-      if (needsConfirmation) {
-        job.setStatus(DatasetJobStatus.NEEDS_CONFIRMATION);
-        job.setProgress(50);
-        job.setMessage("Confirm column mapping");
-        job.setResult(writeJson(suggestions));
-        jobRepository.save(job);
+    transactionTemplate.executeWithoutResult(status -> {
+      DatasetJob job = markRunning(jobPublicId, "Parsing Excel", 10);
+      if (isCancelRequested(job)) {
+        markCancelled(job);
         return;
       }
-      List<Map<String, Object>> mappedRows =
-          applyMappings(payload.rows(), mappingRequestsFromSuggestions(suggestions), columns);
-      DatasetVersion version =
-          createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.IMPORTED, job.getCreatedBy(), mappedRows, columns);
-      completeJob(job, version, "Import completed");
-    } catch (Exception ex) {
-      failJob(job, "Import failed: " + ex.getMessage());
-    }
+      try {
+        String sheetName = null;
+        if (StringUtils.hasText(job.getPayload())) {
+          try {
+            Map<String, String> payloadMap = objectMapper.readValue(job.getPayload(), new TypeReference<>() {});
+            sheetName = payloadMap.get("sheetName");
+          } catch (Exception ignored) {}
+        }
+        ImportPayload payload = parseExcel(bytes, sheetName);
+        Dataset dataset = getDatasetById(job.getDatasetId());
+        List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
+        List<DatasetColumnMappingSuggestionResponse> suggestions = suggestMappings(payload.headers(), columns);
+        boolean needsConfirmation = suggestions.stream().anyMatch(DatasetColumnMappingSuggestionResponse::newColumn);
+        job.setPayload(writeJson(Map.of("headers", payload.headers(), "rows", payload.rows())));
+        if (needsConfirmation) {
+          job.setStatus(DatasetJobStatus.NEEDS_CONFIRMATION);
+          job.setProgress(50);
+          job.setMessage("Confirm column mapping");
+          job.setResult(writeJson(suggestions));
+          jobRepository.save(job);
+          return;
+        }
+        List<Map<String, Object>> mappedRows =
+            applyMappings(payload.rows(), mappingRequestsFromSuggestions(suggestions), columns);
+        DatasetVersion version =
+            createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.IMPORTED, job.getCreatedBy(), mappedRows, columns);
+        completeJob(job, version, "Import completed");
+      } catch (Exception ex) {
+        status.setRollbackOnly();
+        transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "Import failed: " + ex.getMessage()));
+      }
+    });
   }
 
   private void runImportConfirmation(UUID jobPublicId, ConfirmDatasetImportRequest request) {
-    DatasetJob job = markRunning(jobPublicId, "Applying mapping", 60);
-    if (isCancelRequested(job)) {
-      markCancelled(job);
-      return;
-    }
-    try {
-      Map<String, Object> payload = readMap(job.getPayload());
-      List<Map<String, Object>> rawRows = objectMapper.convertValue(payload.get("rows"), ROWS_TYPE);
-      Dataset dataset = getDatasetById(job.getDatasetId());
-      List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
-      List<Map<String, Object>> mappedRows = applyMappings(rawRows, request.mappings(), columns);
-      List<SchemaColumn> updatedColumns = currentColumns(dataset.getProjectId());
-      DatasetVersion version = createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.IMPORTED, job.getCreatedBy(), mappedRows, updatedColumns);
-      completeJob(job, version, "Import completed");
-    } catch (Exception ex) {
-      failJob(job, "Import confirmation failed: " + ex.getMessage());
-    }
+    transactionTemplate.executeWithoutResult(status -> {
+      DatasetJob job = markRunning(jobPublicId, "Applying mapping", 60);
+      if (isCancelRequested(job)) {
+        markCancelled(job);
+        return;
+      }
+      try {
+        Map<String, Object> payload = readMap(job.getPayload());
+        List<Map<String, Object>> rawRows = objectMapper.convertValue(payload.get("rows"), ROWS_TYPE);
+        Dataset dataset = getDatasetById(job.getDatasetId());
+        List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
+        List<Map<String, Object>> mappedRows = applyMappings(rawRows, request.mappings(), columns);
+        List<SchemaColumn> updatedColumns = currentColumns(dataset.getProjectId());
+        DatasetVersion version = createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.IMPORTED, job.getCreatedBy(), mappedRows, updatedColumns);
+        completeJob(job, version, "Import completed");
+      } catch (Exception ex) {
+        status.setRollbackOnly();
+        transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "Import confirmation failed: " + ex.getMessage()));
+      }
+    });
   }
 
   private void runGeneration(UUID jobPublicId) {
-    DatasetJob job = markRunning(jobPublicId, "Preparing AI prompt", 15);
-    if (isCancelRequested(job)) {
-      markCancelled(job);
-      return;
-    }
-    try {
-      GenerateDatasetRequest request = objectMapper.readValue(job.getPayload(), GenerateDatasetRequest.class);
-      Dataset dataset = getDatasetById(job.getDatasetId());
-      List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
-      AiConfig aiConfig =
-          aiConfigRepository
-              .findByProjectId(dataset.getProjectId())
-              .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_AI_CONFIG));
-      String apiKey = secretManager.decryptForOwner("AI_CONFIG", dataset.getProjectId()).get("API_KEY");
-      if (!StringUtils.hasText(apiKey)) {
-        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Missing AI API key.");
+    transactionTemplate.executeWithoutResult(status -> {
+      DatasetJob job = markRunning(jobPublicId, "Preparing AI prompt", 15);
+      if (isCancelRequested(job)) {
+        markCancelled(job);
+        return;
       }
-      updateJob(job, DatasetJobStatus.RUNNING, 35, "Calling AI provider");
-      AiExecutionResult result =
-          providerFactory
-              .getAdapter(aiConfig.getProvider())
-              .execute(new AiRequest(aiConfig, apiKey, AiUseCase.GENERATION, generationSystemPrompt(columns), generationUserPrompt(request)));
-      if (!result.successful() || !StringUtils.hasText(result.generatedText())) {
-        throw ResourceException.of(ErrorCode.BAD_REQUEST, result.errorMessage() != null ? result.errorMessage() : "AI generation failed.");
+      try {
+        GenerateDatasetRequest request = objectMapper.readValue(job.getPayload(), GenerateDatasetRequest.class);
+        Dataset dataset = getDatasetById(job.getDatasetId());
+        List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
+        AiConfig aiConfig =
+            aiConfigRepository
+                .findByProjectId(dataset.getProjectId())
+                .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_AI_CONFIG));
+        String apiKey = secretManager.decryptForOwner("AI_CONFIG", dataset.getProjectId()).get("API_KEY");
+        if (!StringUtils.hasText(apiKey)) {
+          throw ResourceException.of(ErrorCode.BAD_REQUEST, "Missing AI API key.");
+        }
+        updateJob(job, DatasetJobStatus.RUNNING, 35, "Calling AI provider");
+        AiExecutionResult result =
+            providerFactory
+                .getAdapter(aiConfig.getProvider())
+                .execute(new AiRequest(aiConfig, apiKey, AiUseCase.GENERATION, generationSystemPrompt(columns), generationUserPrompt(request)));
+        if (!result.successful() || !StringUtils.hasText(result.generatedText())) {
+          throw ResourceException.of(ErrorCode.BAD_REQUEST, result.errorMessage() != null ? result.errorMessage() : "AI generation failed.");
+        }
+        List<Map<String, Object>> rows = parseGeneratedRows(result.generatedText());
+        DatasetVersion version = createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.AI_GENERATED, job.getCreatedBy(), rows, columns);
+        completeJob(job, version, "AI generation completed");
+      } catch (Exception ex) {
+        status.setRollbackOnly();
+        transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "AI generation failed: " + ex.getMessage()));
       }
-      List<Map<String, Object>> rows = parseGeneratedRows(result.generatedText());
-      DatasetVersion version = createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.AI_GENERATED, job.getCreatedBy(), rows, columns);
-      completeJob(job, version, "AI generation completed");
-    } catch (Exception ex) {
-      failJob(job, "AI generation failed: " + ex.getMessage());
-    }
+    });
   }
 
   private void runExport(UUID jobPublicId) {
-    DatasetJob job = markRunning(jobPublicId, "Preparing Excel export", 40);
-    if (isCancelRequested(job)) {
-      markCancelled(job);
-      return;
-    }
-    try {
-      DatasetVersion version = getVersionById(job.getDatasetVersionId());
-      buildWorkbookBytes(version);
-      completeJob(job, version, "Export ready");
-    } catch (Exception ex) {
-      failJob(job, "Export failed: " + ex.getMessage());
-    }
+    transactionTemplate.executeWithoutResult(status -> {
+      DatasetJob job = markRunning(jobPublicId, "Preparing Excel export", 40);
+      if (isCancelRequested(job)) {
+        markCancelled(job);
+        return;
+      }
+      try {
+        DatasetVersion version = getVersionById(job.getDatasetVersionId());
+        buildWorkbookBytes(version);
+        completeJob(job, version, "Export ready");
+      } catch (Exception ex) {
+        status.setRollbackOnly();
+        transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "Export failed: " + ex.getMessage()));
+      }
+    });
   }
 
   private DatasetVersion createVersion(
@@ -621,8 +627,9 @@ public class DatasetServiceImpl {
       List<Map<String, Object>> rawRows,
       List<DatasetColumnMappingRequest> mappings,
       List<SchemaColumn> existingColumns) {
+    List<SchemaColumn> mutableColumns = new ArrayList<>(existingColumns);
     Map<UUID, SchemaColumn> columnsByPublicId = new HashMap<>();
-    for (SchemaColumn column : existingColumns) {
+    for (SchemaColumn column : mutableColumns) {
       columnsByPublicId.put(column.getPublicId(), column);
     }
     List<ColumnMapping> resolved = new ArrayList<>();
@@ -633,11 +640,11 @@ public class DatasetServiceImpl {
         continue;
       }
       if (action == DatasetColumnMappingAction.ADD_TO_SCHEMA) {
-        if (existingColumns.isEmpty()) {
+        if (mutableColumns.isEmpty()) {
           throw ResourceException.of(ErrorCode.MISSING_DATASET_SCHEMA);
         }
         ProjectSchema schema = schemaRepository
-            .findById(existingColumns.get(0).getSchemaVersionId())
+            .findById(mutableColumns.get(0).getSchemaVersionId())
             .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_DATASET_SCHEMA));
         schema.bumpVersion();
         schemaRepository.save(schema);
@@ -649,7 +656,7 @@ public class DatasetServiceImpl {
                     .role(StringUtils.hasText(mapping.newColumnRole()) ? mapping.newColumnRole().trim().toUpperCase(Locale.ROOT) : "EXPECTED")
                     .dataType(StringUtils.hasText(mapping.newColumnDataType()) ? mapping.newColumnDataType().trim().toUpperCase(Locale.ROOT) : "STRING")
                     .build());
-        existingColumns.add(newColumn);
+        mutableColumns.add(newColumn);
         resolved.add(new ColumnMapping(mapping.sourceColumn(), newColumn.getColumnName()));
       } else {
         SchemaColumn target = columnsByPublicId.get(mapping.schemaColumnPublicId());
@@ -774,17 +781,31 @@ public class DatasetServiceImpl {
   }
 
   private String cellValue(Cell cell) {
-    if (cell == null) {
+    if (cell == null || cell.getCellType() == CellType.BLANK) {
+      return "";
+    }
+    if (cell.getCellType() == CellType.ERROR) {
       return "";
     }
     if (cell.getCellType() == CellType.NUMERIC) {
-      return String.valueOf(cell.getNumericCellValue());
+      if (DateUtil.isCellDateFormatted(cell)) {
+        return cell.getLocalDateTimeCellValue().toString();
+      }
+      double value = cell.getNumericCellValue();
+      if (value == Math.floor(value) && !Double.isInfinite(value)) {
+        return String.valueOf((long) value);
+      }
+      return String.valueOf(value);
     }
     if (cell.getCellType() == CellType.BOOLEAN) {
       return String.valueOf(cell.getBooleanCellValue());
     }
     if (cell.getCellType() == CellType.FORMULA) {
-      return cell.getCellFormula();
+      try {
+        return cell.getStringCellValue();
+      } catch (Exception ex) {
+        return String.valueOf(cell.getNumericCellValue());
+      }
     }
     return cell.getStringCellValue();
   }
@@ -896,10 +917,22 @@ public class DatasetServiceImpl {
   }
 
   private DatasetJobResponse toJobResponse(DatasetJob job) {
+    UUID datasetPublicId = null;
+    if (job.getDatasetId() != null) {
+      datasetPublicId = datasetRepository.findById(job.getDatasetId())
+          .map(Dataset::getPublicId)
+          .orElse(null);
+    }
+    UUID versionPublicId = null;
+    if (job.getDatasetVersionId() != null) {
+      versionPublicId = versionRepository.findById(job.getDatasetVersionId())
+          .map(DatasetVersion::getPublicId)
+          .orElse(null);
+    }
     return new DatasetJobResponse(
         job.getPublicId(),
-        job.getDatasetId() == null ? null : getDatasetById(job.getDatasetId()).getPublicId(),
-        job.getDatasetVersionId() == null ? null : getVersionById(job.getDatasetVersionId()).getPublicId(),
+        datasetPublicId,
+        versionPublicId,
         job.getType(),
         job.getStatus(),
         job.getProgress(),

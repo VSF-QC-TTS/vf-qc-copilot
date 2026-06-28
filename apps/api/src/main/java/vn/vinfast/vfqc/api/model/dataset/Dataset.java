@@ -106,14 +106,11 @@ public class Dataset {
   }
 
   /**
-   * Transitions the dataset from ACTIVE to ARCHIVED.
-   *
-   * @throws IllegalStateException if the dataset is not in ACTIVE status
+   * Soft-deletes the dataset by marking it as ARCHIVED and setting deletedAt.
+   * Works for any non-archived, non-deleted dataset.
    */
-  public void archive() {
-    if (status != DatasetStatus.ACTIVE) {
-      throw new IllegalStateException("Only ACTIVE datasets can be archived. Current: " + status);
-    }
+  public void softDelete() {
     this.status = DatasetStatus.ARCHIVED;
+    this.deletedAt = OffsetDateTime.now();
   }
 }
