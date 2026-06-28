@@ -271,6 +271,43 @@ class VerificationConfigServiceImplTest {
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.BAD_REQUEST);
   }
 
+  @Test
+  void save_LlmJudgePromptOnly_ReturnsItemWithoutCriteria() {
+    when(verificationConfigRepository.findByProjectId(1L)).thenReturn(Optional.empty());
+    when(aiConfigRepository.existsByProjectId(1L)).thenReturn(true);
+
+    SaveVerificationRequest request =
+        new SaveVerificationRequest(
+            VerificationMode.LLM_JUDGE,
+            new BigDecimal("0.8"),
+            List.of(
+                new VerificationItemRequest(
+                    null,
+                    VerificationItemType.LLM_JUDGE,
+                    "Prompt judge",
+                    true,
+                    false,
+                    BigDecimal.ONE,
+                    new BigDecimal("0.7"),
+                    0,
+                    null,
+                    null,
+                    null,
+                    null,
+                    List.of(),
+                    List.of(expectedAnswerKey),
+                    "Bạn là QC. Chấm $response.answer với $dataset.ground_truth.",
+                    List.of())));
+
+    VerificationConfigResponse response = service.save(projectPublicId, request);
+
+    assertThat(response.mode()).isEqualTo(VerificationMode.LLM_JUDGE);
+    assertThat(response.items()).hasSize(1);
+    assertThat(response.items().getFirst().criteria()).isEmpty();
+    assertThat(response.items().getFirst().rubric())
+        .isEqualTo("Bạn là QC. Chấm $response.answer với $dataset.ground_truth.");
+  }
+
   private SaveVerificationRequest combinedRequest() {
     return new SaveVerificationRequest(
         VerificationMode.COMBINED,

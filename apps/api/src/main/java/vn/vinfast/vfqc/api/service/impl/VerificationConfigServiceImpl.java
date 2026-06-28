@@ -196,19 +196,10 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
     if (!StringUtils.hasText(item.rubric())) {
       throw ResourceException.of(ErrorCode.BAD_REQUEST, "rubric is required for LLM judge items.");
     }
-    if (item.targetPaths() == null
-        || item.targetPaths().stream().noneMatch(StringUtils::hasText)) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "At least one targetPath is required for LLM judge items.");
-    }
     if (item.referenceColumnKeys() != null) {
       for (UUID key : item.referenceColumnKeys()) {
         requireValidColumnKey(key, validColumnKeys);
       }
-    }
-    if (item.criteria() == null || item.criteria().stream().noneMatch(LlmCriterionRequest::enabled)) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "LLM judge items require at least one enabled criterion.");
     }
   }
 
@@ -276,6 +267,9 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
       return;
     }
     if (request.type() == VerificationItemType.LLM_JUDGE) {
+      if (request.criteria() == null || request.criteria().isEmpty()) {
+        return;
+      }
       criterionRepository.saveAll(
           request.criteria().stream()
               .map(criterion -> mapper.toCriterion(item.getId(), criterion))

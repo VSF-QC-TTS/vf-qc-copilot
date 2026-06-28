@@ -762,7 +762,11 @@ public class DatasetServiceImpl {
   private ProjectSchema getSchemaOrThrow(Long projectId) {
     return schemaRepository
         .findByProjectId(projectId)
-        .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_DATASET_SCHEMA));
+        .orElseThrow(
+            () ->
+                ResourceException.of(
+                    ErrorCode.MISSING_DATASET_SCHEMA,
+                    "Create a project schema before creating or updating datasets."));
   }
 
   private List<SchemaColumn> currentColumns(Long projectId) {

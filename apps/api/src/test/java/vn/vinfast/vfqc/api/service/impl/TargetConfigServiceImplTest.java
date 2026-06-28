@@ -19,6 +19,7 @@ import vn.vinfast.vfqc.api.mapper.TargetConfigMapperImpl;
 import vn.vinfast.vfqc.api.model.project.Project;
 import vn.vinfast.vfqc.api.model.targetconfig.TargetConfig;
 import vn.vinfast.vfqc.api.model.targetconfig.request.SaveTargetConfigRequest;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ResponseFieldExampleResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
@@ -120,5 +121,35 @@ class TargetConfigServiceImplTest {
         "$.steps[1].content[0].type",
         "$.steps[1].type"
     );
+  }
+
+  @Test
+  void getResponseFieldExamples_ReturnsPathAndSampleValue() {
+    UUID projectId = UUID.randomUUID();
+    Project project = Project.builder().id(1L).publicId(projectId).build();
+    TargetConfig targetConfig = TargetConfig.builder()
+        .id(10L)
+        .projectId(1L)
+        .responseFieldSnapshot("""
+            {
+              "answer": "Approved",
+              "score": 0.92,
+              "metadata": {
+                "source": "policy"
+              }
+            }
+            """)
+        .build();
+
+    when(projectRepository.findByPublicIdAndDeletedAtIsNull(projectId)).thenReturn(Optional.of(project));
+    when(targetConfigRepository.findByProjectId(1L)).thenReturn(Optional.of(targetConfig));
+
+    List<ResponseFieldExampleResponse> fields = service.getResponseFieldExamples(projectId);
+
+    assertThat(fields)
+        .contains(
+            new ResponseFieldExampleResponse("$.answer", "Approved"),
+            new ResponseFieldExampleResponse("$.score", "0.92"),
+            new ResponseFieldExampleResponse("$.metadata.source", "policy"));
   }
 }

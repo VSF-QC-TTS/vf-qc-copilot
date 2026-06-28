@@ -19,6 +19,7 @@ import vn.vinfast.vfqc.api.model.targetconfig.request.SaveTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.request.TestTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ConnectResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestExecutionResult;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ResponseFieldExampleResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
 import vn.vinfast.vfqc.api.service.TargetConfigService;
 
@@ -68,5 +69,11 @@ public class TargetConfigController {
   @GetMapping("/response-fields")
   public List<String> getResponseFields(@PathVariable UUID publicId) {
     return targetConfigService.getResponseFields(publicId);
+  }
+
+  @Operation(summary = "Get Response Field Examples", description = "Returns JSON paths and example values extracted from the last test response.")
+  @GetMapping("/response-field-examples")
+  public List<ResponseFieldExampleResponse> getResponseFieldExamples(@PathVariable UUID publicId) {
+    return targetConfigService.getResponseFieldExamples(publicId);
   }
 }

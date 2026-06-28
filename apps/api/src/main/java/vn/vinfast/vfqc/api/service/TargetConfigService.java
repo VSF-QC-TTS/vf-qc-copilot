@@ -10,6 +10,7 @@ import vn.vinfast.vfqc.api.model.targetconfig.request.TestTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ConnectResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestExecutionResult;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ResponseFieldExampleResponse;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
@@ -66,4 +67,12 @@ public interface TargetConfigService {
    * @return a list of JSON paths (e.g. "$.data.vin", "$.data.engine.power")
    */
   List<String> getResponseFields(UUID projectPublicId);
+
+  /**
+   * Extracts JSON paths and sample values from the stored response field snapshot.
+   *
+   * @param projectPublicId the public ID of the project
+   * @return response fields with example values from the latest successful target test
+   */
+  List<ResponseFieldExampleResponse> getResponseFieldExamples(UUID projectPublicId);
 }

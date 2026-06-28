@@ -25,6 +25,7 @@ import vn.vinfast.vfqc.api.model.targetconfig.request.TestTargetConfigRequest;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ConnectResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.SecretDetection;
 import vn.vinfast.vfqc.api.model.targetconfig.response.ExecuteCurlResponse.TestExecutionResult;
+import vn.vinfast.vfqc.api.model.targetconfig.response.ResponseFieldExampleResponse;
 import vn.vinfast.vfqc.api.model.targetconfig.response.TargetConfigResponse;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
@@ -207,6 +208,14 @@ public class TargetConfigServiceImpl implements TargetConfigService {
   @Override
   @Transactional(readOnly = true)
   public List<String> getResponseFields(UUID projectPublicId) {
+    return getResponseFieldExamples(projectPublicId).stream()
+        .map(ResponseFieldExampleResponse::path)
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ResponseFieldExampleResponse> getResponseFieldExamples(UUID projectPublicId) {
     log.debug("Extracting response fields for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
@@ -218,9 +227,9 @@ public class TargetConfigServiceImpl implements TargetConfigService {
 
     try {
       JsonNode tree = objectMapper.readTree(entity.getResponseFieldSnapshot());
-      List<String> paths = new ArrayList<>();
-      flattenJsonPaths(tree, "$", paths);
-      return paths;
+      List<ResponseFieldExampleResponse> fields = new ArrayList<>();
+      flattenJsonPathExamples(tree, "$", fields);
+      return fields;
     } catch (JsonProcessingException e) {
       log.error("Failed to parse response field snapshot", e);
       return new ArrayList<>();
@@ -264,22 +273,34 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     );
   }
 
-  private void flattenJsonPaths(JsonNode node, String prefix, List<String> paths) {
+  private void flattenJsonPathExamples(JsonNode node, String prefix, List<ResponseFieldExampleResponse> fields) {
     if (node.isObject()) {
       node.fields().forEachRemaining(entry -> {
         String path = prefix + "." + entry.getKey();
         if (entry.getValue().isValueNode()) {
-          paths.add(path);
+          fields.add(new ResponseFieldExampleResponse(path, formatExample(entry.getValue())));
         } else {
-          flattenJsonPaths(entry.getValue(), path, paths);
+          flattenJsonPathExamples(entry.getValue(), path, fields);
         }
       });
     } else if (node.isArray() && !node.isEmpty()) {
       for (int i = 0; i < node.size(); i++) {
-        flattenJsonPaths(node.get(i), prefix + "[" + i + "]", paths);
+        flattenJsonPathExamples(node.get(i), prefix + "[" + i + "]", fields);
       }
     } else {
-      paths.add(prefix);
+      fields.add(new ResponseFieldExampleResponse(prefix, formatExample(node)));
     }
+  }
+
+  private String formatExample(JsonNode node) {
+    String value;
+    if (node == null || node.isNull()) {
+      value = "null";
+    } else if (node.isTextual()) {
+      value = node.asText();
+    } else {
+      value = node.toString();
+    }
+    return value.length() <= 160 ? value : value.substring(0, 157) + "...";
   }
 }
