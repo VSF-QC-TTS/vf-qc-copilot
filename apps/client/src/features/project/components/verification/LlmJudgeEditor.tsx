@@ -9,6 +9,49 @@ import { Textarea } from '@/components/ui/textarea'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+const PROMPT_TEMPLATES = {
+  accuracy: `Bạn là QC/Tester. Hãy đánh giá độ chính xác của câu trả lời từ Bot ($response.answer) đối chiếu với dữ liệu kỳ vọng ($dataset.ground_truth).
+
+Tiêu chí đánh giá:
+- Câu trả lời của Bot phải có đầy đủ các thông tin cốt lõi được nêu trong dữ liệu kỳ vọng.
+- Không được sai lệch các dữ liệu quan trọng như số điện thoại, ngày tháng, thông số kỹ thuật.
+
+Đầu ra yêu cầu:
+- Trả về điểm 1 (Đúng/Đạt) hoặc 0 (Sai/Không đạt).
+- Kèm theo lý do ngắn gọn.`,
+
+  fluency: `Bạn là QC/Tester. Hãy đánh giá độ trôi chảy, tự nhiên và đúng giọng điệu thương hiệu của câu trả lời từ Bot ($response.answer).
+
+Tiêu chí đánh giá:
+- Bot sử dụng ngôn từ lịch sự, thân thiện, xưng hô phù hợp.
+- Câu trả lời mạch lạc, không lủng củng hay lặp từ vô nghĩa.
+
+Đầu ra yêu cầu:
+- Trả về điểm 1 (Đạt yêu cầu giọng điệu) hoặc 0 (Không đạt).
+- Kèm theo lý do ngắn gọn.`,
+
+  hallucination: `Bạn là QC/Tester. Hãy kiểm tra xem câu trả lời của Bot ($response.answer) có bịa đặt ra thông tin nằm ngoài phạm vi tài liệu nghiệp vụ ($dataset.ground_truth) hay không (lỗi Hallucination).
+
+Tiêu chí đánh giá:
+- Chỉ đánh giá dựa trên thông tin được cung cấp trong tài liệu.
+- Nếu Bot tự ý sáng tạo thông tin chưa được kiểm chứng, đánh giá là Không Đạt (0).
+
+Đầu ra yêu cầu:
+- Trả về điểm 1 (Đạt - Không bịa đặt) hoặc 0 (Có bịa đặt thông tin).
+- Kèm theo lý do ngắn gọn.`,
+
+  conciseness: `Bạn là QC/Tester. Hãy đánh giá mức độ ngắn gọn, súc tích và trực diện của câu trả lời từ Bot ($response.answer) so với câu trả lời kỳ vọng ($dataset.ground_truth).
+
+Tiêu chí đánh giá:
+- Trả lời đúng trọng tâm câu hỏi của người dùng, không dông dài hoặc đi lan man sang chủ đề khác.
+- Lược bỏ các từ ngữ thừa thãi không cần thiết.
+
+Đầu ra yêu cầu:
+- Trả về điểm 1 (Đạt - Súc tích) hoặc 0 (Không đạt - Dông dài).
+- Kèm theo lý do ngắn gọn.`
+}
 
 interface LlmJudgeEditorProps {
   item: VerificationItemRequest
@@ -52,6 +95,13 @@ export function LlmJudgeEditor({
     })
   }
 
+  function handleTemplateChange(templateKey: string): void {
+    const templateText = PROMPT_TEMPLATES[templateKey as keyof typeof PROMPT_TEMPLATES]
+    if (templateText) {
+      patchItem({ rubric: templateText })
+    }
+  }
+
   return (
     <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
       <TokenRail
@@ -68,7 +118,21 @@ export function LlmJudgeEditor({
       />
 
       <Field>
-        <FieldLabel className="text-xs font-semibold">Prompt LLM Judge</FieldLabel>
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <FieldLabel className="text-xs font-semibold m-0">Prompt LLM Judge</FieldLabel>
+          
+          <Select onValueChange={handleTemplateChange}>
+            <SelectTrigger className="h-7 text-[11px] rounded-md border-dashed bg-muted/30 px-2.5 max-w-[200px] border-border/80">
+              <SelectValue placeholder="✨ Chọn Prompt mẫu..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="accuracy">🎯 Đánh giá độ chính xác (Accuracy)</SelectItem>
+              <SelectItem value="fluency">💬 Đánh giá trôi chảy & giọng điệu</SelectItem>
+              <SelectItem value="hallucination">🛡️ Kiểm tra bịa đặt (Hallucination)</SelectItem>
+              <SelectItem value="conciseness">⚡ Kiểm tra độ ngắn gọn/súc tích</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <Textarea
           value={item.rubric ?? ''}
           onChange={(event) => patchItem({ rubric: event.target.value })}
