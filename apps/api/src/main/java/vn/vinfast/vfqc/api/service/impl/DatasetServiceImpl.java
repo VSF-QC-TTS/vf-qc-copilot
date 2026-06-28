@@ -605,7 +605,6 @@ public class DatasetServiceImpl {
                     .columnName(StringUtils.hasText(mapping.newColumnName()) ? mapping.newColumnName().trim() : mapping.sourceColumn().trim())
                     .role(StringUtils.hasText(mapping.newColumnRole()) ? mapping.newColumnRole().trim().toUpperCase(Locale.ROOT) : "EXPECTED")
                     .dataType(StringUtils.hasText(mapping.newColumnDataType()) ? mapping.newColumnDataType().trim().toUpperCase(Locale.ROOT) : "STRING")
-                    .displayOrder(existingColumns.size())
                     .build());
         existingColumns.add(newColumn);
         resolved.add(new ColumnMapping(mapping.sourceColumn(), newColumn.getColumnName()));
@@ -771,11 +770,11 @@ public class DatasetServiceImpl {
 
   private List<SchemaColumn> currentColumns(Long projectId) {
     ProjectSchema schema = getSchemaOrThrow(projectId);
-    return columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
+    return columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
   }
 
   private List<SchemaColumn> columnsForVersion(Long schemaVersionId) {
-    return columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schemaVersionId);
+    return columnRepository.findBySchemaVersionIdOrderByIdAsc(schemaVersionId);
   }
 
   private Dataset getDatasetOrThrow(UUID publicId) {

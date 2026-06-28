@@ -8,6 +8,5 @@ package vn.vinfast.vfqc.api.model.verification;
  */
 public enum VerificationItemType {
   FIELD_ASSERTION,
-  FIELD_ASSERTION_GROUP,
   LLM_JUDGE
 }

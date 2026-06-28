@@ -12,9 +12,8 @@ import vn.vinfast.vfqc.api.model.verification.VerificationFieldAssertion;
 public interface JpaVerificationFieldAssertionRepository
     extends JpaRepository<VerificationFieldAssertion, Long> {
 
-  List<VerificationFieldAssertion> findByVerificationItemIdOrderByDisplayOrderAsc(
-      Long verificationItemId);
+  List<VerificationFieldAssertion> findByVerificationItemIdOrderByIdAsc(Long verificationItemId);
 
-  List<VerificationFieldAssertion> findByVerificationItemIdInOrderByDisplayOrderAsc(
+  List<VerificationFieldAssertion> findByVerificationItemIdInOrderByIdAsc(
       Collection<Long> verificationItemIds);
 }

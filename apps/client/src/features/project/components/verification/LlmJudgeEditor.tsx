@@ -37,7 +37,6 @@ export function LlmJudgeEditor({
     patchItem({
       targetPaths: targetPaths.includes(field.path) ? targetPaths : [...targetPaths, field.path],
       rubric: appendTokenToPrompt(toResponseToken(field.path)),
-      criteria: [],
     })
   }
 
@@ -47,7 +46,6 @@ export function LlmJudgeEditor({
         ? referenceColumnKeys
         : [...referenceColumnKeys, column.publicId],
       rubric: appendTokenToPrompt(`$dataset.${column.columnName}`),
-      criteria: [],
     })
   }
 
@@ -69,7 +67,7 @@ export function LlmJudgeEditor({
         <FieldLabel className="text-xs font-semibold">Prompt LLM Judge</FieldLabel>
         <Textarea
           value={item.rubric ?? ''}
-          onChange={(event) => patchItem({ rubric: event.target.value, criteria: [] })}
+          onChange={(event) => patchItem({ rubric: event.target.value })}
           className="min-h-[360px] rounded-lg font-mono text-xs leading-relaxed"
           placeholder={
             'Bạn là QC/Tester. Dựa vào câu trả lời của bot $response.answer và dữ liệu kỳ vọng $dataset.ground_truth, hãy chấm mức độ đúng nghiệp vụ, đầy đủ ý, đúng tone. Trả về điểm 0-1 và lý do ngắn gọn.'

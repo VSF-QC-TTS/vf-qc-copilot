@@ -24,10 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Field, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
 
 import { VerificationSkeleton } from '../../components/VerificationSkeleton'
 import {
@@ -50,20 +47,19 @@ import {
 
 const EMPTY_FORM_VALUES: VerificationFormValues = {
   mode: 'FIELD_CHECKS',
-  threshold: 0.8,
   items: [],
 }
 
 const FALLBACK_OPERATORS: OperatorCatalogResponse[] = [
-  makeOperator('EQUALS', 'Bằng', 'So khớp chính xác', 'TEXT', true),
-  makeOperator('NOT_EQUALS', 'Khác', 'Giá trị thực tế khác kỳ vọng', 'TEXT', true),
-  makeOperator('CONTAINS', 'Chứa', 'Giá trị thực tế chứa kỳ vọng', 'TEXT', true),
-  makeOperator('NOT_CONTAINS', 'Không chứa', 'Giá trị thực tế không chứa kỳ vọng', 'TEXT', true),
-  makeOperator('REGEX', 'Regex', 'Giá trị thực tế khớp biểu thức chính quy', 'TEXT', true),
-  makeOperator('GREATER_THAN', 'Lớn hơn', 'So sánh số lớn hơn kỳ vọng', 'NUMBER', true),
-  makeOperator('GREATER_THAN_OR_EQUALS', 'Lớn hơn hoặc bằng', 'So sánh số lớn hơn hoặc bằng kỳ vọng', 'NUMBER', true),
-  makeOperator('LESS_THAN', 'Nhỏ hơn', 'So sánh số nhỏ hơn kỳ vọng', 'NUMBER', true),
-  makeOperator('LESS_THAN_OR_EQUALS', 'Nhỏ hơn hoặc bằng', 'So sánh số nhỏ hơn hoặc bằng kỳ vọng', 'NUMBER', true),
+  makeOperator('EQUALS', 'Bằng', 'So khớp chính xác', 'TEXT'),
+  makeOperator('NOT_EQUALS', 'Khác', 'Giá trị thực tế khác kỳ vọng', 'TEXT'),
+  makeOperator('CONTAINS', 'Chứa', 'Giá trị thực tế chứa kỳ vọng', 'TEXT'),
+  makeOperator('NOT_CONTAINS', 'Không chứa', 'Giá trị thực tế không chứa kỳ vọng', 'TEXT'),
+  makeOperator('REGEX', 'Regex', 'Giá trị thực tế khớp biểu thức chính quy', 'TEXT'),
+  makeOperator('GREATER_THAN', 'Lớn hơn', 'So sánh số lớn hơn kỳ vọng', 'NUMBER'),
+  makeOperator('GREATER_THAN_OR_EQUALS', 'Lớn hơn hoặc bằng', 'So sánh số lớn hơn hoặc bằng kỳ vọng', 'NUMBER'),
+  makeOperator('LESS_THAN', 'Nhỏ hơn', 'So sánh số nhỏ hơn kỳ vọng', 'NUMBER'),
+  makeOperator('LESS_THAN_OR_EQUALS', 'Nhỏ hơn hoặc bằng', 'So sánh số nhỏ hơn hoặc bằng kỳ vọng', 'NUMBER'),
 ]
 
 export function VerificationConfigPage(): ReactElement {
@@ -96,7 +92,6 @@ export function VerificationConfigPage(): ReactElement {
     const nextItems = flattenConfigItems(config.items.map(normalizeResponseItem))
     setValues({
       mode: deriveMode(nextItems, config.mode),
-      threshold: config.threshold,
       items: nextItems,
     })
     setValidationErrors([])
@@ -120,20 +115,11 @@ export function VerificationConfigPage(): ReactElement {
   }
 
   function addFieldRule(): void {
-    const nextItem = createFieldItem(items.length)
-    updateValues({
-      items: [
-        ...items,
-        {
-          ...nextItem,
-          name: 'So khớp response với dataset',
-        },
-      ],
-    })
+    updateValues({ items: [...items, createFieldItem()] })
   }
 
   function addLlmJudge(): void {
-    updateValues({ items: [...items, createLlmItem(items.length)] })
+    updateValues({ items: [...items, createLlmItem()] })
   }
 
   function removeItem(index: number): void {
@@ -142,8 +128,6 @@ export function VerificationConfigPage(): ReactElement {
 
   function handleFieldChange(index: number, assertion: FieldAssertionRequest): void {
     patchItem(index, {
-      name: assertion.actualPath ? `So khớp ${assertion.actualPath}` : 'So khớp response với dataset',
-      enabled: assertion.enabled,
       fieldAssertion: assertion,
     })
   }
@@ -185,19 +169,7 @@ export function VerificationConfigPage(): ReactElement {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-            <Field>
-              <FieldLabel className="text-xs font-semibold">Ngưỡng pass tổng</FieldLabel>
-              <Input
-                type="number"
-                min="0"
-                max="1"
-                step="0.05"
-                value={values.threshold}
-                onChange={(event) => updateValues({ threshold: Number(event.target.value) })}
-                className="h-10 rounded-lg"
-              />
-            </Field>
+          <div className="flex justify-end">
             <Button type="submit" className="h-10 rounded-lg" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? <Spinner className="size-4" /> : <SaveIcon className="size-4" />}
               Lưu
@@ -273,54 +245,17 @@ export function VerificationConfigPage(): ReactElement {
           {llmItems.length > 0 ? (
             llmItems.map(({ item, index }, displayIndex) => (
               <div key={item.publicId ?? `llm-${index}`} className="rounded-lg border bg-background">
-                <div className="grid gap-3 border-b p-3 lg:grid-cols-[1fr_120px_120px_auto] lg:items-end">
-                  <Field>
-                    <FieldLabel className="text-xs font-semibold">Prompt name</FieldLabel>
-                    <Input
-                      value={item.name}
-                      onChange={(event) => patchItem(index, { name: event.target.value })}
-                      className="h-9 rounded-lg"
-                      placeholder={`LLM Judge ${displayIndex + 1}`}
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel className="text-xs font-semibold">Threshold</FieldLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={item.threshold ?? 0.7}
-                      onChange={(event) => patchItem(index, { threshold: Number(event.target.value) })}
-                      className="h-9 rounded-lg"
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel className="text-xs font-semibold">Weight</FieldLabel>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      value={item.weight}
-                      onChange={(event) => patchItem(index, { weight: Number(event.target.value) })}
-                      className="h-9 rounded-lg"
-                    />
-                  </Field>
-                  <div className="flex items-end gap-2">
-                    <div className="flex h-9 items-center gap-2 rounded-lg border px-3">
-                      <Switch checked={item.enabled} onCheckedChange={(enabled) => patchItem(index, { enabled })} />
-                      <span className="text-xs text-muted-foreground">Bật</span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="size-9 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => removeItem(index)}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </div>
+                <div className="flex items-center justify-between gap-3 border-b p-3">
+                  <Badge variant="outline">Prompt {displayIndex + 1}</Badge>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-9 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => removeItem(index)}
+                  >
+                    <TrashIcon className="size-4" />
+                  </Button>
                 </div>
                 <div className="p-3">
                   <LlmJudgeEditor
@@ -366,31 +301,16 @@ function flattenConfigItems(items: VerificationItemRequest[]): VerificationItemR
   const nextItems: VerificationItemRequest[] = []
   for (const item of items) {
     if (item.type === 'FIELD_ASSERTION') {
-      nextItems.push({ ...item, fieldAssertions: null, criteria: null })
-    }
-    if (item.type === 'FIELD_ASSERTION_GROUP') {
-      for (const assertion of item.fieldAssertions ?? []) {
-        const fieldItem = createFieldItem(nextItems.length)
-        nextItems.push({
-          ...fieldItem,
-          name: assertion.actualPath ? `So khớp ${assertion.actualPath}` : 'So khớp response với dataset',
-          enabled: assertion.enabled,
-          critical: item.critical,
-          weight: assertion.weight,
-          fieldAssertion: { ...assertion, displayOrder: 0 },
-        })
-      }
+      nextItems.push(item)
     }
     if (item.type === 'LLM_JUDGE') {
       nextItems.push({
         ...item,
         fieldAssertion: null,
-        fieldAssertions: null,
-        criteria: [],
       })
     }
   }
-  return nextItems.map((item, displayOrder) => ({ ...item, displayOrder }))
+  return nextItems
 }
 
 function deriveMode(items: VerificationItemRequest[], fallback: VerificationMode): VerificationMode {
@@ -423,8 +343,6 @@ function makeOperator(
   displayName: string,
   description: string,
   category: OperatorCatalogResponse['category'],
-  requiresExpected: boolean,
-  supportedExpectedSources: OperatorCatalogResponse['supportedExpectedSources'] = ['DATASET_COLUMN'],
 ): OperatorCatalogResponse {
-  return { operator, displayName, description, category, requiresExpected, supportedExpectedSources }
+  return { operator, displayName, description, category }
 }

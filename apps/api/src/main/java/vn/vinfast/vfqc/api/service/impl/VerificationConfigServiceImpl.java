@@ -1,8 +1,6 @@
 package vn.vinfast.vfqc.api.service.impl;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,17 +15,12 @@ import vn.vinfast.vfqc.api.mapper.VerificationConfigMapper;
 import vn.vinfast.vfqc.api.model.project.Project;
 import vn.vinfast.vfqc.api.model.schema.ProjectSchema;
 import vn.vinfast.vfqc.api.model.schema.SchemaColumn;
-import vn.vinfast.vfqc.api.model.verification.CheckOperator;
-import vn.vinfast.vfqc.api.model.verification.ExpectedSource;
-import vn.vinfast.vfqc.api.model.verification.FieldAggregation;
 import vn.vinfast.vfqc.api.model.verification.VerificationConfig;
 import vn.vinfast.vfqc.api.model.verification.VerificationFieldAssertion;
 import vn.vinfast.vfqc.api.model.verification.VerificationItem;
 import vn.vinfast.vfqc.api.model.verification.VerificationItemType;
-import vn.vinfast.vfqc.api.model.verification.VerificationLlmCriterion;
-import vn.vinfast.vfqc.api.model.verification.request.ExpectedValueRequest;
+import vn.vinfast.vfqc.api.model.verification.VerificationMode;
 import vn.vinfast.vfqc.api.model.verification.request.FieldAssertionRequest;
-import vn.vinfast.vfqc.api.model.verification.request.LlmCriterionRequest;
 import vn.vinfast.vfqc.api.model.verification.request.SaveVerificationRequest;
 import vn.vinfast.vfqc.api.model.verification.request.VerificationItemRequest;
 import vn.vinfast.vfqc.api.model.verification.response.VerificationConfigResponse;
@@ -38,7 +31,6 @@ import vn.vinfast.vfqc.api.repository.JpaSchemaColumnRepository;
 import vn.vinfast.vfqc.api.repository.JpaVerificationConfigRepository;
 import vn.vinfast.vfqc.api.repository.JpaVerificationFieldAssertionRepository;
 import vn.vinfast.vfqc.api.repository.JpaVerificationItemRepository;
-import vn.vinfast.vfqc.api.repository.JpaVerificationLlmCriterionRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
 import vn.vinfast.vfqc.api.service.VerificationConfigService;
@@ -58,7 +50,6 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
   private final JpaVerificationConfigRepository verificationConfigRepository;
   private final JpaVerificationItemRepository itemRepository;
   private final JpaVerificationFieldAssertionRepository assertionRepository;
-  private final JpaVerificationLlmCriterionRepository criterionRepository;
   private final TargetConfigRepository targetConfigRepository;
   private final JpaAiConfigRepository aiConfigRepository;
   private final JpaDatasetRepository datasetRepository;
@@ -78,7 +69,7 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
             .orElseThrow(() -> ResourceException.of(ErrorCode.VERIFICATION_CONFIG_NOT_FOUND));
 
     List<VerificationItem> items =
-        itemRepository.findByVerificationConfigIdOrderByDisplayOrderAsc(config.getId());
+        itemRepository.findByVerificationConfigIdOrderByIdAsc(config.getId());
     return buildResponse(config, items);
   }
 
@@ -91,7 +82,7 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
 
     ProjectSchema schema = validatePreconditions(projectId, request);
     Set<UUID> validColumnKeys =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId()).stream()
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId()).stream()
             .map(SchemaColumn::getPublicId)
             .collect(Collectors.toSet());
     validateItems(request, validColumnKeys);
@@ -102,7 +93,6 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
             .orElseGet(() -> VerificationConfig.builder().projectId(projectId).version(0).build());
 
     config.setMode(request.mode());
-    config.setThreshold(request.threshold());
     config.setVersion(config.getVersion() + 1);
     config = verificationConfigRepository.save(config);
 
@@ -132,32 +122,30 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
     if (request.items() == null) {
       return false;
     }
-    return request.items().stream()
-        .anyMatch(item -> item.enabled() && item.type() == VerificationItemType.LLM_JUDGE);
+    return request.items().stream().anyMatch(item -> item.type() == VerificationItemType.LLM_JUDGE);
   }
 
   private void validateItems(SaveVerificationRequest request, Set<UUID> validColumnKeys) {
     List<VerificationItemRequest> items = request.items();
-    if (items == null || items.stream().noneMatch(VerificationItemRequest::enabled)) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "At least one enabled evaluation item is required.");
+    if (items == null || items.isEmpty()) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "At least one verification item is required.");
     }
 
     for (VerificationItemRequest item : items) {
-      validateItem(item, validColumnKeys);
+      validateModeCompatibility(request.mode(), item.type());
+      switch (item.type()) {
+        case FIELD_ASSERTION -> validateFieldAssertionItem(item, validColumnKeys);
+        case LLM_JUDGE -> validateLlmJudge(item, validColumnKeys);
+      }
     }
   }
 
-  private void validateItem(VerificationItemRequest item, Set<UUID> validColumnKeys) {
-    if (item.weight().compareTo(BigDecimal.ZERO) < 0) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "Item weight must be greater than or equal to 0.");
+  private void validateModeCompatibility(VerificationMode mode, VerificationItemType type) {
+    if (mode == VerificationMode.FIELD_CHECKS && type != VerificationItemType.FIELD_ASSERTION) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "FIELD_CHECKS mode only accepts field assertions.");
     }
-
-    switch (item.type()) {
-      case FIELD_ASSERTION -> validateFieldAssertionItem(item, validColumnKeys);
-      case FIELD_ASSERTION_GROUP -> validateFieldAssertionGroup(item, validColumnKeys);
-      case LLM_JUDGE -> validateLlmJudge(item, validColumnKeys);
+    if (mode == VerificationMode.LLM_JUDGE && type != VerificationItemType.LLM_JUDGE) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "LLM_JUDGE mode only accepts LLM judge items.");
     }
   }
 
@@ -167,29 +155,6 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
       throw ResourceException.of(ErrorCode.BAD_REQUEST, "fieldAssertion is required.");
     }
     validateFieldAssertion(item.fieldAssertion(), validColumnKeys);
-  }
-
-  private void validateFieldAssertionGroup(
-      VerificationItemRequest item, Set<UUID> validColumnKeys) {
-    if (item.aggregation() == null) {
-      throw ResourceException.of(ErrorCode.BAD_REQUEST, "aggregation is required for field groups.");
-    }
-    List<FieldAssertionRequest> assertions = item.fieldAssertions();
-    if (assertions == null || assertions.stream().noneMatch(FieldAssertionRequest::enabled)) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "Field assertion groups require at least one enabled assertion.");
-    }
-    if (item.aggregation() == FieldAggregation.AT_LEAST
-        && (item.minPassCount() == null || item.minPassCount() < 1)) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "minPassCount is required for AT_LEAST groups.");
-    }
-    if (item.aggregation() == FieldAggregation.AT_LEAST
-        && item.minPassCount() > assertions.stream().filter(FieldAssertionRequest::enabled).count()) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "minPassCount cannot exceed enabled assertions.");
-    }
-    assertions.forEach(assertion -> validateFieldAssertion(assertion, validColumnKeys));
   }
 
   private void validateLlmJudge(VerificationItemRequest item, Set<UUID> validColumnKeys) {
@@ -205,30 +170,10 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
 
   private void validateFieldAssertion(
       FieldAssertionRequest assertion, Set<UUID> validColumnKeys) {
-    CheckOperator operator = assertion.operator();
-    if (!operator.isRequiresExpected()) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST,
-          "Field assertions must compare a response field with a dataset schema column.");
+    if (!StringUtils.hasText(assertion.actualPath())) {
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "actualPath is required.");
     }
-    if (assertion.expected() == null) {
-      throw ResourceException.of(ErrorCode.BAD_REQUEST, "expected dataset column is required.");
-    }
-    validateExpected(assertion.expected(), operator, validColumnKeys);
-  }
-
-  private void validateExpected(
-      ExpectedValueRequest expected, CheckOperator operator, Set<UUID> validColumnKeys) {
-    if (expected.source() != ExpectedSource.DATASET_COLUMN) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "Field assertions must compare against a dataset schema column.");
-    }
-    if (!operator.getSupportedExpectedSources().contains(expected.source())) {
-      throw ResourceException.of(
-          ErrorCode.BAD_REQUEST, "Expected source is not supported by this operator.");
-    }
-
-    requireValidColumnKey(expected.columnKey(), validColumnKeys);
+    requireValidColumnKey(assertion.expectedColumnKey(), validColumnKeys);
   }
 
   private void requireValidColumnKey(UUID key, Set<UUID> validColumnKeys) {
@@ -248,52 +193,26 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
     for (VerificationItemRequest request : requests) {
       VerificationItem item = mapper.toItem(configId, request);
       item = itemRepository.save(item);
-      saveChildren(item, request);
+      if (request.type() == VerificationItemType.FIELD_ASSERTION) {
+        assertionRepository.save(mapper.toAssertion(item.getId(), request.fieldAssertion()));
+      }
       savedItems.add(item);
     }
-    return itemRepository.findByVerificationConfigIdOrderByDisplayOrderAsc(configId);
-  }
-
-  private void saveChildren(VerificationItem item, VerificationItemRequest request) {
-    if (request.type() == VerificationItemType.FIELD_ASSERTION) {
-      assertionRepository.save(mapper.toAssertion(item.getId(), request.fieldAssertion()));
-      return;
-    }
-    if (request.type() == VerificationItemType.FIELD_ASSERTION_GROUP) {
-      assertionRepository.saveAll(
-          request.fieldAssertions().stream()
-              .map(assertion -> mapper.toAssertion(item.getId(), assertion))
-              .toList());
-      return;
-    }
-    if (request.type() == VerificationItemType.LLM_JUDGE) {
-      if (request.criteria() == null || request.criteria().isEmpty()) {
-        return;
-      }
-      criterionRepository.saveAll(
-          request.criteria().stream()
-              .map(criterion -> mapper.toCriterion(item.getId(), criterion))
-              .toList());
-    }
+    return itemRepository.findByVerificationConfigIdOrderByIdAsc(configId);
   }
 
   private VerificationConfigResponse buildResponse(
       VerificationConfig config, List<VerificationItem> items) {
     if (items.isEmpty()) {
-      return mapper.toResponse(config, items, Map.of(), Map.of());
+      return mapper.toResponse(config, items, Map.of());
     }
 
     List<Long> itemIds = items.stream().map(VerificationItem::getId).toList();
     Map<Long, List<VerificationFieldAssertion>> assertionsByItem =
-        assertionRepository.findByVerificationItemIdInOrderByDisplayOrderAsc(itemIds).stream()
-            .sorted(Comparator.comparing(VerificationFieldAssertion::getDisplayOrder))
+        assertionRepository.findByVerificationItemIdInOrderByIdAsc(itemIds).stream()
             .collect(Collectors.groupingBy(VerificationFieldAssertion::getVerificationItemId));
-    Map<Long, List<VerificationLlmCriterion>> criteriaByItem =
-        criterionRepository.findByVerificationItemIdInOrderByDisplayOrderAsc(itemIds).stream()
-            .sorted(Comparator.comparing(VerificationLlmCriterion::getDisplayOrder))
-            .collect(Collectors.groupingBy(VerificationLlmCriterion::getVerificationItemId));
 
-    return mapper.toResponse(config, items, assertionsByItem, criteriaByItem);
+    return mapper.toResponse(config, items, assertionsByItem);
   }
 
   private Project getProjectOrThrow(UUID publicId) {

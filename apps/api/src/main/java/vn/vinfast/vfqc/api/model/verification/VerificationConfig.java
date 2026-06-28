@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -51,10 +50,6 @@ public class VerificationConfig {
   @Enumerated(EnumType.STRING)
   @Column(name = "mode", nullable = false, length = 30)
   private VerificationMode mode;
-
-  @Column(name = "threshold", nullable = false, precision = 5, scale = 4)
-  @Builder.Default
-  private BigDecimal threshold = new BigDecimal("0.8");
 
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default

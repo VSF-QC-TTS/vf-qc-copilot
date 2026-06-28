@@ -7,15 +7,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.vinfast.vfqc.api.mapper.ProjectSchemaMapper;
+import vn.vinfast.vfqc.api.model.project.Project;
 import vn.vinfast.vfqc.api.model.schema.ProjectSchema;
 import vn.vinfast.vfqc.api.model.schema.SchemaColumn;
-import vn.vinfast.vfqc.api.repository.JpaProjectSchemaRepository;
-import vn.vinfast.vfqc.api.repository.JpaSchemaColumnRepository;
-import vn.vinfast.vfqc.api.mapper.ProjectSchemaMapper;
 import vn.vinfast.vfqc.api.model.schema.request.CreateSchemaColumnRequest;
 import vn.vinfast.vfqc.api.model.schema.request.UpdateSchemaColumnRequest;
 import vn.vinfast.vfqc.api.model.schema.response.ProjectSchemaResponse;
-import vn.vinfast.vfqc.api.model.project.Project;
+import vn.vinfast.vfqc.api.repository.JpaProjectSchemaRepository;
+import vn.vinfast.vfqc.api.repository.JpaSchemaColumnRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.service.ProjectSchemaService;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
@@ -48,7 +48,7 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
 
     ProjectSchema latestVersion = latestVersionOpt.get();
     List<SchemaColumn> columns =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(latestVersion.getId());
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(latestVersion.getId());
     return mapper.toResponse(latestVersion, columns);
   }
 
@@ -67,7 +67,7 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
                         ProjectSchema.builder().projectId(project.getId()).version(1).build()));
 
     List<SchemaColumn> currentColumns =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
 
     boolean nameExists =
         currentColumns.stream()
@@ -78,7 +78,6 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
 
     SchemaColumn newColumn = mapper.toEntity(request);
     newColumn.setSchemaVersionId(schema.getId());
-    newColumn.setDisplayOrder(currentColumns.size());
     if (newColumn.getDataType() == null || newColumn.getDataType().isBlank()) {
       newColumn.setDataType("STRING");
     } else {
@@ -95,7 +94,7 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
     schemaRepository.save(schema);
 
     List<SchemaColumn> updatedColumns =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
     return mapper.toResponse(schema, updatedColumns);
   }
 
@@ -111,7 +110,7 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
             .orElseThrow(() -> ResourceException.of(ErrorCode.DATASET_SCHEMA_NOT_FOUND));
 
     List<SchemaColumn> currentColumns =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
 
     SchemaColumn target =
         currentColumns.stream()
@@ -147,7 +146,7 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
     schemaRepository.save(schema);
 
     List<SchemaColumn> updatedColumns =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
     return mapper.toResponse(schema, updatedColumns);
   }
 
@@ -162,7 +161,7 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
             .orElseThrow(() -> ResourceException.of(ErrorCode.DATASET_SCHEMA_NOT_FOUND));
 
     List<SchemaColumn> currentColumns =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
 
     SchemaColumn target =
         currentColumns.stream()
@@ -172,17 +171,11 @@ public class ProjectSchemaServiceImpl implements ProjectSchemaService {
 
     columnRepository.delete(target);
 
-    // Reorder remaining
-    List<SchemaColumn> remaining =
-        columnRepository.findBySchemaVersionIdOrderByDisplayOrderAsc(schema.getId());
-    for (int i = 0; i < remaining.size(); i++) {
-      remaining.get(i).setDisplayOrder(i);
-    }
-    columnRepository.saveAll(remaining);
-
     schema.bumpVersion();
     schemaRepository.save(schema);
 
+    List<SchemaColumn> remaining =
+        columnRepository.findBySchemaVersionIdOrderByIdAsc(schema.getId());
     return mapper.toResponse(schema, remaining);
   }
 

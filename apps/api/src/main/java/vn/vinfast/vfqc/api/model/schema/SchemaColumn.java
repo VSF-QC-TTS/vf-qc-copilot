@@ -16,8 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * A column definition within a project schema. Simplified to only columnName + description. The
- * publicId serves as the stable identifier referenced by verification rules.
+ * A column definition within a project schema. Domain data is intentionally limited to column name,
+ * type, role, and sample value.
  *
  * @author nghlong3004 (Long Nguyen Hoang)
  * @since 6/27/2026
@@ -45,9 +45,6 @@ public class SchemaColumn {
   @Column(name = "column_name", nullable = false)
   private String columnName;
 
-  @Column(name = "description")
-  private String description;
-
   @Column(name = "data_type", nullable = false)
   @Builder.Default
   private String dataType = "STRING";
@@ -58,10 +55,6 @@ public class SchemaColumn {
 
   @Column(name = "sample_value")
   private String sampleValue;
-
-  @Column(name = "display_order", nullable = false)
-  @Builder.Default
-  private Integer displayOrder = 0;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default

@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -19,8 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Primitive deterministic assertion. A top-level field item has one assertion; a group item has
- * multiple assertions.
+ * Primitive field assertion that compares one response field with one dataset schema column.
  *
  * @author nghlong3004 (Long Nguyen Hoang)
  * @since 6/28/2026
@@ -52,33 +50,8 @@ public class VerificationFieldAssertion {
   @Column(name = "operator", nullable = false, length = 50)
   private CheckOperator operator;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "expected_source", length = 30)
-  private ExpectedSource expectedSource;
-
   @Column(name = "expected_column_key")
   private UUID expectedColumnKey;
-
-  @Column(name = "expected_value")
-  private String expectedValue;
-
-  @Column(name = "expected_template")
-  private String expectedTemplate;
-
-  @Column(name = "threshold", precision = 5, scale = 4)
-  private BigDecimal threshold;
-
-  @Column(name = "weight", nullable = false, precision = 8, scale = 4)
-  @Builder.Default
-  private BigDecimal weight = BigDecimal.ONE;
-
-  @Column(name = "enabled", nullable = false)
-  @Builder.Default
-  private boolean enabled = true;
-
-  @Column(name = "display_order", nullable = false)
-  @Builder.Default
-  private Integer displayOrder = 0;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   @Builder.Default

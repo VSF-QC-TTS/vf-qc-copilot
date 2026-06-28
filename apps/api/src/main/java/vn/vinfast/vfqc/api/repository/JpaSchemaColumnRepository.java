@@ -10,7 +10,7 @@ import vn.vinfast.vfqc.api.model.schema.SchemaColumn;
  */
 public interface JpaSchemaColumnRepository extends JpaRepository<SchemaColumn, Long> {
 
-  List<SchemaColumn> findBySchemaVersionIdOrderByDisplayOrderAsc(Long schemaVersionId);
+  List<SchemaColumn> findBySchemaVersionIdOrderByIdAsc(Long schemaVersionId);
 
   void deleteBySchemaVersionId(Long schemaVersionId);
 }

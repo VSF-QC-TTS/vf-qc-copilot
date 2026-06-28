@@ -12,16 +12,10 @@ export type CheckOperator =
   | 'GREATER_THAN_OR_EQUALS'
   | 'LESS_THAN'
   | 'LESS_THAN_OR_EQUALS'
-  | 'NOT_EMPTY'
-  | 'IS_JSON'
-
-export type ExpectedSource = 'DATASET_COLUMN'
 
 export type VerificationMode = 'FIELD_CHECKS' | 'LLM_JUDGE' | 'COMBINED'
 
-export type VerificationItemType = 'FIELD_ASSERTION' | 'FIELD_ASSERTION_GROUP' | 'LLM_JUDGE'
-
-export type FieldAggregation = 'ALL' | 'ANY' | 'AT_LEAST' | 'AVERAGE'
+export type VerificationItemType = 'FIELD_ASSERTION' | 'LLM_JUDGE'
 
 export type OperatorCategory = 'TEXT' | 'NUMBER' | 'STRUCTURE' | 'PRESENCE'
 
@@ -153,7 +147,6 @@ export interface SchemaColumnResponse {
   dataType: string
   role: string
   sampleValue: string | null
-  displayOrder: number
 }
 
 export interface ProjectSchemaResponse {
@@ -181,99 +174,42 @@ export interface UpdateSchemaColumnRequest {
 // Verification Config
 // ==========================================
 
-export interface ExpectedValue {
-  source: ExpectedSource
-  columnKey: string | null
-  value: string | null
-  template: string | null
-}
-
-export type ExpectedValueRequest = ExpectedValue
-export type ExpectedValueResponse = ExpectedValue
-
 export interface FieldAssertionResponse {
   publicId: string
   actualPath: string
   operator: CheckOperator
-  expected: ExpectedValueResponse | null
-  threshold: number | null
-  weight: number
-  enabled: boolean
-  displayOrder: number
+  expectedColumnKey: string
 }
 
 export interface FieldAssertionRequest {
   publicId?: string | null
   actualPath: string
   operator: CheckOperator
-  expected?: ExpectedValueRequest | null
-  threshold?: number | null
-  weight: number
-  enabled: boolean
-  displayOrder: number
-}
-
-export interface LlmCriterionResponse {
-  publicId: string
-  name: string
-  description: string
-  weight: number
-  enabled: boolean
-  displayOrder: number
-}
-
-export interface LlmCriterionRequest {
-  publicId?: string | null
-  name: string
-  description: string
-  weight: number
-  enabled: boolean
-  displayOrder: number
+  expectedColumnKey: string | null
 }
 
 export interface VerificationItemResponse {
   publicId: string
   type: VerificationItemType
-  name: string
-  enabled: boolean
-  critical: boolean
-  weight: number
-  threshold: number | null
-  displayOrder: number
-  aggregation: FieldAggregation | null
-  minPassCount: number | null
   fieldAssertion: FieldAssertionResponse | null
-  fieldAssertions: FieldAssertionResponse[]
   targetPaths: string[]
   referenceColumnKeys: string[]
   rubric: string | null
-  criteria: LlmCriterionResponse[]
 }
 
 export interface VerificationItemRequest {
   publicId?: string | null
   type: VerificationItemType
-  name: string
-  enabled: boolean
-  critical: boolean
-  weight: number
-  threshold?: number | null
-  displayOrder: number
-  aggregation?: FieldAggregation | null
-  minPassCount?: number | null
   fieldAssertion?: FieldAssertionRequest | null
-  fieldAssertions?: FieldAssertionRequest[] | null
   targetPaths?: string[] | null
   referenceColumnKeys?: string[] | null
   rubric?: string | null
-  criteria?: LlmCriterionRequest[] | null
 }
 
 export interface VerificationConfigResponse {
   publicId: string
   version: number
   mode: VerificationMode
-  threshold: number
   items: VerificationItemResponse[]
   createdAt: string
   updatedAt: string
@@ -281,7 +217,6 @@ export interface VerificationConfigResponse {
 
 export interface SaveVerificationRequest {
   mode: VerificationMode
-  threshold: number
   items?: VerificationItemRequest[] | null
 }
 
@@ -290,8 +225,6 @@ export interface OperatorCatalogResponse {
   displayName: string
   description: string
   category: OperatorCategory
-  requiresExpected: boolean
-  supportedExpectedSources: ExpectedSource[]
 }
 
 // ==========================================

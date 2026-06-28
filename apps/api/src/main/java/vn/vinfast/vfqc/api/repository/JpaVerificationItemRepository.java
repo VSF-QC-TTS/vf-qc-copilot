@@ -10,7 +10,7 @@ import vn.vinfast.vfqc.api.model.verification.VerificationItem;
  */
 public interface JpaVerificationItemRepository extends JpaRepository<VerificationItem, Long> {
 
-  List<VerificationItem> findByVerificationConfigIdOrderByDisplayOrderAsc(Long verificationConfigId);
+  List<VerificationItem> findByVerificationConfigIdOrderByIdAsc(Long verificationConfigId);
 
   void deleteByVerificationConfigId(Long verificationConfigId);
 }

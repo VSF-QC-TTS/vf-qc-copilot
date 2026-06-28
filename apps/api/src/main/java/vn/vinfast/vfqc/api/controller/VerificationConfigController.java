@@ -59,9 +59,7 @@ public class VerificationConfigController {
                     op,
                     op.getDisplayName(),
                     op.getDescription(),
-                    op.getCategory(),
-                    op.isRequiresExpected(),
-                    op.getSupportedExpectedSources()))
+                    op.getCategory()))
         .toList();
   }
 }
