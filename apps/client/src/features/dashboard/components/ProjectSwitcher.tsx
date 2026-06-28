@@ -69,7 +69,7 @@ export function ProjectSwitcher({
             <button
               className={cn(
                 'h-12 w-full px-3 py-2 border border-zinc-200/80 dark:border-zinc-800/80 hover:bg-zinc-100/50 dark:hover:bg-zinc-900/30 rounded-xl select-none cursor-pointer flex items-center gap-2.5 outline-none transition-all',
-                isCollapsed ? 'p-0 h-10 w-10 mx-auto justify-center border-none hover:bg-transparent shadow-none' : 'justify-between'
+                isCollapsed ? 'p-0 h-8 w-8 mx-auto justify-center border-none hover:bg-transparent shadow-none' : 'justify-between'
               )}
               aria-label={t('switcher.selectProject')}
               title={currentProject?.name ?? t('switcher.selectProject')}
