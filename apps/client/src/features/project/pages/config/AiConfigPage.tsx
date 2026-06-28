@@ -93,7 +93,7 @@ export function AiConfigPage() {
       evaluationModel: values.evaluationModel,
       generationModel: values.generationModel || null,
       apiKey: values.apiKey || null, 
-      baseUrl: values.baseUrl || null,
+      baseUrl: values.provider === 'CUSTOM' ? (values.baseUrl || null) : null,
       temperature: values.temperature,
       maxTokens: values.maxTokens, 
       timeoutMs: values.timeout * 1000, 

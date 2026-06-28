@@ -65,7 +65,7 @@ public class AiConfigServiceImpl implements AiConfigService {
 
     // Update entity
     entity.setProvider(req.provider());
-    entity.setBaseUrl(req.baseUrl());
+    entity.setBaseUrl(entity.requiresCustomBaseUrl() ? req.baseUrl() : null);
     entity.setKeySource(req.keySource());
     entity.setEvaluationModel(req.evaluationModel());
     entity.setGenerationModel(req.generationModel());
