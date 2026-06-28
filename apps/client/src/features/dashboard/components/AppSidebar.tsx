@@ -38,10 +38,17 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
       <SidebarHeader>
-        <div className="flex flex-col gap-2 pt-2">
-          {state !== 'collapsed' && (
-            <div className="flex h-8 items-center px-4">
-              <span className="font-semibold text-foreground/80 tracking-tight">{t('app.name')}</span>
+        <div className="flex flex-col gap-2 pt-2 select-none">
+          {state !== 'collapsed' ? (
+            <div className="flex h-8 items-center gap-2.5 px-4">
+              <img src="/logo.png" className="size-5 object-contain" alt="VinFast Logo" />
+              <span className="font-semibold text-foreground/80 tracking-tight text-sm">
+                {t('app.name')}
+              </span>
+            </div>
+          ) : (
+            <div className="flex h-8 items-center justify-center">
+              <img src="/logo.png" className="size-5 object-contain" alt="VinFast Logo" />
             </div>
           )}
           <ProjectSwitcher />

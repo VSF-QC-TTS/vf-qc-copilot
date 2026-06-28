@@ -18,7 +18,7 @@ import { useProjectsInfinite } from '@/features/project/hooks/use-projects'
 import { CreateProjectDialog } from '@/features/project/components/CreateProjectDialog'
 import { useSidebar } from '@/components/ui/sidebar-context'
 
-interface ProjectSwitcherProps extends ComponentProps<'div'> {
+interface ProjectSwitcherProps extends Omit<ComponentProps<'div'>, 'ref'> {
   compact?: boolean
   tone?: 'default' | 'sidebar'
 }

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { GuestGuard } from '@/features/auth/guards/GuestGuard'
 import { AuthGuard } from '@/features/auth/guards/AuthGuard'
@@ -6,6 +6,7 @@ import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AppLayout } from '@/features/dashboard/layouts/AppLayout'
 import { ProjectLayout } from '@/features/dashboard/layouts/ProjectLayout'
+import { VinFastPreloader } from '@/components/VinFastPreloader'
 
 // Lazy-loaded auth pages — code-split per route
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -49,38 +50,54 @@ function RouteFallback() {
 }
 
 function App() {
-  return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
-        {/* Guest-only auth routes — shared AuthLayout (no remount on navigate) */}
-        <Route element={<GuestGuard><AuthLayout /></GuestGuard>}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-        </Route>
+  const [loading, setLoading] = useState(true)
 
-        {/* Protected routes */}
-        <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
-          <Route path="/" element={<Navigate to="/projects" replace />} />
-          <Route path="/projects" element={<ProjectListPage />} />
-          <Route path="/projects/:publicId" element={<ProjectLayout />}>
-            <Route index element={<ProjectOverviewPage />} />
-            <Route path="config/target" element={<TargetConfigPage />} />
-            <Route path="config/ai" element={<AiConfigPage />} />
-            <Route path="config/schema" element={<ProjectSchemaPage />} />
-            <Route path="config/verification" element={<VerificationConfigPage />} />
-            <Route path="datasets" element={<DatasetListPage />} />
-            <Route path="datasets/:datasetId" element={<DatasetDetailPage />} />
-            <Route path="runs" element={<TestRunPage />} />
-            <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />
-          </Route>
-        </Route>
-        
-        <Route path="*" element={<Navigate to="/projects" replace />} />
-      </Routes>
-    </Suspense>
+  const handleIntroComplete = () => {
+    setLoading(false)
+  }
+
+  return (
+    <>
+      {loading && (
+        <VinFastPreloader 
+          logoUrl="/logo.png" 
+          onComplete={handleIntroComplete} 
+        />
+      )}
+      <div className={loading ? 'invisible h-0 overflow-hidden' : ''}>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            {/* Guest-only auth routes — shared AuthLayout (no remount on navigate) */}
+            <Route element={<GuestGuard><AuthLayout /></GuestGuard>}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+            </Route>
+
+            {/* Protected routes */}
+            <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
+              <Route path="/" element={<Navigate to="/projects" replace />} />
+              <Route path="/projects" element={<ProjectListPage />} />
+              <Route path="/projects/:publicId" element={<ProjectLayout />}>
+                <Route index element={<ProjectOverviewPage />} />
+                <Route path="config/target" element={<TargetConfigPage />} />
+                <Route path="config/ai" element={<AiConfigPage />} />
+                <Route path="config/schema" element={<ProjectSchemaPage />} />
+                <Route path="config/verification" element={<VerificationConfigPage />} />
+                <Route path="datasets" element={<DatasetListPage />} />
+                <Route path="datasets/:datasetId" element={<DatasetDetailPage />} />
+                <Route path="runs" element={<TestRunPage />} />
+                <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />
+              </Route>
+            </Route>
+            
+            <Route path="*" element={<Navigate to="/projects" replace />} />
+          </Routes>
+        </Suspense>
+      </div>
+    </>
   )
 }
 
