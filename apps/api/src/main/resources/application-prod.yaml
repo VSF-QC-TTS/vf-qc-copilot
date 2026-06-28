@@ -141,3 +141,7 @@ vfqc:
     cookie:
       secure: true
       same-site: Strict
+  runner:
+    internal-token: ${RUNNER_INTERNAL_TOKEN}
+    redis:
+      stream: ${RUNNER_REDIS_STREAM:eval.run.requested}
