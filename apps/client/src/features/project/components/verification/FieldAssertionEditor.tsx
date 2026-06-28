@@ -41,8 +41,8 @@ export function FieldAssertionEditor({
   const responseOptions = normalizedResponseFields.map((field) => {
     const isAnswer = field.path.toLowerCase().includes('answer')
     const displayLabel = isAnswer
-      ? t('verification.aliasResponseField', { path: field.path })
-      : t('verification.aliasResponseFieldDefault', { path: field.path })
+      ? t('config.verification.aliasResponseField', { path: field.path })
+      : t('config.verification.aliasResponseFieldDefault', { path: field.path })
     return { value: field.path, label: displayLabel }
   })
   
@@ -68,18 +68,18 @@ export function FieldAssertionEditor({
     <div className="rounded-lg border bg-background p-3">
       <div className="grid gap-2 xl:grid-cols-[minmax(220px,1fr)_160px_minmax(220px,1fr)] xl:items-end">
         <Field>
-          <FieldLabel className="text-xs font-semibold">{t('verification.fieldLabelResponse')}</FieldLabel>
+          <FieldLabel className="text-xs font-semibold">{t('config.verification.fieldLabelResponse')}</FieldLabel>
           <Combobox
             options={responseOptions}
             value={assertion.actualPath || undefined}
             onChange={(actualPath) => patchAssertion({ actualPath })}
-            placeholder={t('verification.chooseResponseField')}
-            emptyText={t('verification.noResponsePath')}
+            placeholder={t('config.verification.chooseResponseField')}
+            emptyText={t('config.verification.noResponsePath')}
           />
         </Field>
 
         <Field>
-          <FieldLabel className="text-xs font-semibold">{t('verification.fieldLabelOperator')}</FieldLabel>
+          <FieldLabel className="text-xs font-semibold">{t('config.verification.fieldLabelOperator')}</FieldLabel>
           <Select value={currentOperator} onValueChange={handleOperatorChange}>
             <SelectTrigger className="h-9 rounded-lg">
               <SelectValue />
@@ -95,19 +95,19 @@ export function FieldAssertionEditor({
         </Field>
 
         <Field>
-          <FieldLabel className="text-xs font-semibold">{t('verification.fieldLabelDataset')}</FieldLabel>
+          <FieldLabel className="text-xs font-semibold">{t('config.verification.fieldLabelDataset')}</FieldLabel>
           <div className="grid grid-cols-[auto_1fr] items-center gap-2">
             <ArrowRightIcon className="size-4 text-muted-foreground" />
             <Select value={datasetColumnId} onValueChange={handleDatasetColumnChange}>
               <SelectTrigger className="h-9 rounded-lg">
-                <SelectValue placeholder={t('verification.chooseDatasetColumn')} />
+                <SelectValue placeholder={t('config.verification.chooseDatasetColumn')} />
               </SelectTrigger>
               <SelectContent>
                 {columns.map((column) => {
                   const isGroundTruth = column.columnName.toLowerCase().includes('ground_truth')
                   const displayLabel = isGroundTruth
-                    ? t('verification.aliasDatasetColumn', { column: column.columnName })
-                    : t('verification.aliasDatasetColumnDefault', { column: column.columnName })
+                    ? t('config.verification.aliasDatasetColumn', { column: column.columnName })
+                    : t('config.verification.aliasDatasetColumnDefault', { column: column.columnName })
                   return (
                     <SelectItem key={column.publicId} value={column.publicId}>
                       {displayLabel}
@@ -123,15 +123,15 @@ export function FieldAssertionEditor({
         <div className="mt-2 flex flex-col gap-1 rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
           {selectedResponseField?.example ? (
             <div className="break-all">
-              <span className="font-semibold text-foreground">{t('verification.actualSampleData')}</span> {selectedResponseField.example}
+              <span className="font-semibold text-foreground">{t('config.verification.actualSampleData')}</span> {selectedResponseField.example}
             </div>
           ) : null}
           {selectedOperator ? (
             <div>
-              <span className="font-semibold text-foreground">{t('verification.matchingRule', { operator: selectedOperator.displayName })}</span> {selectedOperator.description}
+              <span className="font-semibold text-foreground">{t('config.verification.matchingRule', { operator: selectedOperator.displayName })}</span> {selectedOperator.description}
             </div>
           ) : (
-            <div>{t('verification.description')}</div>
+            <div>{t('config.verification.description')}</div>
           )}
         </div>
       )}

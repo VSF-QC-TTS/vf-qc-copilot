@@ -89,7 +89,7 @@ export function VerificationConfigPage(): ReactElement {
   const mode = deriveMode(items, values.mode)
 
   const localizedOperators = operators.map((op) => {
-    const key = `verification.operators.${op.operator.toLowerCase()}`
+    const key = `config.verification.operators.${op.operator.toLowerCase()}`
     return {
       ...op,
       displayName: t(`${key}.name`, { defaultValue: op.displayName }),
@@ -159,7 +159,7 @@ export function VerificationConfigPage(): ReactElement {
     const errors = validateVerificationForm(submitValues, operators)
     setValidationErrors(errors)
     if (errors.length > 0) {
-      toast.error(t('verification.invalidVerification'))
+      toast.error(t('config.verification.invalidVerification'))
       return
     }
     saveMutation.mutate(submitValues)
@@ -182,19 +182,19 @@ export function VerificationConfigPage(): ReactElement {
               {modeLabel(mode, t)}
             </Badge>
           </div>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{t('verification.title')}</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{t('config.verification.title')}</h1>
           <div className="mt-2.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
             <Badge variant="secondary" className="font-normal py-0.5 px-2">
-              {fieldItems.length} {t('verification.fieldMatchTab').toLowerCase()}
+              {fieldItems.length} {t('config.verification.fieldMatchTab').toLowerCase()}
             </Badge>
             <Badge variant="secondary" className="font-normal py-0.5 px-2">
-              {llmItems.length} {t('verification.llmJudgeTab').toLowerCase()}
+              {llmItems.length} {t('config.verification.llmJudgeTab').toLowerCase()}
             </Badge>
             <Badge variant="secondary" className="font-normal py-0.5 px-2">
-              {responseFields.length} {t('verification.responseFields').toLowerCase()}
+              {responseFields.length} {t('config.verification.responseFields').toLowerCase()}
             </Badge>
             <Badge variant="secondary" className="font-normal py-0.5 px-2">
-              {columns.length} {t('verification.datasetColumns').toLowerCase()}
+              {columns.length} {t('config.verification.datasetColumns').toLowerCase()}
             </Badge>
           </div>
         </div>
@@ -202,7 +202,7 @@ export function VerificationConfigPage(): ReactElement {
         <div className="flex shrink-0 items-center justify-end">
           <Button type="submit" className="h-9 px-4 rounded-lg font-medium" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? <Spinner className="size-4" /> : <SaveIcon className="size-4" />}
-            {t('verification.save')}
+            {t('config.verification.save')}
           </Button>
         </div>
       </div>
@@ -220,7 +220,7 @@ export function VerificationConfigPage(): ReactElement {
           }`}
         >
           <ListChecksIcon className="size-4" />
-          <span>{t('verification.fieldMatchTab')}</span>
+          <span>{t('config.verification.fieldMatchTab')}</span>
           <Badge variant="secondary" className="ml-1 h-5 rounded-full px-1.5 text-[10px] font-normal">
             {fieldItems.length}
           </Badge>
@@ -236,7 +236,7 @@ export function VerificationConfigPage(): ReactElement {
           }`}
         >
           <BotIcon className="size-4" />
-          <span>{t('verification.llmJudgeTab')}</span>
+          <span>{t('config.verification.llmJudgeTab')}</span>
           <Badge variant="secondary" className="ml-1 h-5 rounded-full px-1.5 text-[10px] font-normal">
             {llmItems.length}
           </Badge>
@@ -249,11 +249,11 @@ export function VerificationConfigPage(): ReactElement {
             <CardHeader className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <ListChecksIcon className="size-4 text-muted-foreground" />
-                {t('verification.fieldMatchTitle')}
+                {t('config.verification.fieldMatchTitle')}
               </CardTitle>
               <Button type="button" variant="outline" size="sm" className="h-8 rounded-md text-xs font-normal" onClick={addFieldRule}>
                 <PlusIcon className="size-3.5" />
-                {t('verification.addRule')}
+                {t('config.verification.addRule')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4 p-4">
@@ -263,7 +263,7 @@ export function VerificationConfigPage(): ReactElement {
                     <div key={item.publicId ?? `field-${index}`} className="space-y-2">
                       <div className="flex items-center justify-between gap-3">
                         <Badge variant="outline" className="font-normal text-[11px] px-2 py-0.5">
-                          {t('verification.rule')} {displayIndex + 1}
+                          {t('config.verification.rule')} {displayIndex + 1}
                         </Badge>
                         <Button
                           type="button"
@@ -289,8 +289,8 @@ export function VerificationConfigPage(): ReactElement {
               ) : (
                 <Empty className="rounded-lg border border-dashed py-12">
                   <EmptyHeader>
-                    <EmptyTitle className="text-sm font-medium">{t('verification.noFieldMatch')}</EmptyTitle>
-                    <EmptyDescription className="text-xs text-muted-foreground max-w-xs">{t('verification.noFieldMatchHint')}</EmptyDescription>
+                    <EmptyTitle className="text-sm font-medium">{t('config.verification.noFieldMatch')}</EmptyTitle>
+                    <EmptyDescription className="text-xs text-muted-foreground max-w-xs">{t('config.verification.noFieldMatchHint')}</EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               )}
@@ -303,11 +303,11 @@ export function VerificationConfigPage(): ReactElement {
             <CardHeader className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <BotIcon className="size-4 text-muted-foreground" />
-                {t('verification.llmJudgeTitle')}
+                {t('config.verification.llmJudgeTitle')}
               </CardTitle>
               <Button type="button" variant="outline" size="sm" className="h-8 rounded-md text-xs font-normal" onClick={addLlmJudge}>
                 <PlusIcon className="size-3.5" />
-                {t('verification.addPrompt')}
+                {t('config.verification.addPrompt')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4 p-4">
@@ -316,7 +316,7 @@ export function VerificationConfigPage(): ReactElement {
                   <div key={item.publicId ?? `llm-${index}`} className="rounded-lg border bg-background overflow-hidden">
                     <div className="flex items-center justify-between gap-3 border-b bg-muted/15 p-2 px-3">
                       <Badge variant="outline" className="font-normal text-[11px] px-2 py-0.5">
-                        {t('verification.prompt')} {displayIndex + 1}
+                        {t('config.verification.prompt')} {displayIndex + 1}
                       </Badge>
                       <Button
                         type="button"
@@ -341,8 +341,8 @@ export function VerificationConfigPage(): ReactElement {
               ) : (
                 <Empty className="rounded-lg border border-dashed py-12">
                   <EmptyHeader>
-                    <EmptyTitle className="text-sm font-medium">{t('verification.noLlmJudge')}</EmptyTitle>
-                    <EmptyDescription className="text-xs text-muted-foreground max-w-xs">{t('verification.noLlmJudgeHint')}</EmptyDescription>
+                    <EmptyTitle className="text-sm font-medium">{t('config.verification.noLlmJudge')}</EmptyTitle>
+                    <EmptyDescription className="text-xs text-muted-foreground max-w-xs">{t('config.verification.noLlmJudgeHint')}</EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               )}
@@ -358,7 +358,7 @@ function ValidationAlert({ errors, t }: { errors: string[]; t: (key: string) => 
   return (
     <Alert variant="destructive">
       <AlertCircleIcon className="size-4" />
-      <AlertTitle>{t('verification.validationErrorTitle')}</AlertTitle>
+      <AlertTitle>{t('config.verification.validationErrorTitle')}</AlertTitle>
       <AlertDescription>
         <ul className="list-disc space-y-1 pl-4">
           {errors.map((error) => (
@@ -403,12 +403,12 @@ function deriveMode(items: VerificationItemRequest[], fallback: VerificationMode
 
 function modeLabel(mode: VerificationMode, t: (key: string) => string): string {
   if (mode === 'COMBINED') {
-    return t('verification.modeHybrid')
+    return t('config.verification.modeHybrid')
   }
   if (mode === 'LLM_JUDGE') {
-    return t('verification.modeOverallRubric')
+    return t('config.verification.modeOverallRubric')
   }
-  return t('verification.modeFieldChecks')
+  return t('config.verification.modeFieldChecks')
 }
 
 function makeOperator(

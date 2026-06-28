@@ -106,13 +106,13 @@ export function LlmJudgeEditor({
   return (
     <div className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_280px]">
       <TokenRail
-        title={t('verification.responseFields')}
-        emptyText={t('verification.noResponseFields')}
+        title={t('config.verification.responseFields')}
+        emptyText={t('config.verification.noResponseFields')}
         items={normalizedResponseFields.map((field) => ({
           key: field.path,
           token: toResponseToken(field.path),
           example: field.example,
-          description: t('verification.fieldResponseDesc'),
+          description: t('config.verification.fieldResponseDesc'),
           selected: targetPaths.includes(field.path),
           onInsert: () => insertResponseToken(field),
         }))}
@@ -120,17 +120,17 @@ export function LlmJudgeEditor({
 
       <Field>
         <div className="flex items-center justify-between gap-2 mb-1.5">
-          <FieldLabel className="text-xs font-semibold m-0">{t('verification.rubricPrompt')}</FieldLabel>
+          <FieldLabel className="text-xs font-semibold m-0">{t('config.verification.rubricPrompt')}</FieldLabel>
           
           <Select onValueChange={handleTemplateChange}>
             <SelectTrigger className="h-7 text-[11px] rounded-md border-dashed bg-muted/30 px-2.5 max-w-[200px] border-border/80">
-              <SelectValue placeholder={t('verification.selectTemplate')} />
+              <SelectValue placeholder={t('config.verification.selectTemplate')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="accuracy">{t('verification.promptTemplateAccuracy')}</SelectItem>
-              <SelectItem value="fluency">{t('verification.promptTemplateFluency')}</SelectItem>
-              <SelectItem value="hallucination">{t('verification.promptTemplateHallucination')}</SelectItem>
-              <SelectItem value="conciseness">{t('verification.promptTemplateConciseness')}</SelectItem>
+              <SelectItem value="accuracy">{t('config.verification.promptTemplateAccuracy')}</SelectItem>
+              <SelectItem value="fluency">{t('config.verification.promptTemplateFluency')}</SelectItem>
+              <SelectItem value="hallucination">{t('config.verification.promptTemplateHallucination')}</SelectItem>
+              <SelectItem value="conciseness">{t('config.verification.promptTemplateConciseness')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -138,21 +138,21 @@ export function LlmJudgeEditor({
           value={item.rubric ?? ''}
           onChange={(event) => patchItem({ rubric: event.target.value })}
           className="min-h-[360px] rounded-lg font-mono text-xs leading-relaxed"
-          placeholder={t('verification.rubricPrompt')}
+          placeholder={t('config.verification.promptPlaceholder')}
         />
         <div className="rounded-md bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-          Bấm token hai bên để chèn vào prompt. Backend lưu prompt này để runner đưa vào LLM Judge.
+          {t('config.verification.promptHint')}
         </div>
       </Field>
 
       <TokenRail
-        title={t('verification.datasetColumns')}
-        emptyText={t('verification.noExpectedColumns')}
+        title={t('config.verification.datasetColumns')}
+        emptyText={t('config.verification.noExpectedColumns')}
         items={columns.map((column) => ({
           key: column.publicId,
           token: `$dataset.${column.columnName}`,
           example: column.sampleValue,
-          description: t('verification.datasetColumnDesc', { role: column.role, dataType: column.dataType }),
+          description: t('config.verification.datasetColumnDesc', { role: column.role, dataType: column.dataType }),
           selected: referenceColumnKeys.includes(column.publicId),
           onInsert: () => insertDatasetToken(column),
         }))}
@@ -201,7 +201,7 @@ function TokenRail({
         <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <Input
           type="text"
-          placeholder={t('verification.searchPlaceholder')}
+          placeholder={t('config.verification.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="h-8 pl-8 pr-3 text-xs rounded-lg"
@@ -249,13 +249,13 @@ function TokenRail({
                     </div>
                     {item.example ? (
                       <div className="space-y-1">
-                        <div className="text-[10px] font-semibold uppercase text-muted-foreground">{t('verification.dataExample')}</div>
+                        <div className="text-[10px] font-semibold uppercase text-muted-foreground">{t('config.verification.dataExample')}</div>
                         <pre className="max-h-36 overflow-auto rounded bg-muted/50 p-2 font-mono text-[10px] leading-relaxed break-all whitespace-pre-wrap">
                           {item.example}
                         </pre>
                       </div>
                     ) : (
-                      <div className="text-[10px] italic text-muted-foreground">{t('verification.noDataExample')}</div>
+                      <div className="text-[10px] italic text-muted-foreground">{t('config.verification.noDataExample')}</div>
                     )}
                   </div>
                 </PopoverContent>
@@ -264,7 +264,7 @@ function TokenRail({
           ))
         ) : (
           <div className="rounded-md border border-dashed bg-background px-3 py-6 text-center text-xs text-muted-foreground">
-            {searchQuery ? t('verification.noResults') : emptyText}
+            {searchQuery ? t('config.verification.noResults') : emptyText}
           </div>
         )}
       </div>
