@@ -7,12 +7,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import vn.vinfast.vfqc.api.model.ai.AiConfig;
@@ -24,17 +27,24 @@ import vn.vinfast.vfqc.api.model.dataset.DatasetVersionStatus;
 import vn.vinfast.vfqc.api.model.project.Project;
 import vn.vinfast.vfqc.api.model.schema.ProjectSchema;
 import vn.vinfast.vfqc.api.model.targetconfig.TargetConfig;
+import vn.vinfast.vfqc.api.model.testrun.AssertionResult;
+import vn.vinfast.vfqc.api.model.testrun.TestCaseStatus;
+import vn.vinfast.vfqc.api.model.testrun.TestResult;
 import vn.vinfast.vfqc.api.model.testrun.TestRun;
 import vn.vinfast.vfqc.api.model.testrun.TestRunStatus;
 import vn.vinfast.vfqc.api.model.testrun.request.CreateTestRunRequest;
+import vn.vinfast.vfqc.api.model.testrun.response.TestResultResponse;
 import vn.vinfast.vfqc.api.model.testrun.response.TestRunResponse;
 import vn.vinfast.vfqc.api.model.user.User;
 import vn.vinfast.vfqc.api.model.verification.VerificationConfig;
 import vn.vinfast.vfqc.api.model.verification.VerificationMode;
+import vn.vinfast.vfqc.api.repository.JpaAssertionResultRepository;
 import vn.vinfast.vfqc.api.repository.JpaAiConfigRepository;
 import vn.vinfast.vfqc.api.repository.JpaDatasetRepository;
 import vn.vinfast.vfqc.api.repository.JpaDatasetVersionRepository;
 import vn.vinfast.vfqc.api.repository.JpaProjectSchemaRepository;
+import vn.vinfast.vfqc.api.repository.JpaRunEventRepository;
+import vn.vinfast.vfqc.api.repository.JpaTestResultRepository;
 import vn.vinfast.vfqc.api.repository.JpaTestRunRepository;
 import vn.vinfast.vfqc.api.repository.JpaVerificationConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
@@ -58,6 +68,9 @@ class TestRunServiceImplTest {
   @Mock private JpaVerificationConfigRepository verificationConfigRepository;
   @Mock private JpaTestRunRepository testRunRepository;
   @Mock private EvalJobPublisher evalJobPublisher;
+  @Mock private JpaTestResultRepository testResultRepository;
+  @Mock private JpaRunEventRepository runEventRepository;
+  @Mock private JpaAssertionResultRepository assertionResultRepository;
 
   private TestRunServiceImpl service;
   private UUID projectPublicId;
@@ -76,7 +89,10 @@ class TestRunServiceImplTest {
             datasetVersionRepository,
             verificationConfigRepository,
             testRunRepository,
-            evalJobPublisher);
+            evalJobPublisher,
+            testResultRepository,
+            runEventRepository,
+            assertionResultRepository);
 
     projectPublicId = UUID.randomUUID();
     datasetPublicId = UUID.randomUUID();
@@ -189,6 +205,58 @@ class TestRunServiceImplTest {
     assertThat(response.status()).isEqualTo(TestRunStatus.COMPLETED);
     assertThat(response.cancellationRequested()).isFalse();
     verify(testRunRepository, never()).save(any(TestRun.class));
+  }
+
+  @Test
+  void listResults_IncludesAssertionDetails() {
+    UUID runPublicId = UUID.randomUUID();
+    UUID resultPublicId = UUID.randomUUID();
+    UUID assertionPublicId = UUID.randomUUID();
+    TestRun run =
+        TestRun.builder()
+            .id(101L)
+            .publicId(runPublicId)
+            .status(TestRunStatus.COMPLETED)
+            .build();
+    TestResult result =
+        TestResult.builder()
+            .id(201L)
+            .publicId(resultPublicId)
+            .runId(101L)
+            .datasetRowId(301L)
+            .caseIndex(1)
+            .inputData("{\"question\":\"ping\"}")
+            .actualOutput("{\"answer\":\"pong\"}")
+            .status(TestCaseStatus.FAILED)
+            .passed(false)
+            .score(BigDecimal.ZERO)
+            .latencyMs(123L)
+            .build();
+    AssertionResult assertion =
+        AssertionResult.builder()
+            .publicId(assertionPublicId)
+            .testResultId(201L)
+            .assertionName("$.answer equals expected_answer")
+            .assertionType("FIELD_CHECK")
+            .responsePath("$.answer")
+            .passed(false)
+            .score(BigDecimal.ZERO)
+            .reason("Expected ping but got pong")
+            .expectedValue("ping")
+            .actualValue("pong")
+            .build();
+    when(testRunRepository.findByPublicId(runPublicId)).thenReturn(Optional.of(run));
+    when(testResultRepository.findByRunIdOrderByCaseIndexAsc(101L, PageRequest.of(0, 50)))
+        .thenReturn(new PageImpl<>(List.of(result), PageRequest.of(0, 50), 1));
+    when(assertionResultRepository.findByTestResultIdInOrderByTestResultIdAscIdAsc(List.of(201L)))
+        .thenReturn(List.of(assertion));
+
+    TestResultResponse response = service.listResults(runPublicId, 0, 50).content().getFirst();
+
+    assertThat(response.assertions()).hasSize(1);
+    assertThat(response.assertions().getFirst().publicId()).isEqualTo(assertionPublicId);
+    assertThat(response.assertions().getFirst().responsePath()).isEqualTo("$.answer");
+    assertThat(response.assertions().getFirst().reason()).isEqualTo("Expected ping but got pong");
   }
 
   private Dataset activeDataset() {

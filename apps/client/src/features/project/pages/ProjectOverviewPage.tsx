@@ -7,14 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
 import { useProject, useSetupStatus } from '../hooks/use-projects'
+import { useTestRuns } from '../hooks/use-test-runs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { RunStatusBadge } from '../components/RunStatusBadge'
 
 export function ProjectOverviewPage() {
   const { t } = useTranslation('project')
   const { publicId } = useParams<{ publicId: string }>()
   const { data: project, isLoading: isProjectLoading } = useProject(publicId)
   const { data: status, isLoading: isStatusLoading } = useSetupStatus(publicId)
+  const { data: runsData } = useTestRuns(publicId, 0, 5)
 
   if (isProjectLoading || isStatusLoading) {
     return (
@@ -37,18 +40,26 @@ export function ProjectOverviewPage() {
     { key: 'targetConfig', label: t('nav.apiConfig'), done: status?.hasTargetConfig, path: `/projects/${publicId}/config/target` },
     { key: 'aiConfig', label: t('nav.llmJudge'), done: status?.hasAiConfig, path: `/projects/${publicId}/config/ai` },
     { key: 'projectSchema', label: t('nav.datasetSchema'), done: status?.hasProjectSchema, path: `/projects/${publicId}/config/schema` },
-    { key: 'verification', label: t('nav.verification'), done: status?.hasVerification, path: `/projects/${publicId}/verification` },
+    { key: 'verification', label: t('nav.verification'), done: status?.hasVerification, path: `/projects/${publicId}/config/verification` },
     { key: 'datasets', label: t('nav.datasets'), done: status?.hasDatasets, path: `/projects/${publicId}/datasets` },
   ]
 
   const completedSteps = steps.filter((s) => s.done).length
   const totalSteps = steps.length
 
-  // Mock stats - will be replaced with real API data later
+  const runs = runsData?.content ?? []
+  const totalRuns = status?.totalTestRuns ?? runsData?.totalElements ?? 0
+  const completedRuns = runs.filter((run) => run.status === 'COMPLETED')
+  const totalPassed = completedRuns.reduce((sum, run) => sum + run.passedCases, 0)
+  const totalCases = completedRuns.reduce((sum, run) => sum + run.totalCases, 0)
+  const durations = completedRuns.map((run) => run.durationMs).filter((value): value is number => value != null)
+  const avgDuration =
+    durations.length === 0 ? '-' : formatDuration(Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length))
+
   const stats = [
-    { label: t('overview.totalRuns'), value: '0', icon: BarChart3, color: 'text-blue-500' },
-    { label: t('overview.passRate'), value: '-', icon: Activity, color: 'text-emerald-500' },
-    { label: t('overview.avgLatency'), value: '-', icon: Clock, color: 'text-amber-500' },
+    { label: t('overview.totalRuns'), value: String(totalRuns), icon: BarChart3, color: 'text-blue-500' },
+    { label: t('overview.passRate'), value: totalCases === 0 ? '-' : `${Math.round((totalPassed / totalCases) * 100)}%`, icon: Activity, color: 'text-emerald-500' },
+    { label: t('overview.avgLatency'), value: avgDuration, icon: Clock, color: 'text-amber-500' },
     { label: t('overview.setupSteps'), value: `${completedSteps}/${totalSteps}`, icon: Database, color: 'text-violet-500' },
   ]
 
@@ -137,15 +148,42 @@ export function ProjectOverviewPage() {
             <CardTitle className="text-sm font-semibold">{t('overview.recentRuns')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Empty>
-              <EmptyHeader>
-                <EmptyTitle>{t('overview.noRuns')}</EmptyTitle>
-                <EmptyDescription>{t('overview.noRunsHint')}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            {runs.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>{t('overview.noRuns')}</EmptyTitle>
+                  <EmptyDescription>{t('overview.noRunsHint')}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div className="grid gap-2">
+                {runs.map((run) => (
+                  <Link
+                    key={run.publicId}
+                    to={`/projects/${publicId}/runs?run=${run.publicId}`}
+                    className="flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/40"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{run.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {run.totalCases} cases / {formatDuration(run.durationMs)}
+                      </div>
+                    </div>
+                    <RunStatusBadge status={run.status} />
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </motion.div>
   )
+}
+
+function formatDuration(value: number | null): string {
+  if (value == null) {
+    return '-'
+  }
+  return value < 1000 ? `${value}ms` : `${(value / 1000).toFixed(1)}s`
 }

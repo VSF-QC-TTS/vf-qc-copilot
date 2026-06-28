@@ -8,5 +8,7 @@ public interface JpaAssertionResultRepository extends JpaRepository<AssertionRes
 
   List<AssertionResult> findByTestResultIdOrderByIdAsc(Long testResultId);
 
+  List<AssertionResult> findByTestResultIdInOrderByTestResultIdAscIdAsc(List<Long> testResultIds);
+
   void deleteByTestResultId(Long testResultId);
 }

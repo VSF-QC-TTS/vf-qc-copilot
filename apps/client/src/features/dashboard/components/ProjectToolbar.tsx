@@ -1,4 +1,5 @@
-import { useParams, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
@@ -7,10 +8,13 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useSidebar } from '@/components/ui/sidebar-context'
 import { useProject, useSetupStatus } from '@/features/project/hooks/use-projects'
 import { PlayIcon } from 'lucide-react'
+import { CreateTestRunDialog } from '@/features/project/components/CreateTestRunDialog'
 
 export function ProjectToolbar() {
   const { t } = useTranslation('project')
   const { publicId } = useParams<{ publicId: string }>()
+  const navigate = useNavigate()
+  const [createRunOpen, setCreateRunOpen] = useState(false)
   const { toggleSidebar } = useSidebar()
   const { data: project } = useProject(publicId)
   const { data: status } = useSetupStatus(publicId)
@@ -42,7 +46,7 @@ export function ProjectToolbar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <div>
-              <Button disabled={!isSetupComplete} size="sm" className="h-8">
+              <Button disabled={!isSetupComplete} size="sm" className="h-8" onClick={() => setCreateRunOpen(true)}>
                 <PlayIcon data-icon="inline-start" />
                 {t('toolbar.runTest')}
               </Button>
@@ -55,6 +59,12 @@ export function ProjectToolbar() {
           )}
         </Tooltip>
       </div>
+      <CreateTestRunDialog
+        open={createRunOpen}
+        onOpenChange={setCreateRunOpen}
+        projectPublicId={publicId}
+        onCreated={(run) => navigate(`/projects/${publicId}/runs?run=${run.publicId}`)}
+      />
     </header>
   )
 }

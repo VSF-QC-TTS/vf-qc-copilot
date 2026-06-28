@@ -2,6 +2,7 @@ package vn.vinfast.vfqc.api.model.testrun.response;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 import vn.vinfast.vfqc.api.model.testrun.TestCaseStatus;
 
@@ -17,4 +18,5 @@ public record TestResultResponse(
     BigDecimal score,
     String errorMessage,
     Long latencyMs,
+    List<AssertionResultResponse> assertions,
     OffsetDateTime createdAt) {}

@@ -3,10 +3,13 @@ package vn.vinfast.vfqc.api.service.impl;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +23,12 @@ import vn.vinfast.vfqc.api.model.project.Project;
 import vn.vinfast.vfqc.api.model.schema.ProjectSchema;
 import vn.vinfast.vfqc.api.model.targetconfig.TargetConfig;
 import vn.vinfast.vfqc.api.model.testrun.RunEvent;
+import vn.vinfast.vfqc.api.model.testrun.AssertionResult;
 import vn.vinfast.vfqc.api.model.testrun.TestResult;
 import vn.vinfast.vfqc.api.model.testrun.TestRun;
 import vn.vinfast.vfqc.api.model.testrun.TestRunStatus;
 import vn.vinfast.vfqc.api.model.testrun.request.CreateTestRunRequest;
+import vn.vinfast.vfqc.api.model.testrun.response.AssertionResultResponse;
 import vn.vinfast.vfqc.api.model.testrun.response.RunEventResponse;
 import vn.vinfast.vfqc.api.model.testrun.response.TestResultResponse;
 import vn.vinfast.vfqc.api.model.testrun.response.TestRunResponse;
@@ -31,6 +36,7 @@ import vn.vinfast.vfqc.api.model.user.User;
 import vn.vinfast.vfqc.api.model.verification.VerificationConfig;
 import vn.vinfast.vfqc.api.model.verification.VerificationMode;
 import vn.vinfast.vfqc.api.repository.JpaAiConfigRepository;
+import vn.vinfast.vfqc.api.repository.JpaAssertionResultRepository;
 import vn.vinfast.vfqc.api.repository.JpaDatasetRepository;
 import vn.vinfast.vfqc.api.repository.JpaDatasetVersionRepository;
 import vn.vinfast.vfqc.api.repository.JpaProjectSchemaRepository;
@@ -64,6 +70,7 @@ public class TestRunServiceImpl implements TestRunService {
   private final EvalJobPublisher evalJobPublisher;
   private final JpaTestResultRepository testResultRepository;
   private final JpaRunEventRepository runEventRepository;
+  private final JpaAssertionResultRepository assertionResultRepository;
 
   @Autowired
   public TestRunServiceImpl(
@@ -78,7 +85,8 @@ public class TestRunServiceImpl implements TestRunService {
       JpaTestRunRepository testRunRepository,
       EvalJobPublisher evalJobPublisher,
       JpaTestResultRepository testResultRepository,
-      JpaRunEventRepository runEventRepository) {
+      JpaRunEventRepository runEventRepository,
+      JpaAssertionResultRepository assertionResultRepository) {
     this.projectRepository = projectRepository;
     this.userRepository = userRepository;
     this.targetConfigRepository = targetConfigRepository;
@@ -91,6 +99,7 @@ public class TestRunServiceImpl implements TestRunService {
     this.evalJobPublisher = evalJobPublisher;
     this.testResultRepository = testResultRepository;
     this.runEventRepository = runEventRepository;
+    this.assertionResultRepository = assertionResultRepository;
   }
 
   TestRunServiceImpl(
@@ -115,6 +124,7 @@ public class TestRunServiceImpl implements TestRunService {
         verificationConfigRepository,
         testRunRepository,
         evalJobPublisher,
+        null,
         null,
         null);
   }
@@ -187,10 +197,10 @@ public class TestRunServiceImpl implements TestRunService {
   @Transactional(readOnly = true)
   public PageResponse<TestResultResponse> listResults(UUID runPublicId, int page, int size) {
     TestRun run = getRun(runPublicId);
-    return PageResponse.of(
-        testResultRepository
-            .findByRunIdOrderByCaseIndexAsc(run.getId(), PageRequest.of(page, size))
-            .map(result -> toResultResponse(run, result)));
+    Page<TestResult> resultPage =
+        testResultRepository.findByRunIdOrderByCaseIndexAsc(run.getId(), PageRequest.of(page, size));
+    Map<Long, List<AssertionResult>> assertionsByResultId = loadAssertionsByResultId(resultPage.getContent());
+    return PageResponse.of(resultPage.map(result -> toResultResponse(run, result, assertionsByResultId)));
   }
 
   @Override
@@ -314,7 +324,17 @@ public class TestRunServiceImpl implements TestRunService {
         run.getCreatedAt());
   }
 
-  private TestResultResponse toResultResponse(TestRun run, TestResult result) {
+  private Map<Long, List<AssertionResult>> loadAssertionsByResultId(List<TestResult> results) {
+    if (results.isEmpty()) {
+      return Map.of();
+    }
+    List<Long> resultIds = results.stream().map(TestResult::getId).toList();
+    return assertionResultRepository.findByTestResultIdInOrderByTestResultIdAscIdAsc(resultIds).stream()
+        .collect(Collectors.groupingBy(AssertionResult::getTestResultId));
+  }
+
+  private TestResultResponse toResultResponse(
+      TestRun run, TestResult result, Map<Long, List<AssertionResult>> assertionsByResultId) {
     return new TestResultResponse(
         result.getPublicId(),
         run.getPublicId(),
@@ -327,7 +347,24 @@ public class TestRunServiceImpl implements TestRunService {
         result.getScore(),
         result.getErrorMessage(),
         result.getLatencyMs(),
+        assertionsByResultId.getOrDefault(result.getId(), List.of()).stream()
+            .map(this::toAssertionResponse)
+            .toList(),
         result.getCreatedAt());
+  }
+
+  private AssertionResultResponse toAssertionResponse(AssertionResult assertion) {
+    return new AssertionResultResponse(
+        assertion.getPublicId(),
+        assertion.getAssertionName(),
+        assertion.getAssertionType(),
+        assertion.getResponsePath(),
+        assertion.getPassed(),
+        assertion.getScore(),
+        assertion.getReason(),
+        assertion.getExpectedValue(),
+        assertion.getActualValue(),
+        assertion.getCreatedAt());
   }
 
   private RunEventResponse toEventResponse(TestRun run, RunEvent event) {
