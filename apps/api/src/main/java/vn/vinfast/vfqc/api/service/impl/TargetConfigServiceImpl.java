@@ -147,7 +147,12 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
 
-    // Only update lightweight fields
+    SecretScanResult secrets = secretManager.scanAndEncrypt(
+        req.headers(), req.queryParams(), project.getId(), "TARGET_CONFIG", project.getId());
+
+    entity.setMethod(req.method());
+    entity.setUrl(req.url());
+    entity.setBodyTemplate(req.bodyTemplate());
     entity.setResponsePath(req.responsePath());
     if (req.name() != null) {
       entity.setName(req.name());
@@ -155,12 +160,20 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     if (req.timeoutMs() > 0) {
       entity.setTimeoutMs(req.timeoutMs());
     }
+    try {
+      entity.setHeaders(objectMapper.writeValueAsString(secrets.sanitizedHeaders()));
+      entity.setQueryParams(objectMapper.writeValueAsString(secrets.sanitizedParams()));
+    } catch (JsonProcessingException e) {
+      log.error("Failed to serialize target config headers/params", e);
+      throw ResourceException.of(ErrorCode.BAD_REQUEST, "Invalid target headers or query params.");
+    }
+    secretManager.replaceSecrets("TARGET_CONFIG", project.getId(), secrets.detectedSecrets());
 
     // Update version
     entity.setVersion(entity.getVersion() + 1);
 
     TargetConfig saved = targetConfigRepository.save(entity);
-    return mapToResponse(saved, parseJson(entity.getHeaders()), parseJson(entity.getQueryParams()));
+    return mapToResponse(saved, secrets.sanitizedHeaders(), secrets.sanitizedParams());
   }
 
   @Override

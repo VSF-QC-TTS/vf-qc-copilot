@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,7 @@ import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
 import vn.vinfast.vfqc.api.service.CurlParser;
 import vn.vinfast.vfqc.api.service.TargetHttpExecutor;
 import vn.vinfast.vfqc.api.shared.crypto.SecretManager;
+import vn.vinfast.vfqc.api.shared.crypto.SecretManager.SecretScanResult;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
@@ -71,13 +73,32 @@ class TargetConfigServiceImplTest {
       t.setId(10L);
       return t;
     });
+    when(secretManager.scanAndEncrypt(any(), any(), any(), any(), any()))
+        .thenReturn(new SecretScanResult(
+            Map.of("Authorization", "SECRET_REDACTED", "X-Client", "vfqc"),
+            Map.of("api-key", "SECRET_REDACTED", "locale", "vi"),
+            List.of()));
 
     SaveTargetConfigRequest req = new SaveTargetConfigRequest(
-        "POST", "http://example.com", null, null, null, null, 30000, "Test");
+        "PUT",
+        "http://updated.example.com",
+        Map.of("Authorization", "Bearer SECRET_REDACTED", "X-Client", "vfqc"),
+        Map.of("api-key", "SECRET_REDACTED", "locale", "vi"),
+        "{\"question\":\"{{question}}\"}",
+        "$.answer",
+        45000,
+        "Test");
     TargetConfigResponse response = service.save(projectId, req);
 
-    assertThat(response.method()).isEqualTo("POST");
-    assertThat(response.url()).isEqualTo("http://example.com");
+    assertThat(response.method()).isEqualTo("PUT");
+    assertThat(response.url()).isEqualTo("http://updated.example.com");
+    assertThat(response.maskedHeaders()).containsEntry("Authorization", "SECRET_REDACTED");
+    assertThat(response.maskedHeaders()).containsEntry("X-Client", "vfqc");
+    assertThat(response.maskedQueryParams()).containsEntry("api-key", "SECRET_REDACTED");
+    assertThat(response.maskedQueryParams()).containsEntry("locale", "vi");
+    assertThat(response.bodyTemplate()).isEqualTo("{\"question\":\"{{question}}\"}");
+    assertThat(response.responsePath()).isEqualTo("$.answer");
+    assertThat(response.timeoutMs()).isEqualTo(45000);
     verify(targetConfigRepository).save(any(TargetConfig.class));
   }
 

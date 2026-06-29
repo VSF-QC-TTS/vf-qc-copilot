@@ -137,6 +137,7 @@ public class DatasetServiceImpl {
                 .createdBy(user.getId())
                 .status(DatasetStatus.DRAFT)
                 .build());
+    log.info("Dataset created: publicId={}, name='{}', projectId={}", dataset.getPublicId(), dataset.getName(), project.getPublicId());
     return get(dataset.getPublicId());
   }
 
@@ -176,6 +177,7 @@ public class DatasetServiceImpl {
   @Transactional
   public void archive(UUID datasetPublicId) {
     Dataset dataset = getDatasetOrThrow(datasetPublicId);
+    log.info("Archiving dataset: publicId={}, name='{}'", dataset.getPublicId(), dataset.getName());
     dataset.softDelete();
     datasetRepository.save(dataset);
   }
@@ -184,6 +186,8 @@ public class DatasetServiceImpl {
   public DatasetJobResponse startImport(UUID datasetPublicId, MultipartFile file, String sheetName, String email) {
     Dataset dataset = getDatasetOrThrow(datasetPublicId);
     User user = getUser(email);
+    log.info("Starting Excel import: dataset={}, file='{}', size={} bytes, sheet='{}', user={}",
+        datasetPublicId, file.getOriginalFilename(), file.getSize(), sheetName, email);
     DatasetJob job =
         jobRepository.save(
             DatasetJob.builder()
@@ -195,6 +199,7 @@ public class DatasetServiceImpl {
                 .message("Queued Excel import")
                 .build());
     byte[] bytes = readFileBytes(file);
+    log.info("Excel import job queued: jobId={}, datasetId={}", job.getPublicId(), datasetPublicId);
     executeAfterCommit(() -> runImport(job.getPublicId(), bytes));
     return toJobResponse(job);
   }
@@ -218,6 +223,7 @@ public class DatasetServiceImpl {
     if (job.getStatus() != DatasetJobStatus.NEEDS_CONFIRMATION) {
       throw ResourceException.of(ErrorCode.BAD_REQUEST, "Import job is not waiting for confirmation.");
     }
+    log.info("Import confirmation received: jobId={}, mappings={}", jobPublicId, request.mappings().size());
     executeAfterCommit(() -> runImportConfirmation(jobPublicId, request));
     return toJobResponse(job);
   }
@@ -336,6 +342,8 @@ public class DatasetServiceImpl {
     if (version.getInvalidRows() > 0 || version.getStatus() == DatasetVersionStatus.INVALID) {
       throw ResourceException.of(ErrorCode.VALIDATION_ERROR, "Cannot activate an invalid dataset version.");
     }
+    log.info("Activating dataset version: dataset={}, version=v{}, rows={}",
+        datasetPublicId, version.getVersionNumber(), version.getTotalRows());
     version.setStatus(DatasetVersionStatus.ACTIVE);
     versionRepository.save(version);
     dataset.setActiveVersionId(version.getId());
@@ -361,9 +369,11 @@ public class DatasetServiceImpl {
   }
 
   private void runImport(UUID jobPublicId, byte[] bytes) {
+    log.info("[IMPORT] Starting async import: jobId={}, fileSize={} bytes", jobPublicId, bytes.length);
     transactionTemplate.executeWithoutResult(status -> {
       DatasetJob job = markRunning(jobPublicId, "Parsing Excel", 10);
       if (isCancelRequested(job)) {
+        log.info("[IMPORT] Job cancelled before start: jobId={}", jobPublicId);
         markCancelled(job);
         return;
       }
@@ -376,10 +386,12 @@ public class DatasetServiceImpl {
           } catch (Exception ignored) {}
         }
         ImportPayload payload = parseExcel(bytes, sheetName);
+        log.info("[IMPORT] Parsed Excel: jobId={}, headers={}, rows={}", jobPublicId, payload.headers(), payload.rows().size());
         Dataset dataset = getDatasetById(job.getDatasetId());
         List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
         List<DatasetColumnMappingSuggestionResponse> suggestions = suggestMappings(payload.headers(), columns);
         boolean needsConfirmation = suggestions.stream().anyMatch(DatasetColumnMappingSuggestionResponse::newColumn);
+        log.info("[IMPORT] Column mapping: jobId={}, needsConfirmation={}, suggestions={}", jobPublicId, needsConfirmation, suggestions.size());
         job.setPayload(writeJson(Map.of("headers", payload.headers(), "rows", payload.rows())));
         if (needsConfirmation) {
           job.setStatus(DatasetJobStatus.NEEDS_CONFIRMATION);
@@ -387,6 +399,7 @@ public class DatasetServiceImpl {
           job.setMessage("Confirm column mapping");
           job.setResult(writeJson(suggestions));
           jobRepository.save(job);
+          log.info("[IMPORT] Awaiting user confirmation: jobId={}", jobPublicId);
           return;
         }
         List<Map<String, Object>> mappedRows =
@@ -394,7 +407,9 @@ public class DatasetServiceImpl {
         DatasetVersion version =
             createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.IMPORTED, job.getCreatedBy(), mappedRows, columns);
         completeJob(job, version, "Import completed");
+        log.info("[IMPORT] Completed: jobId={}, version=v{}, rows={}", jobPublicId, version.getVersionNumber(), mappedRows.size());
       } catch (Exception ex) {
+        log.error("[IMPORT] Failed: jobId={}", jobPublicId, ex);
         status.setRollbackOnly();
         transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "Import failed: " + ex.getMessage()));
       }
@@ -402,9 +417,11 @@ public class DatasetServiceImpl {
   }
 
   private void runImportConfirmation(UUID jobPublicId, ConfirmDatasetImportRequest request) {
+    log.info("[IMPORT-CONFIRM] Starting: jobId={}, mappings={}", jobPublicId, request.mappings().size());
     transactionTemplate.executeWithoutResult(status -> {
       DatasetJob job = markRunning(jobPublicId, "Applying mapping", 60);
       if (isCancelRequested(job)) {
+        log.info("[IMPORT-CONFIRM] Cancelled: jobId={}", jobPublicId);
         markCancelled(job);
         return;
       }
@@ -417,7 +434,9 @@ public class DatasetServiceImpl {
         List<SchemaColumn> updatedColumns = currentColumns(dataset.getProjectId());
         DatasetVersion version = createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.IMPORTED, job.getCreatedBy(), mappedRows, updatedColumns);
         completeJob(job, version, "Import completed");
+        log.info("[IMPORT-CONFIRM] Completed: jobId={}, version=v{}, rows={}", jobPublicId, version.getVersionNumber(), mappedRows.size());
       } catch (Exception ex) {
+        log.error("[IMPORT-CONFIRM] Failed: jobId={}", jobPublicId, ex);
         status.setRollbackOnly();
         transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "Import confirmation failed: " + ex.getMessage()));
       }
@@ -425,9 +444,11 @@ public class DatasetServiceImpl {
   }
 
   private void runGeneration(UUID jobPublicId) {
+    log.info("[AI-GEN] Starting: jobId={}", jobPublicId);
     transactionTemplate.executeWithoutResult(status -> {
       DatasetJob job = markRunning(jobPublicId, "Preparing AI prompt", 15);
       if (isCancelRequested(job)) {
+        log.info("[AI-GEN] Cancelled: jobId={}", jobPublicId);
         markCancelled(job);
         return;
       }
@@ -443,6 +464,7 @@ public class DatasetServiceImpl {
         if (!StringUtils.hasText(apiKey)) {
           throw ResourceException.of(ErrorCode.BAD_REQUEST, "Missing AI API key.");
         }
+        log.info("[AI-GEN] Calling provider: jobId={}, provider={}, model={}", jobPublicId, aiConfig.getProvider(), aiConfig.getEvaluationModel());
         updateJob(job, DatasetJobStatus.RUNNING, 35, "Calling AI provider");
         AiExecutionResult result =
             providerFactory
@@ -454,7 +476,9 @@ public class DatasetServiceImpl {
         List<Map<String, Object>> rows = parseGeneratedRows(result.generatedText());
         DatasetVersion version = createVersion(dataset, dataset.getSchemaVersionId(), DatasetSource.AI_GENERATED, job.getCreatedBy(), rows, columns);
         completeJob(job, version, "AI generation completed");
+        log.info("[AI-GEN] Completed: jobId={}, version=v{}, rows={}", jobPublicId, version.getVersionNumber(), rows.size());
       } catch (Exception ex) {
+        log.error("[AI-GEN] Failed: jobId={}", jobPublicId, ex);
         status.setRollbackOnly();
         transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "AI generation failed: " + ex.getMessage()));
       }
@@ -462,9 +486,11 @@ public class DatasetServiceImpl {
   }
 
   private void runExport(UUID jobPublicId) {
+    log.info("[EXPORT] Starting: jobId={}", jobPublicId);
     transactionTemplate.executeWithoutResult(status -> {
       DatasetJob job = markRunning(jobPublicId, "Preparing Excel export", 40);
       if (isCancelRequested(job)) {
+        log.info("[EXPORT] Cancelled: jobId={}", jobPublicId);
         markCancelled(job);
         return;
       }
@@ -472,7 +498,9 @@ public class DatasetServiceImpl {
         DatasetVersion version = getVersionById(job.getDatasetVersionId());
         buildWorkbookBytes(version);
         completeJob(job, version, "Export ready");
+        log.info("[EXPORT] Completed: jobId={}, version=v{}", jobPublicId, version.getVersionNumber());
       } catch (Exception ex) {
+        log.error("[EXPORT] Failed: jobId={}", jobPublicId, ex);
         status.setRollbackOnly();
         transactionTemplate.executeWithoutResult(s -> failJob(getJobOrThrow(jobPublicId), "Export failed: " + ex.getMessage()));
       }
@@ -486,8 +514,11 @@ public class DatasetServiceImpl {
       Long userId,
       List<Map<String, Object>> rows,
       List<SchemaColumn> columns) {
+    log.debug("Creating version: dataset={}, source={}, rows={}, columns={}",
+        dataset.getPublicId(), source, rows.size(), columns.size());
     List<DatasetValidationError> schemaErrors = validationService.validateSchemaReadiness(columns);
     if (!schemaErrors.isEmpty()) {
+      log.warn("Schema not ready: dataset={}, errors={}", dataset.getPublicId(), schemaErrors);
       throw ResourceException.of(
           ErrorCode.VALIDATION_ERROR,
           schemaErrors.stream()
@@ -508,6 +539,8 @@ public class DatasetServiceImpl {
             .map(version -> version.getVersionNumber() + 1)
             .orElse(1);
     int invalidRows = errorsByRow.size();
+    log.info("Version created: dataset={}, v{}, total={}, valid={}, invalid={}, source={}",
+        dataset.getPublicId(), versionNumber, rows.size(), rows.size() - invalidRows, invalidRows, source);
     DatasetVersion version =
         versionRepository.save(
             DatasetVersion.builder()
