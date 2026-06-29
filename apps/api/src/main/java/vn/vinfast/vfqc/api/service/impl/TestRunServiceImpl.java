@@ -139,38 +139,6 @@ public class TestRunServiceImpl implements TestRunService {
     this.transactionTemplate = transactionTemplate;
   }
 
-  TestRunServiceImpl(
-      ProjectRepository projectRepository,
-      UserRepository userRepository,
-      TargetConfigRepository targetConfigRepository,
-      JpaAiConfigRepository aiConfigRepository,
-      JpaProjectSchemaRepository schemaRepository,
-      JpaDatasetRepository datasetRepository,
-      JpaDatasetVersionRepository datasetVersionRepository,
-      JpaVerificationConfigRepository verificationConfigRepository,
-      JpaTestRunRepository testRunRepository,
-      EvalJobPublisher evalJobPublisher) {
-    this(
-        projectRepository,
-        userRepository,
-        targetConfigRepository,
-        aiConfigRepository,
-        schemaRepository,
-        datasetRepository,
-        datasetVersionRepository,
-        verificationConfigRepository,
-        testRunRepository,
-        evalJobPublisher,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null);
-  }
 
   @Override
   @Transactional(readOnly = true)

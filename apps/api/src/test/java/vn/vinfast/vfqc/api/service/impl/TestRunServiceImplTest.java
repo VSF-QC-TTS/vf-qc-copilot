@@ -50,6 +50,12 @@ import vn.vinfast.vfqc.api.repository.JpaVerificationConfigRepository;
 import vn.vinfast.vfqc.api.repository.ProjectRepository;
 import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
 import vn.vinfast.vfqc.api.repository.UserRepository;
+import vn.vinfast.vfqc.api.repository.JpaTestRunCustomColumnRepository;
+import vn.vinfast.vfqc.api.repository.JpaTestResultCustomValueRepository;
+import vn.vinfast.vfqc.api.repository.JpaTestResultOverrideRepository;
+import vn.vinfast.vfqc.api.repository.JpaTestRunJobRepository;
+import java.util.concurrent.Executor;
+import org.springframework.transaction.support.TransactionTemplate;
 import vn.vinfast.vfqc.api.service.runner.EvalJobPublisher;
 import vn.vinfast.vfqc.api.service.runner.EvalRunJobMessage;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
@@ -71,6 +77,12 @@ class TestRunServiceImplTest {
   @Mock private JpaTestResultRepository testResultRepository;
   @Mock private JpaRunEventRepository runEventRepository;
   @Mock private JpaAssertionResultRepository assertionResultRepository;
+  @Mock private JpaTestRunCustomColumnRepository testRunCustomColumnRepository;
+  @Mock private JpaTestResultCustomValueRepository testResultCustomValueRepository;
+  @Mock private JpaTestResultOverrideRepository testResultOverrideRepository;
+  @Mock private JpaTestRunJobRepository testRunJobRepository;
+  @Mock private Executor taskExecutor;
+  @Mock private TransactionTemplate transactionTemplate;
 
   private TestRunServiceImpl service;
   private UUID projectPublicId;
@@ -92,7 +104,13 @@ class TestRunServiceImplTest {
             evalJobPublisher,
             testResultRepository,
             runEventRepository,
-            assertionResultRepository);
+            assertionResultRepository,
+            testRunCustomColumnRepository,
+            testResultCustomValueRepository,
+            testResultOverrideRepository,
+            testRunJobRepository,
+            taskExecutor,
+            transactionTemplate);
 
     projectPublicId = UUID.randomUUID();
     datasetPublicId = UUID.randomUUID();
