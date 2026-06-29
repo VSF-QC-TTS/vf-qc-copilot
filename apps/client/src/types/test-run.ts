@@ -68,6 +68,55 @@ export interface AssertionResultResponse {
   createdAt: string
 }
 
+export interface CustomColumnResponse {
+  publicId: string
+  columnName: string
+  dataType: string
+}
+
+export interface CustomValueResponse {
+  customColumnPublicId: string
+  value: string | null
+}
+
+export interface TestResultOverrideResponse {
+  publicId: string
+  overriddenStatus: TestCaseStatus
+  overriddenScore: number
+  correctedReason: string | null
+  correctedByUserEmail: string
+  createdAt: string
+}
+
+export interface AddCustomColumnRequest {
+  columnName: string
+  dataType: string
+}
+
+export interface SaveCustomValueRequest {
+  customColumnPublicId: string
+  value: string | null
+}
+
+export interface OverrideResultRequest {
+  overriddenStatus: TestCaseStatus
+  overriddenScore: number
+  correctedReason: string | null
+}
+
+export interface TestRunJobResponse {
+  publicId: string
+  runPublicId: string | null
+  type: string
+  status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  progress: number
+  message: string | null
+  errorMessage: string | null
+  createdAt: string
+  updatedAt: string
+  completedAt: string | null
+}
+
 export interface TestResultResponse {
   publicId: string
   runPublicId: string
@@ -81,6 +130,8 @@ export interface TestResultResponse {
   errorMessage: string | null
   latencyMs: number | null
   assertions: AssertionResultResponse[]
+  customValues: CustomValueResponse[]
+  override: TestResultOverrideResponse | null
   createdAt: string
 }
 

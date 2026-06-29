@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiError, apiClient, getAccessToken } from './api-client'
+import { ApiError, apiClient, authorizedFetch, throwApiError } from './api-client'
 import { isApiError } from './api-error'
 import type {
   ConfirmDatasetImportRequest,
@@ -185,18 +185,7 @@ export async function streamDatasetJobEvents(
   }
 }
 
-async function authorizedFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const headers = new Headers(init.headers)
-  const token = getAccessToken()
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
-  }
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-    credentials: 'include',
-  })
-}
+
 
 async function readJsonResponse<T>(res: Response): Promise<T> {
   const data: unknown = await res.json()
@@ -209,13 +198,7 @@ async function readJsonResponse<T>(res: Response): Promise<T> {
   return data as T
 }
 
-async function throwApiError(res: Response): Promise<never> {
-  const data: unknown = await res.json().catch(() => null)
-  if (isApiError(data)) {
-    throw new ApiError(data)
-  }
-  throw new Error('Request failed')
-}
+
 
 function parseFilename(disposition: string | null): string | null {
   if (!disposition) {

@@ -191,7 +191,7 @@ export function DatasetListPage() {
                       {schemaColumns.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 border-t border-muted/50 pt-3">
                           {schemaColumns.map((col) => {
-                            const isEvaluated = evaluatedColumns.has(col.publicId)
+                            const isEvaluated = evaluatedColumns.has(col.columnName)
                             return (
                               <Badge
                                 key={col.columnName}
@@ -202,7 +202,7 @@ export function DatasetListPage() {
                                     : 'bg-muted/30 text-muted-foreground'
                                 }`}
                               >
-                                {isEvaluated && <Target className="mr-1 size-2.5" />}
+                                {isEvaluated && <Target data-icon="inline-start" />}
                                 {col.columnName}
                               </Badge>
                             )

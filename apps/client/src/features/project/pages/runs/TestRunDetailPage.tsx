@@ -8,6 +8,9 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   CopyIcon,
+  Plus,
+  Download,
+  Check,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
@@ -18,13 +21,31 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
+import { FieldGroup, Field, FieldLabel } from '@/components/ui/field'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   useTestRun,
   useTestRunResults,
   useCancelTestRun,
   isRunActive,
+  useCustomColumns,
+  useAddCustomColumn,
+  useSaveCustomValue,
+  useOverrideResult,
+  usePrepareTestRunExport,
 } from '../../hooks/use-test-runs'
 import { RunStatusBadge, CaseStatusBadge } from '../../components/RunStatusBadge'
+import { TestRunJobProgressDialog } from '../../components/TestRunJobProgressDialog'
+import { downloadTestRunExcel } from '@/lib/test-run-api'
+import type { TestCaseStatus } from '@/types/test-run'
 
 function formatScore(value: number | null): string {
   return value == null ? '-' : `${Math.round(value * 100)}%`
@@ -64,6 +85,34 @@ export function TestRunDetailPage() {
   const poll = isRunActive(run)
   const resultsQuery = useTestRunResults(runId, poll, 0, 100) // fetch up to 100 cases
   const cancelMutation = useCancelTestRun(publicId)
+
+  const customColumnsQuery = useCustomColumns(runId)
+  const customColumns = customColumnsQuery.data
+  const addColMutation = useAddCustomColumn(runId)
+  const saveValueMutation = useSaveCustomValue(runId)
+  const overrideMutation = useOverrideResult(runId)
+
+  const [addColOpen, setAddColOpen] = useState(false)
+  const [newColName, setNewColName] = useState('')
+
+  const [exportJob, setExportJob] = useState<any>(null)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const exportMutation = usePrepareTestRunExport(publicId, runId)
+
+  const handleExportExcel = () => {
+    exportMutation.mutate(undefined, {
+      onSuccess: (job) => {
+        setExportJob(job)
+        setExportDialogOpen(true)
+      }
+    })
+  }
+
+  const handleExportComplete = (completedJob: any) => {
+    if (completedJob.status === 'COMPLETED' && publicId && runId) {
+      void downloadTestRunExcel(publicId, runId, completedJob.publicId)
+    }
+  }
 
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PASSED' | 'FAILED' | 'ERROR'>('ALL')
@@ -178,6 +227,32 @@ export function TestRunDetailPage() {
         </div>
 
         <div className="flex gap-2">
+          {run && run.status === 'COMPLETED' && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 rounded-lg"
+                onClick={() => setAddColOpen(true)}
+              >
+                <Plus data-icon="inline-start" />
+                Thêm cột QC
+              </Button>
+
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="h-9 rounded-lg"
+                disabled={exportMutation.isPending}
+                onClick={handleExportExcel}
+              >
+                {exportMutation.isPending ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
+                Xuất Excel
+              </Button>
+            </>
+          )}
           {run && (run.status === 'QUEUED' || run.status === 'RUNNING') && (
             <Button
               type="button"
@@ -462,42 +537,86 @@ export function TestRunDetailPage() {
                 return (
                   <div key={item.publicId} className="transition-all hover:bg-muted/5">
                     {/* Compact row summary */}
-                    <div
-                      onClick={() => toggleCase(item.publicId)}
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-5 py-3.5 cursor-pointer gap-3 select-none"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="font-mono text-sm font-bold text-muted-foreground/80 shrink-0">#{item.caseIndex}</span>
-                        <CaseStatusBadge status={item.status} />
-                        <div className="min-w-0">
-                          <p className="text-xs font-mono font-medium text-foreground truncate max-w-lg" title={item.inputData ?? undefined}>
-                            Input: {item.inputData}
-                          </p>
-                        </div>
-                      </div>
+                    {(() => {
+                      const displayStatus = item.override ? item.override.overriddenStatus : item.status
+                      const displayScore = item.override ? item.override.overriddenScore : item.score
+                      return (
+                        <div
+                          onClick={() => toggleCase(item.publicId)}
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-5 py-3.5 cursor-pointer gap-3 select-none"
+                        >
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <span className="font-mono text-sm font-bold text-muted-foreground/80 shrink-0">#{item.caseIndex}</span>
+                            <CaseStatusBadge status={displayStatus} />
+                            {item.override && (
+                              <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-500/20 bg-amber-500/5 select-none font-bold text-[10px] gap-1 shrink-0 py-0.5">
+                                <Check data-icon="inline-start" />
+                                QC Sửa
+                              </Badge>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-mono font-medium text-foreground truncate max-w-lg" title={item.inputData ?? undefined}>
+                                Input: {item.inputData}
+                              </p>
+                              {customColumns && customColumns.length > 0 && (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex flex-wrap items-center gap-3 mt-1.5 pt-1 border-t border-border/20"
+                                >
+                                  {customColumns.map((col) => {
+                                    const cellVal = item.customValues?.find((v) => v.customColumnPublicId === col.publicId)?.value ?? ''
+                                    return (
+                                      <div key={col.publicId} className="flex items-center gap-1">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{col.columnName}:</span>
+                                        <input
+                                          type="text"
+                                          className="w-28 h-6 px-1.5 text-[10px] rounded border bg-background/50 focus:bg-background focus:ring-1 focus:ring-ring focus:outline-none transition-all"
+                                          defaultValue={cellVal}
+                                          onBlur={(e) => {
+                                            const val = e.target.value
+                                            if (val !== cellVal) {
+                                              saveValueMutation.mutate({
+                                                resultPublicId: item.publicId,
+                                                data: {
+                                                  customColumnPublicId: col.publicId,
+                                                  value: val,
+                                                }
+                                              })
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
-                      <div className="flex items-center gap-4.5 self-end sm:self-auto text-xs shrink-0">
-                        <div>
-                          <span className="text-muted-foreground">Score: </span>
-                          <span className="font-mono font-bold text-foreground">{formatScore(item.score)}</span>
+                          <div className="flex items-center gap-4.5 self-end sm:self-auto text-xs shrink-0">
+                            <div>
+                              <span className="text-muted-foreground">Score: </span>
+                              <span className="font-mono font-bold text-foreground">{formatScore(displayScore)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Latency: </span>
+                              <span className="font-mono font-semibold text-foreground">{formatDuration(item.latencyMs)}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Assertions: </span>
+                              <Badge variant="secondary" className="font-mono font-semibold">
+                                {item.assertions.filter((a) => a.passed).length}/{item.assertions.length}
+                              </Badge>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronUpIcon className="size-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDownIcon className="size-4 text-muted-foreground" />
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Latency: </span>
-                          <span className="font-mono font-semibold text-foreground">{formatDuration(item.latencyMs)}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Assertions: </span>
-                          <Badge variant="secondary" className="font-mono font-semibold">
-                            {item.assertions.filter((a) => a.passed).length}/{item.assertions.length}
-                          </Badge>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronUpIcon className="size-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDownIcon className="size-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </div>
+                      )
+                    })()}
 
                     {/* Expanded details section */}
                     <AnimatePresence>
@@ -618,6 +737,92 @@ export function TestRunDetailPage() {
                                   })}
                                 </div>
                               )}
+
+                              {/* QC Override Panel */}
+                              <div className="rounded-lg border bg-background p-4.5 shadow-sm mt-2">
+                                <div className="flex items-center justify-between border-b pb-2.5 mb-4">
+                                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Hiệu chỉnh kết quả (QC Override)</h4>
+                                  {item.override ? (
+                                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 gap-1 font-bold text-[10px] py-0.5">
+                                      <Check data-icon="inline-start" />
+                                      Đã hiệu chỉnh bởi {item.override.correctedByUserEmail}
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-muted-foreground text-[10px] py-0.5">Chưa hiệu chỉnh</Badge>
+                                  )}
+                                </div>
+
+                                <form onSubmit={(e) => {
+                                  e.preventDefault()
+                                  const form = e.currentTarget
+                                  const status = (form.elements.namedItem('status') as HTMLSelectElement).value as TestCaseStatus
+                                  const score = parseFloat((form.elements.namedItem('score') as HTMLInputElement).value) / 100
+                                  const reason = (form.elements.namedItem('reason') as HTMLTextAreaElement).value
+                                  
+                                  overrideMutation.mutate({
+                                    resultPublicId: item.publicId,
+                                    data: {
+                                      overriddenStatus: status,
+                                      overriddenScore: score,
+                                      correctedReason: reason,
+                                    }
+                                  })
+                                }}>
+                                  <FieldGroup className="gap-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <Field>
+                                        <FieldLabel className="text-xs font-semibold">Trạng thái QC</FieldLabel>
+                                        <select
+                                          name="status"
+                                          className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-ring"
+                                          defaultValue={item.override?.overriddenStatus ?? item.status}
+                                        >
+                                          <option value="PASSED">Đạt (PASSED)</option>
+                                          <option value="FAILED">Không đạt (FAILED)</option>
+                                          <option value="ERROR">Lỗi (ERROR)</option>
+                                        </select>
+                                      </Field>
+
+                                      <Field>
+                                        <FieldLabel className="text-xs font-semibold">Điểm số QC (%)</FieldLabel>
+                                        <Input
+                                          type="number"
+                                          name="score"
+                                          min="0"
+                                          max="100"
+                                          defaultValue={Math.round((item.override?.overriddenScore ?? item.score ?? 0) * 100)}
+                                          placeholder="0-100"
+                                          className="h-9 text-xs rounded-lg"
+                                          required
+                                        />
+                                      </Field>
+                                    </div>
+
+                                    <Field>
+                                      <FieldLabel className="text-xs font-semibold">Lý do hiệu chỉnh</FieldLabel>
+                                      <textarea
+                                        name="reason"
+                                        rows={2}
+                                        defaultValue={item.override?.correctedReason ?? ''}
+                                        className="flex min-h-[60px] w-full rounded-lg border border-input bg-background px-3 py-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-ring transition-colors"
+                                        placeholder="Nhập lý do hoặc bug ID..."
+                                      />
+                                    </Field>
+
+                                    <div className="flex justify-end">
+                                      <Button
+                                        type="submit"
+                                        size="sm"
+                                        disabled={overrideMutation.isPending}
+                                        className="h-8 text-xs rounded-lg"
+                                      >
+                                        {overrideMutation.isPending && <Spinner data-icon="inline-start" />}
+                                        Lưu hiệu chỉnh
+                                      </Button>
+                                    </div>
+                                  </FieldGroup>
+                                </form>
+                              </div>
                             </div>
                           </div>
                         </motion.div>
@@ -630,6 +835,61 @@ export function TestRunDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={addColOpen} onOpenChange={setAddColOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Thêm cột QC tùy chỉnh</DialogTitle>
+            <DialogDescription>
+              Tạo trường thông tin đánh giá mới (Ví dụ: Bug ID, Ghi chú QC, ...).
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!newColName.trim()) return
+              addColMutation.mutate(
+                { columnName: newColName.trim(), dataType: 'TEXT' },
+                {
+                  onSuccess: () => {
+                    setAddColOpen(false)
+                    setNewColName('')
+                  },
+                }
+              )
+            }}
+          >
+            <FieldGroup className="gap-4 py-4">
+              <Field>
+                <FieldLabel>Tên cột</FieldLabel>
+                <Input
+                  value={newColName}
+                  onChange={(e) => setNewColName(e.target.value)}
+                  placeholder="Ví dụ: Bug ID, QC Notes"
+                  autoFocus
+                  required
+                />
+              </Field>
+            </FieldGroup>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddColOpen(false)}>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={addColMutation.isPending}>
+                {addColMutation.isPending && <Spinner data-icon="inline-start" />}
+                Thêm cột
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <TestRunJobProgressDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        job={exportJob}
+        onComplete={handleExportComplete}
+      />
     </div>
   )
 }

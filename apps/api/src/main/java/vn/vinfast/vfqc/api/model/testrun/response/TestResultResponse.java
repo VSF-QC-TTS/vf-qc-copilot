@@ -19,4 +19,6 @@ public record TestResultResponse(
     String errorMessage,
     Long latencyMs,
     List<AssertionResultResponse> assertions,
+    List<CustomValueResponse> customValues,
+    TestResultOverrideResponse override,
     OffsetDateTime createdAt) {}

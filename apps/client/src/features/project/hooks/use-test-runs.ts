@@ -8,8 +8,19 @@ import {
   listTestRunEvents,
   listTestRunResults,
   listTestRuns,
+  listCustomColumns,
+  addCustomColumn,
+  saveCustomValue,
+  overrideResult,
+  prepareTestRunExport,
 } from '@/lib/test-run-api'
-import type { CreateTestRunRequest, TestRunResponse } from '@/types/test-run'
+import type {
+  CreateTestRunRequest,
+  TestRunResponse,
+  AddCustomColumnRequest,
+  SaveCustomValueRequest,
+  OverrideResultRequest,
+} from '@/types/test-run'
 
 export function isRunActive(run: TestRunResponse | undefined): boolean {
   return run?.status === 'QUEUED' || run?.status === 'RUNNING'
@@ -77,6 +88,60 @@ export function useCancelTestRun(projectPublicId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['testRuns', projectPublicId] })
       queryClient.setQueryData(['testRun', run.publicId], run)
     },
+    onError: (error: Error) => toast.error(error.message),
+  })
+}
+
+export function useCustomColumns(runPublicId: string | undefined) {
+  return useQuery({
+    queryKey: ['customColumns', runPublicId],
+    queryFn: () => listCustomColumns(runPublicId!),
+    enabled: Boolean(runPublicId),
+  })
+}
+
+export function useAddCustomColumn(runPublicId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: AddCustomColumnRequest) => addCustomColumn(runPublicId!, data),
+    onSuccess: () => {
+      toast.success('Đã thêm cột tùy chỉnh')
+      queryClient.invalidateQueries({ queryKey: ['customColumns', runPublicId] })
+      queryClient.invalidateQueries({ queryKey: ['testRunResults', runPublicId] })
+    },
+    onError: (error: Error) => toast.error(error.message),
+  })
+}
+
+export function useSaveCustomValue(runPublicId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ resultPublicId, data }: { resultPublicId: string; data: SaveCustomValueRequest }) =>
+      saveCustomValue(resultPublicId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['testRunResults', runPublicId] })
+    },
+    onError: (error: Error) => toast.error(error.message),
+  })
+}
+
+export function useOverrideResult(runPublicId: string | undefined) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ resultPublicId, data }: { resultPublicId: string; data: OverrideResultRequest }) =>
+      overrideResult(resultPublicId, data),
+    onSuccess: () => {
+      toast.success('Đã hiệu chỉnh kết quả')
+      queryClient.invalidateQueries({ queryKey: ['testRun', runPublicId] })
+      queryClient.invalidateQueries({ queryKey: ['testRunResults', runPublicId] })
+    },
+    onError: (error: Error) => toast.error(error.message),
+  })
+}
+
+export function usePrepareTestRunExport(projectPublicId: string | undefined, runPublicId: string | undefined) {
+  return useMutation({
+    mutationFn: () => prepareTestRunExport(projectPublicId!, runPublicId!),
     onError: (error: Error) => toast.error(error.message),
   })
 }

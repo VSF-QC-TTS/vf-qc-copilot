@@ -182,3 +182,23 @@ export async function apiClient<T>(
     }
   }
 }
+
+export async function authorizedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers)
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`)
+  }
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers,
+    credentials: 'include',
+  })
+}
+
+export async function throwApiError(res: Response): Promise<never> {
+  const data: unknown = await res.json().catch(() => null)
+  if (isApiError(data)) {
+    throw new ApiError(data)
+  }
+  throw new Error('Request failed')
+}
