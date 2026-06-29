@@ -10,5 +10,8 @@ import jakarta.validation.constraints.NotBlank;
 public record ExecuteCurlRequest(
     @NotBlank(message = "invalid-curl")
     @Schema(description = "The raw cURL command string to execute", example = "curl -X GET https://api.example.com")
-    String curl
+    String curl,
+
+    @Schema(description = "Optional override for the body template containing placeholders like {{prompt}}")
+    String bodyTemplate
 ) {}

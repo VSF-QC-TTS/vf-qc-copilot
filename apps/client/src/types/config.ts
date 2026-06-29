@@ -61,6 +61,7 @@ export interface SaveTargetConfigRequest {
 
 export interface ExecuteCurlRequest {
   curl: string
+  bodyTemplate?: string
 }
 
 export interface SecretDetection {

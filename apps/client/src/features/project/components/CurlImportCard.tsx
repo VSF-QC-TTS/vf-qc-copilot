@@ -9,8 +9,10 @@ import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 
+import parseCurl from 'parse-curl'
+
 interface CurlImportCardProps {
-  onImport: (curl: string) => void
+  onImport: (curl: string, bodyTemplate?: string) => void
   isPending: boolean
   initialValue?: string | null
   hasExistingConfig?: boolean
@@ -18,21 +20,45 @@ interface CurlImportCardProps {
 
 export function CurlImportCard({ onImport, isPending, initialValue, hasExistingConfig }: CurlImportCardProps) {
   const [curlInput, setCurlInput] = useState(initialValue ?? '')
+  const [jsonBody, setJsonBody] = useState('')
   const hasUserEdited = useRef(false)
 
   useEffect(() => {
     if (initialValue && !hasUserEdited.current) {
       setCurlInput(initialValue)
+      tryParseCurlBody(initialValue)
     }
   }, [initialValue])
 
+  function tryParseCurlBody(curlStr: string) {
+    try {
+      const parsed = parseCurl(curlStr)
+      if (parsed.body) {
+        try {
+          // If it's valid JSON, format it nicely
+          const parsedJson = JSON.parse(parsed.body)
+          setJsonBody(JSON.stringify(parsedJson, null, 2))
+        } catch {
+          // Fallback to raw string if not JSON
+          setJsonBody(parsed.body)
+        }
+      } else {
+        setJsonBody('')
+      }
+    } catch {
+      // Ignore parse errors while typing
+    }
+  }
+
   function handleCurlInputChange(event: ChangeEvent<HTMLTextAreaElement>): void {
     hasUserEdited.current = true
-    setCurlInput(event.target.value)
+    const val = event.target.value
+    setCurlInput(val)
+    tryParseCurlBody(val)
   }
 
   const handleImport = () => {
-    onImport(curlInput)
+    onImport(curlInput, jsonBody.trim() ? jsonBody : undefined)
     // Do NOT clear curlInput — keep it visible
   }
 
@@ -69,11 +95,39 @@ export function CurlImportCard({ onImport, isPending, initialValue, hasExistingC
                   value={curlInput}
                   onChange={handleCurlInputChange}
                   placeholder="Ví dụ:&#10;curl -X POST https://api.atomesus.com/v1/chat/completions \&#10;  -H 'Content-Type: application/json' \&#10;  -H 'Authorization: SECRET_REDACTED' \&#10;  -d '{...}'"
-                  className="flex-1 resize-none font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[180px] text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-700 leading-relaxed selection:bg-zinc-200 dark:selection:bg-zinc-800 selection:text-zinc-900 dark:selection:text-zinc-100"
+                  className="flex-1 resize-none font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[120px] text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-700 leading-relaxed selection:bg-zinc-200 dark:selection:bg-zinc-800 selection:text-zinc-900 dark:selection:text-zinc-100"
                   style={{ scrollbarWidth: 'thin' }}
                 />
               </InputGroup>
             </div>
+
+            {/* JSON Body Editor Box */}
+            <motion.div 
+              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+              animate={{ height: jsonBody ? 'auto' : 0, opacity: jsonBody ? 1 : 0, marginTop: jsonBody ? 16 : 0 }}
+              className="overflow-hidden"
+            >
+              <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-[#1e1e1e] text-[#d4d4d4] shadow-md relative">
+                <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#3c3c3c] select-none shrink-0">
+                  <span className="text-[11px] font-mono text-[#cccccc] uppercase tracking-widest font-semibold flex items-center gap-2">
+                    <span className="text-yellow-500">{}</span> JSON Body (Template)
+                  </span>
+                </div>
+                <div className="absolute top-2 right-4 text-[11px] text-zinc-400 bg-[#252526] px-2 py-0.5 rounded font-mono border border-[#3c3c3c]">
+                  Thay thế giá trị tĩnh thành <span className="text-[#ce9178]">{"{{prompt}}"}</span>
+                </div>
+                
+                <InputGroup className="flex-1 border-0 bg-transparent">
+                  <InputGroupTextarea
+                    value={jsonBody}
+                    onChange={(e) => setJsonBody(e.target.value)}
+                    placeholder='{ "message": "{{prompt}}" }'
+                    className="flex-1 resize-y font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[150px] text-[#9cdcfe] placeholder:text-zinc-600 leading-relaxed selection:bg-[#264f78]"
+                    style={{ scrollbarWidth: 'thin' }}
+                  />
+                </InputGroup>
+              </div>
+            </motion.div>
             
             <div className="mt-4 flex justify-end">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

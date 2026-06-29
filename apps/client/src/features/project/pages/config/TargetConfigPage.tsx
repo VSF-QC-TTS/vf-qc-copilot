@@ -46,10 +46,10 @@ export function TargetConfigPage() {
 
   const hasConfig = !!config && !error
 
-  const handleConnect = (curl: string) => {
+  const handleConnect = (curl: string, bodyTemplate?: string) => {
     setLastTestResult(null)
     setTestDialogOpen(true)
-    connectMutation.mutate({ curl }, {
+    connectMutation.mutate({ curl, bodyTemplate }, {
       onSuccess: (data) => {
         setLastTestResult(data.testResult)
         setResponsePathSynced(false)

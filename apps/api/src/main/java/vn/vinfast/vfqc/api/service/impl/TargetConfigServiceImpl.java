@@ -60,6 +60,11 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     log.info("Connecting target config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
     ParsedCurlCommand parsed = curlParser.parse(req.curl());
+    
+    String finalBody = req.bodyTemplate() != null ? req.bodyTemplate() : parsed.body();
+    if (finalBody != null && !finalBody.isBlank() && !finalBody.contains("{{prompt}}")) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Body template must contain {{prompt}} variable");
+    }
 
     // 1. Scan & encrypt secrets
     SecretScanResult secrets = secretManager.scanAndEncrypt(
@@ -73,7 +78,7 @@ public class TargetConfigServiceImpl implements TargetConfigService {
 
     entity.setMethod(parsed.method());
     entity.setUrl(parsed.url());
-    entity.setBodyTemplate(parsed.body());
+    entity.setBodyTemplate(finalBody);
     entity.setTimeoutMs(30000);
 
     // Redact secrets in cURL before saving
@@ -111,8 +116,17 @@ public class TargetConfigServiceImpl implements TargetConfigService {
       entity.setVersion(entity.getVersion() + 1);
     }
 
-    // 4. Execute the HTTP request (using original parsed headers, NOT the sanitized ones)
-    TestExecutionResult executionResult = targetHttpExecutor.execute(parsed, 30000);
+    // 4. Execute the HTTP request
+    // We replace {{prompt}} with a dummy text so the external API doesn't fail with syntax error
+    String testBody = finalBody != null ? finalBody.replace("{{prompt}}", "Hello from VFQ") : null;
+    ParsedCurlCommand testParsed = new ParsedCurlCommand(
+        parsed.method(),
+        parsed.url(),
+        parsed.headers(),
+        parsed.queryParams(),
+        testBody
+    );
+    TestExecutionResult executionResult = targetHttpExecutor.execute(testParsed, 30000);
 
     // 5. Update test status & response snapshot
     entity.setLastTestedAt(OffsetDateTime.now());
@@ -146,6 +160,10 @@ public class TargetConfigServiceImpl implements TargetConfigService {
 
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
+
+    if (req.bodyTemplate() != null && !req.bodyTemplate().isBlank() && !req.bodyTemplate().contains("{{prompt}}")) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Body template must contain {{prompt}} variable");
+    }
 
     SecretScanResult secrets = secretManager.scanAndEncrypt(
         req.headers(), req.queryParams(), project.getId(), "TARGET_CONFIG", project.getId());
