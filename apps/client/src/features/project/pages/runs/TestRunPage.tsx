@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { ActivityIcon, BarChart3Icon, ClockIcon, PlayIcon, SettingsIcon, type LucideIcon } from 'lucide-react'
+import { ActivityIcon, BarChart3Icon, ClockIcon, SettingsIcon, type LucideIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -83,17 +83,6 @@ export function TestRunPage() {
             Quản lý và theo dõi các phiên chạy test qua runner hệ thống.
           </p>
         </div>
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button 
-            type="button" 
-            disabled={!isSetupComplete} 
-            onClick={() => setCreateOpen(true)}
-            className="shadow-sm transition-all cursor-pointer"
-          >
-            <PlayIcon data-icon="inline-start" />
-            Tạo lượt chạy
-          </Button>
-        </motion.div>
       </div>
 
       {!isSetupComplete ? (
