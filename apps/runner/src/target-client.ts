@@ -8,19 +8,27 @@ export interface TargetCallResult {
   latencyMs: number;
 }
 
-export class TargetClient {
+export interface TargetCaller {
+  callTarget(target: TargetConfigPayload, rowData: Record<string, unknown>): Promise<TargetCallResult>;
+}
+
+export class TargetClient implements TargetCaller {
   public async callTarget(
     target: TargetConfigPayload,
     rowData: Record<string, unknown>,
   ): Promise<TargetCallResult> {
     const startedAt = Date.now();
     const url = this.buildUrl(target, rowData);
-    const response = await fetch(url, {
+    const init: RequestInit = {
       method: target.method,
       headers: this.buildHeaders(target, rowData),
-      body: this.buildBody(target, rowData),
       signal: AbortSignal.timeout(target.timeoutMs ?? 30_000),
-    });
+    };
+    const body = this.buildBody(target, rowData);
+    if (body !== undefined) {
+      init.body = body;
+    }
+    const response = await fetch(url, init);
     const rawText = await response.text();
     const rawResponse = this.parseResponse(rawText);
 

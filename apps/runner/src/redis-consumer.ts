@@ -1,6 +1,7 @@
 import { Redis } from 'ioredis';
 import type { RunnerConfig } from './config.js';
 import { logger } from './logger.js';
+import { parseWithSchema, redisRunJobFieldsSchema } from './schemas.js';
 
 export interface RunJobMessage {
   recordId: string;
@@ -61,12 +62,13 @@ export class RedisRunConsumer {
     }
 
     const fields = this.toObject(entry[1]);
-    const runId = fields.runId;
-    if (!runId) {
+    const parsed = redisRunJobFieldsSchema.safeParse(fields);
+    if (!parsed.success) {
       await this.ack(entry[0]);
-      throw new Error(`Redis job ${entry[0]} is missing runId`);
+      throw new Error(`Redis job ${entry[0]} validation failed: ${parsed.error.message}`);
     }
-    return { recordId: entry[0], runId };
+    const job = parseWithSchema(redisRunJobFieldsSchema, fields, `Redis job ${entry[0]}`);
+    return { recordId: entry[0], runId: job.runId };
   }
 
   public async ack(recordId: string): Promise<void> {

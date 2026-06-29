@@ -2,6 +2,7 @@ import type {
   EvalRunRequest,
   RunnerCaseResult,
 } from './types.js';
+import { cancelStatusSchema, evalRunRequestSchema, parseWithSchema } from './schemas.js';
 
 export class BackendClient {
   public constructor(
@@ -10,7 +11,8 @@ export class BackendClient {
   ) {}
 
   public async getEvalRequest(runId: string): Promise<EvalRunRequest> {
-    return this.request<EvalRunRequest>(`/internal/runs/${runId}/eval-request`, { method: 'GET' });
+    const response = await this.request<unknown>(`/internal/runs/${runId}/eval-request`, { method: 'GET' });
+    return parseWithSchema(evalRunRequestSchema, response, 'EvalRunRequest');
   }
 
   public async reportStarted(runId: string): Promise<void> {
@@ -47,11 +49,11 @@ export class BackendClient {
   }
 
   public async isCancellationRequested(runId: string): Promise<boolean> {
-    const response = await this.request<{ cancellationRequested: boolean }>(
+    const response = await this.request<unknown>(
       `/internal/runs/${runId}/cancel-status`,
       { method: 'GET' },
     );
-    return response.cancellationRequested;
+    return parseWithSchema(cancelStatusSchema, response, 'CancelStatusResponse').cancellationRequested;
   }
 
   private async request<T>(path: string, init: RequestInit): Promise<T> {

@@ -1,14 +1,12 @@
 import type { BackendClient } from './backend-client.js';
-import { AssertionEvaluator } from './assertion-evaluator.js';
 import { parseJsonObject, stringifyJson } from './json.js';
-import { TargetClient } from './target-client.js';
+import { PromptfooExecutor } from './promptfoo-executor.js';
 import type { EvalRunRequest, RunnerCaseResult, TestCaseStatus } from './types.js';
 
 export class RunExecutor {
   public constructor(
     private readonly backendClient: BackendClient,
-    private readonly targetClient = new TargetClient(),
-    private readonly assertionEvaluator = new AssertionEvaluator(),
+    private readonly promptfooExecutor = new PromptfooExecutor(),
   ) {}
 
   public async execute(request: EvalRunRequest): Promise<'COMPLETED' | 'CANCELLED'> {
@@ -38,8 +36,8 @@ export class RunExecutor {
     const rowData = parseJsonObject(inputData);
     const startedAt = Date.now();
     try {
-      const targetResult = await this.targetClient.callTarget(request.targetConfig, rowData);
-      const assertions = this.assertionEvaluator.evaluate(request, rowData, targetResult.output);
+      const execution = await this.promptfooExecutor.executeRow(request, rowData);
+      const assertions = execution.assertions;
       const passedAssertions = assertions.filter((assertion) => assertion.passed).length;
       const score = assertions.length === 0 ? 1 : passedAssertions / assertions.length;
       const passed = assertions.every((assertion) => assertion.passed);
@@ -47,13 +45,13 @@ export class RunExecutor {
         datasetRowPublicId,
         caseIndex,
         inputData,
-        stringifyJson(targetResult.output),
+        stringifyJson(execution.output),
         passed ? 'PASSED' : 'FAILED',
         passed,
         score,
         null,
-        targetResult.latencyMs,
-        stringifyJson(targetResult.rawResponse),
+        execution.latencyMs,
+        stringifyJson(execution.rawResponse),
         assertions,
       );
     } catch (error: unknown) {
