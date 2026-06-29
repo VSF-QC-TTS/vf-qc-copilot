@@ -48,6 +48,9 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-vfqc_dev}
       DB_USERNAME: ${POSTGRES_USER:-vfqc}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-vfqc}
+      VFQC_ADMIN_EMAIL: ${VFQC_ADMIN_EMAIL:-}
+      VFQC_ADMIN_PASSWORD: ${VFQC_ADMIN_PASSWORD:-}
+      VFQC_ADMIN_DISPLAY_NAME: ${VFQC_ADMIN_DISPLAY_NAME:-Administrator}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
