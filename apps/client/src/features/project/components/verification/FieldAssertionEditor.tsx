@@ -71,7 +71,7 @@ export function FieldAssertionEditor({
   return (
     <div className="rounded-lg border bg-background p-3">
       <div className="grid gap-2 xl:grid-cols-[minmax(220px,1fr)_160px_minmax(220px,1fr)] xl:items-end">
-        <Field>
+        <Field className="min-w-0">
           <FieldLabel className="text-xs font-semibold">{t('config.verification.fieldLabelResponse')}</FieldLabel>
           <Combobox
             options={responseOptions}
@@ -82,10 +82,10 @@ export function FieldAssertionEditor({
           />
         </Field>
 
-        <Field>
+        <Field className="min-w-0">
           <FieldLabel className="text-xs font-semibold">{t('config.verification.fieldLabelOperator')}</FieldLabel>
           <Select value={currentOperator} onValueChange={handleOperatorChange}>
-            <SelectTrigger className="h-9 rounded-lg">
+            <SelectTrigger className="w-full h-9 rounded-lg">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -98,12 +98,12 @@ export function FieldAssertionEditor({
           </Select>
         </Field>
 
-        <Field>
+        <Field className="min-w-0">
           <FieldLabel className="text-xs font-semibold">{t('config.verification.fieldLabelDataset')}</FieldLabel>
           <div className="grid grid-cols-[auto_1fr] items-center gap-2">
             <ArrowRightIcon className="size-4 text-muted-foreground" />
             <Select value={datasetColumnId} onValueChange={handleDatasetColumnChange}>
-              <SelectTrigger className="h-9 rounded-lg">
+              <SelectTrigger className="w-full h-9 rounded-lg">
                 <SelectValue placeholder={t('config.verification.chooseDatasetColumn')} />
               </SelectTrigger>
               <SelectContent>
