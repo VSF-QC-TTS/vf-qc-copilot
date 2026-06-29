@@ -117,11 +117,27 @@ export function TestRunDetailPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PASSED' | 'FAILED' | 'ERROR'>('ALL')
   const [expandedCases, setExpandedCases] = useState<Set<string>>(new Set())
+  const [expandedAssertions, setExpandedAssertions] = useState<Record<string, boolean>>({})
   const [sortBy, setSortBy] = useState<'index' | 'latency'>('index')
 
-  const resultsList = resultsQuery.data?.content
-  const processedCases = (run?.passedCases ?? 0) + (run?.failedCases ?? 0) + (run?.errorCases ?? 0)
+  const resultsList = resultsQuery.data?.content || []
+  const isRunning = run?.status === 'QUEUED' || run?.status === 'RUNNING'
+
+  // Computed real-time metrics
   const totalCases = run?.totalCases ?? 0
+  
+  const processedCases = isRunning && resultsQuery.data?.totalElements !== undefined
+    ? resultsQuery.data.totalElements
+    : ((run?.passedCases ?? 0) + (run?.failedCases ?? 0) + (run?.errorCases ?? 0))
+    
+  const passedCases = isRunning ? resultsList.filter(c => (c.override?.overriddenStatus ?? c.status) === 'PASSED').length : (run?.passedCases ?? 0)
+  const failedCases = isRunning ? resultsList.filter(c => (c.override?.overriddenStatus ?? c.status) === 'FAILED').length : (run?.failedCases ?? 0)
+  const errorCases = isRunning ? resultsList.filter(c => (c.override?.overriddenStatus ?? c.status) === 'ERROR').length : (run?.errorCases ?? 0)
+  
+  const computedScore = isRunning 
+    ? (processedCases > 0 ? passedCases / processedCases : 0) 
+    : (run?.score ?? 0)
+
   const progress = totalCases > 0 ? Math.round((processedCases / totalCases) * 100) : 0
 
   // Filtered & Sorted Cases
@@ -177,10 +193,10 @@ export function TestRunDetailPage() {
   const radialProps = useMemo(() => {
     const radius = 36
     const circumference = 2 * Math.PI * radius
-    const scoreVal = run?.score ?? 0
+    const scoreVal = computedScore
     const strokeDashoffset = circumference - scoreVal * circumference
     return { radius, circumference, strokeDashoffset }
-  }, [run?.score])
+  }, [computedScore])
 
   const toggleCase = (id: string) => {
     const newExpanded = new Set(expandedCases)
@@ -198,6 +214,16 @@ export function TestRunDetailPage() {
 
   const collapseAll = () => {
     setExpandedCases(new Set())
+  }
+
+  const expandAllAssertions = () => {
+    const next: Record<string, boolean> = {}
+    filteredCases.forEach(c => next[c.publicId] = true)
+    setExpandedAssertions(next)
+  }
+
+  const collapseAllAssertions = () => {
+    setExpandedAssertions({})
   }
 
   const handleCopy = (text: string, label: string) => {
@@ -311,7 +337,7 @@ export function TestRunDetailPage() {
                 />
               </svg>
               <span className="absolute font-mono text-2xl font-bold text-foreground">
-                {formatScore(run?.score ?? null)}
+                {formatScore(computedScore)}
               </span>
             </div>
             <div className="mt-2 text-[10px] text-muted-foreground">Tính theo tỉ lệ các Case đạt yêu cầu</div>
@@ -339,39 +365,39 @@ export function TestRunDetailPage() {
 
             <div>
               <span className="text-[11px] text-muted-foreground block mb-2 font-medium">Tỷ lệ các trạng thái</span>
-              <div className="h-4 w-full flex rounded-lg overflow-hidden border">
-                {run?.passedCases && run.passedCases > 0 ? (
+              <div className="h-4 w-full flex rounded-lg overflow-hidden border bg-muted/30">
+                {passedCases > 0 && (
                   <div
                     className="bg-emerald-500 text-white font-mono text-[10px] font-bold flex items-center justify-center transition-all"
-                    style={{ width: `${(run.passedCases / Math.max(processedCases, 1)) * 100}%` }}
-                    title={`Đạt: ${run.passedCases}`}
+                    style={{ width: `${(passedCases / Math.max(processedCases, 1)) * 100}%` }}
+                    title={`Đạt: ${passedCases}`}
                   >
-                    {run.passedCases}
+                    {passedCases}
                   </div>
-                ) : null}
-                {run?.failedCases && run.failedCases > 0 ? (
+                )}
+                {failedCases > 0 && (
                   <div
                     className="bg-destructive text-white font-mono text-[10px] font-bold flex items-center justify-center transition-all"
-                    style={{ width: `${(run.failedCases / Math.max(processedCases, 1)) * 100}%` }}
-                    title={`Lỗi: ${run.failedCases}`}
+                    style={{ width: `${(failedCases / Math.max(processedCases, 1)) * 100}%` }}
+                    title={`Lỗi: ${failedCases}`}
                   >
-                    {run.failedCases}
+                    {failedCases}
                   </div>
-                ) : null}
-                {run?.errorCases && run.errorCases > 0 ? (
+                )}
+                {errorCases > 0 && (
                   <div
                     className="bg-amber-500 text-white font-mono text-[10px] font-bold flex items-center justify-center transition-all"
-                    style={{ width: `${(run.errorCases / Math.max(processedCases, 1)) * 100}%` }}
-                    title={`Hỏng: ${run.errorCases}`}
+                    style={{ width: `${(errorCases / Math.max(processedCases, 1)) * 100}%` }}
+                    title={`Hỏng: ${errorCases}`}
                   >
-                    {run.errorCases}
+                    {errorCases}
                   </div>
-                ) : null}
+                )}
               </div>
               <div className="flex justify-between mt-2 text-[10px] text-muted-foreground font-mono">
-                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-emerald-500" /> Đạt ({run?.passedCases ?? 0})</span>
-                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-destructive" /> Lỗi ({run?.failedCases ?? 0})</span>
-                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-amber-500" /> Hỏng ({run?.errorCases ?? 0})</span>
+                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-emerald-500" /> Đạt ({passedCases})</span>
+                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-destructive" /> Lỗi ({failedCases})</span>
+                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-amber-500" /> Hỏng ({errorCases})</span>
               </div>
             </div>
           </CardContent>
@@ -671,7 +697,15 @@ export function TestRunDetailPage() {
 
                             {/* Right Column: Assertions & Rubrics Check Details */}
                             <div className="flex flex-col gap-4">
-                              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Chi tiết các quy tắc xác thực (Assertions)</h4>
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Chi tiết các quy tắc xác thực (Assertions)</h4>
+                                {hasAssertions && (
+                                  <div className="flex gap-1">
+                                    <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground" onClick={expandAllAssertions}>Mở hết</Button>
+                                    <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground" onClick={collapseAllAssertions}>Thu hết</Button>
+                                  </div>
+                                )}
+                              </div>
                               {!hasAssertions ? (
                                 <div className="rounded-lg border bg-background/30 p-4 text-center text-xs text-muted-foreground italic">
                                   Không có quy tắc kiểm tra (assertions) nào được cấu hình cho case này.
@@ -680,16 +714,17 @@ export function TestRunDetailPage() {
                                 <div className="flex flex-col gap-3">
                                   {item.assertions.map((assertion) => {
                                     const isLlmJudge = assertion.assertionType === 'LLM_JUDGE'
+                                    const isAssertionsListExpanded = expandedAssertions[item.publicId] ?? (item.assertions.length <= 1)
+
                                     return (
                                       <div
                                         key={assertion.assertionName}
-                                        className={`rounded-lg border p-3.5 shadow-sm transition-all bg-background ${
-                                          assertion.passed
-                                            ? 'border-emerald-500/20 hover:border-emerald-500/40'
-                                            : 'border-destructive/20 hover:border-destructive/40'
-                                        }`}
+                                        className="rounded-lg border border-border bg-background p-3.5 shadow-sm transition-all"
                                       >
-                                        <div className="flex items-start justify-between gap-2.5">
+                                        <div 
+                                          className="flex items-start justify-between gap-2.5 cursor-pointer select-none"
+                                          onClick={() => setExpandedAssertions(prev => ({ ...prev, [item.publicId]: !isAssertionsListExpanded }))}
+                                        >
                                           <div className="flex flex-wrap items-center gap-2">
                                             <Badge variant={assertion.passed ? 'outline' : 'destructive'} className="text-[10px] font-bold">
                                               {assertion.passed ? 'Pass' : 'Fail'}
@@ -699,39 +734,53 @@ export function TestRunDetailPage() {
                                               {assertion.assertionType}
                                             </span>
                                           </div>
-                                          <span className="font-mono text-xs font-bold text-foreground">{formatScore(assertion.score)}</span>
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-mono text-xs font-bold text-foreground">{formatScore(assertion.score)}</span>
+                                            {isAssertionsListExpanded ? <ChevronUpIcon className="size-4 text-muted-foreground" /> : <ChevronDownIcon className="size-4 text-muted-foreground" />}
+                                          </div>
                                         </div>
 
-                                        {/* Assertion comparison path details */}
-                                        {assertion.responsePath && (
-                                          <div className="mt-2 text-[10px] text-muted-foreground font-mono">
-                                            JSON Path: <strong className="text-foreground">{assertion.responsePath}</strong>
-                                          </div>
-                                        )}
+                                        <AnimatePresence>
+                                          {isAssertionsListExpanded && (
+                                            <motion.div
+                                              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                              animate={{ height: 'auto', opacity: 1, marginTop: 8 }}
+                                              exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                              className="overflow-hidden"
+                                            >
+                                              {/* Assertion comparison path details */}
+                                              {assertion.responsePath && (
+                                                <div className="text-[10px] text-muted-foreground font-mono">
+                                                  JSON Path: <strong className="text-foreground">{assertion.responsePath}</strong>
+                                                </div>
+                                              )}
 
-                                        {/* Expected vs Actual logic */}
-                                        {!isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
-                                          <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40 text-[10px] font-mono leading-relaxed bg-muted/10 p-1.5 rounded">
-                                            <div>
-                                              <span className="text-muted-foreground block">Kì vọng:</span>
-                                              <span className="text-foreground font-semibold break-all">{assertion.expectedValue ?? 'null'}</span>
-                                            </div>
-                                            <div>
-                                              <span className="text-muted-foreground block">Thực tế:</span>
-                                              <span className="text-foreground font-semibold break-all">{assertion.actualValue ?? 'null'}</span>
-                                            </div>
-                                          </div>
-                                        )}
+                                              {/* Expected vs Actual logic */}
+                                              {!isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
+                                                <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40 text-[10px] font-mono leading-relaxed bg-muted/10 p-1.5 rounded">
+                                                  <div>
+                                                    <span className="text-muted-foreground block">Kì vọng:</span>
+                                                    <span className="text-foreground font-semibold break-all">{assertion.expectedValue ?? 'null'}</span>
+                                                  </div>
+                                                  <div>
+                                                    <span className="text-muted-foreground block">Thực tế:</span>
+                                                    <span className="text-foreground font-semibold break-all">{assertion.actualValue ?? 'null'}</span>
+                                                  </div>
+                                                </div>
+                                              )}
 
-                                        {/* Assertion feedback / reason */}
-                                        {assertion.reason && (
-                                          <div className={`mt-2 p-2.5 rounded-lg text-xs leading-relaxed ${
-                                            assertion.passed ? 'bg-emerald-500/5 text-emerald-700 dark:text-emerald-300' : 'bg-destructive/5 text-destructive'
-                                          }`}>
-                                            <strong className="font-semibold block mb-0.5">Lý do chấm điểm:</strong>
-                                            <p className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed">{assertion.reason}</p>
-                                          </div>
-                                        )}
+                                              {/* Assertion feedback / reason */}
+                                              {assertion.reason && (
+                                                <div className="mt-2 p-2.5 rounded-lg border border-border/50 text-xs leading-relaxed bg-muted/30">
+                                                  <strong className={`font-semibold block mb-0.5 ${assertion.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
+                                                    Lý do chấm điểm:
+                                                  </strong>
+                                                  <p className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-foreground/80">{assertion.reason}</p>
+                                                </div>
+                                              )}
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
                                       </div>
                                     )
                                   })}

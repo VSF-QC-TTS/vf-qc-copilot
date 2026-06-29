@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import vn.vinfast.vfqc.api.mapper.UserMapper;
 import vn.vinfast.vfqc.api.model.user.Role;
 import vn.vinfast.vfqc.api.model.user.User;
@@ -36,6 +37,9 @@ public class AdminUserServiceImpl implements AdminUserService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final PasswordEncoder passwordEncoder;
+
+  @Value("${vfqc.user.default-avatar-url}")
+  private String defaultAvatarUrl;
 
   @Override
   @Transactional(readOnly = true)
@@ -67,6 +71,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             .passwordHash(passwordEncoder.encode(request.password()))
             .displayName(resolveDisplayName(request.displayName(), email))
             .role(request.role())
+            .avatarUrl(defaultAvatarUrl)
             .status(request.status())
             .build();
 

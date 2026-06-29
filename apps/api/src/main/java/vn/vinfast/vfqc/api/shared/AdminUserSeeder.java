@@ -31,6 +31,9 @@ public class AdminUserSeeder implements ApplicationRunner {
   @Value("${vfqc.admin.seed.display-name:Administrator}")
   private String adminDisplayName;
 
+  @Value("${vfqc.user.default-avatar-url}")
+  private String defaultAvatarUrl;
+
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
@@ -77,6 +80,7 @@ public class AdminUserSeeder implements ApplicationRunner {
             .email(email)
             .passwordHash(passwordEncoder.encode(adminPassword))
             .displayName(resolveDisplayName(email))
+            .avatarUrl(defaultAvatarUrl)
             .role(Role.ADMIN)
             .status(UserStatus.ACTIVE)
             .build();
