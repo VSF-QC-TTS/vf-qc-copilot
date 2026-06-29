@@ -658,27 +658,27 @@ export function TestRunDetailPage() {
                             {/* Left Column: API Inputs & Responses */}
                             <div className="flex flex-col gap-4">
                               <div>
-                                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Thông tin đầu vào (Input variables)</h4>
-                                <div className="rounded-lg border bg-background/50 p-3 text-xs font-mono whitespace-pre-wrap leading-relaxed shadow-sm">
+                                <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Thông tin đầu vào (Input variables)</h4>
+                                <div className="rounded-lg border bg-background/80 p-3 text-sm font-mono whitespace-pre-wrap leading-relaxed shadow-sm">
                                   {item.inputData}
                                 </div>
                               </div>
 
                               <div>
                                 <div className="flex items-center justify-between mb-2">
-                                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Kết quả phản hồi thực tế (API Output)</h4>
+                                  <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Kết quả phản hồi thực tế (API Output)</h4>
                                   {item.actualOutput && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-6 text-[10px] px-2 text-primary hover:bg-primary/5"
+                                      className="h-7 text-xs px-2.5 text-primary hover:bg-primary/5"
                                       onClick={() => handleCopy(item.actualOutput!, 'API Output')}
                                     >
                                       <CopyIcon className="size-3 mr-1" /> Copy JSON
                                     </Button>
                                   )}
                                 </div>
-                                <pre className="rounded-lg border bg-zinc-950 text-zinc-200 p-3.5 text-xs font-mono max-h-[260px] overflow-y-auto leading-relaxed shadow-sm select-text selection:bg-zinc-800">
+                                <pre className="rounded-lg border bg-background text-foreground p-4 text-sm font-mono max-h-[300px] overflow-y-auto leading-relaxed shadow-sm select-text selection:bg-primary/20">
                                   {item.actualOutput ? (
                                     (() => {
                                       try {
@@ -698,16 +698,16 @@ export function TestRunDetailPage() {
                             {/* Right Column: Assertions & Rubrics Check Details */}
                             <div className="flex flex-col gap-4">
                               <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Chi tiết các quy tắc xác thực (Assertions)</h4>
+                                <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Chi tiết các quy tắc xác thực (Assertions)</h4>
                                 {hasAssertions && (
                                   <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground" onClick={expandAllAssertions}>Mở hết</Button>
-                                    <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground" onClick={collapseAllAssertions}>Thu hết</Button>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground" onClick={expandAllAssertions}>Mở hết</Button>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground" onClick={collapseAllAssertions}>Thu hết</Button>
                                   </div>
                                 )}
                               </div>
                               {!hasAssertions ? (
-                                <div className="rounded-lg border bg-background/30 p-4 text-center text-xs text-muted-foreground italic">
+                                <div className="rounded-lg border bg-background/30 p-4 text-center text-sm text-muted-foreground italic">
                                   Không có quy tắc kiểm tra (assertions) nào được cấu hình cho case này.
                                 </div>
                               ) : (
@@ -719,23 +719,23 @@ export function TestRunDetailPage() {
                                     return (
                                       <div
                                         key={assertion.assertionName}
-                                        className="rounded-lg border border-border bg-background p-3.5 shadow-sm transition-all"
+                                        className="rounded-lg border border-border bg-background p-4 shadow-sm transition-all"
                                       >
                                         <div 
                                           className="flex items-start justify-between gap-2.5 cursor-pointer select-none"
                                           onClick={() => setExpandedAssertions(prev => ({ ...prev, [item.publicId]: !isAssertionsListExpanded }))}
                                         >
                                           <div className="flex flex-wrap items-center gap-2">
-                                            <Badge variant={assertion.passed ? 'outline' : 'destructive'} className="text-[10px] font-bold">
+                                            <Badge variant={assertion.passed ? 'outline' : 'destructive'} className={`text-xs font-bold ${assertion.passed ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : ''}`}>
                                               {assertion.passed ? 'Pass' : 'Fail'}
                                             </Badge>
-                                            <span className="font-semibold text-xs text-foreground">{assertion.assertionName}</span>
-                                            <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                                            <span className="font-semibold text-sm text-foreground">{assertion.assertionName}</span>
+                                            <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
                                               {assertion.assertionType}
                                             </span>
                                           </div>
                                           <div className="flex items-center gap-2">
-                                            <span className="font-mono text-xs font-bold text-foreground">{formatScore(assertion.score)}</span>
+                                            <span className="font-mono text-sm font-bold text-foreground">{formatScore(assertion.score)}</span>
                                             {isAssertionsListExpanded ? <ChevronUpIcon className="size-4 text-muted-foreground" /> : <ChevronDownIcon className="size-4 text-muted-foreground" />}
                                           </div>
                                         </div>
@@ -750,20 +750,20 @@ export function TestRunDetailPage() {
                                             >
                                               {/* Assertion comparison path details */}
                                               {assertion.responsePath && (
-                                                <div className="text-[10px] text-muted-foreground font-mono">
+                                                <div className="text-xs text-muted-foreground font-mono mt-1">
                                                   JSON Path: <strong className="text-foreground">{assertion.responsePath}</strong>
                                                 </div>
                                               )}
 
                                               {/* Expected vs Actual logic */}
                                               {!isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
-                                                <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40 text-[10px] font-mono leading-relaxed bg-muted/10 p-1.5 rounded">
+                                                <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-border/40 text-xs font-mono leading-relaxed bg-muted/20 p-2.5 rounded-md">
                                                   <div>
-                                                    <span className="text-muted-foreground block">Kì vọng:</span>
+                                                    <span className="text-muted-foreground block mb-1">Kì vọng:</span>
                                                     <span className="text-foreground font-semibold break-all">{assertion.expectedValue ?? 'null'}</span>
                                                   </div>
                                                   <div>
-                                                    <span className="text-muted-foreground block">Thực tế:</span>
+                                                    <span className="text-muted-foreground block mb-1">Thực tế:</span>
                                                     <span className="text-foreground font-semibold break-all">{assertion.actualValue ?? 'null'}</span>
                                                   </div>
                                                 </div>
@@ -771,11 +771,11 @@ export function TestRunDetailPage() {
 
                                               {/* Assertion feedback / reason */}
                                               {assertion.reason && (
-                                                <div className="mt-2 p-2.5 rounded-lg border border-border/50 text-xs leading-relaxed bg-muted/30">
-                                                  <strong className={`font-semibold block mb-0.5 ${assertion.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
+                                                <div className="mt-3 p-3 rounded-lg border border-border/50 text-sm leading-relaxed bg-muted/30">
+                                                  <strong className={`font-semibold block mb-1 ${assertion.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
                                                     Lý do chấm điểm:
                                                   </strong>
-                                                  <p className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-foreground/80">{assertion.reason}</p>
+                                                  <p className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground/80">{assertion.reason}</p>
                                                 </div>
                                               )}
                                             </motion.div>
@@ -788,16 +788,16 @@ export function TestRunDetailPage() {
                               )}
 
                               {/* QC Override Panel */}
-                              <div className="rounded-lg border bg-background p-4.5 shadow-sm mt-2">
-                                <div className="flex items-center justify-between border-b pb-2.5 mb-4">
-                                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Hiệu chỉnh kết quả (QC Override)</h4>
+                              <div className="rounded-lg border bg-background p-5 shadow-sm mt-2">
+                                <div className="flex items-center justify-between border-b pb-3 mb-4">
+                                  <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Hiệu chỉnh kết quả (QC Override)</h4>
                                   {item.override ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 gap-1 font-bold text-[10px] py-0.5">
+                                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 gap-1 font-bold text-xs py-0.5 px-2">
                                       <Check data-icon="inline-start" />
                                       Đã hiệu chỉnh bởi {item.override.correctedByUserEmail}
                                     </Badge>
                                   ) : (
-                                    <Badge variant="outline" className="text-muted-foreground text-[10px] py-0.5">Chưa hiệu chỉnh</Badge>
+                                    <Badge variant="outline" className="text-muted-foreground text-xs py-0.5 px-2">Chưa hiệu chỉnh</Badge>
                                   )}
                                 </div>
 

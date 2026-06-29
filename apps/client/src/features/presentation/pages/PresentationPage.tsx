@@ -5,135 +5,99 @@ import { useNavigate } from 'react-router-dom'
 const slides = [
   {
     id: 1,
-    title: 'VF QC Copilot',
+    title: 'VinFast QC Copilot',
     subtitle: 'Nền tảng tự động hóa đánh giá chất lượng AI/API',
     content: (
-      <div className="flex flex-col items-center justify-center h-full space-y-4">
-        <p className="text-2xl text-muted-foreground">Người trình bày: Long</p>
-        <p className="text-2xl text-muted-foreground">Mentor: [Tên mentor]</p>
+      <div className="flex flex-col items-center justify-center h-full space-y-6">
+        <p className="text-3xl font-medium text-muted-foreground">Nhóm thực hiện:</p>
+        <p className="text-4xl font-bold text-foreground">Nguyễn Hoàng Long - Phạm Đình Trường</p>
+
+        <div className="mt-8 pt-8 border-t border-border/50">
+          <p className="text-2xl text-muted-foreground mb-4">Hướng dẫn viên (Mentor):</p>
+          <p className="text-3xl font-bold text-foreground">Chị Nguyễn Thị Sao - Anh Nguyễn Văn An</p>
+        </div>
       </div>
     )
   },
   {
     id: 2,
-    title: 'Bối cảnh & Vấn đề',
+    title: 'Những kết quả đã đạt được',
     content: (
-      <ul className="text-2xl space-y-8 list-disc list-inside">
-        <li>QC thủ công các ứng dụng AI/API tốn quá nhiều thời gian.</li>
-        <li>Kết quả từ LLM (AI) linh động, khó dùng công cụ test truyền thống để chấm điểm chính xác.</li>
-        <li>Thiếu một nền tảng tập trung để quản lý Dataset, chạy hàng loạt và tự động chấm điểm.</li>
+      <ul className="text-3xl space-y-10 list-disc list-inside mt-8">
+        <li>
+          <span className="font-bold text-primary">Linh hoạt cấu hình:</span> Tự động thiết lập và cấu hình Target API, Chatbot dễ dàng.
+        </li>
+        <li>
+          <span className="font-bold text-primary">Đánh giá toàn diện:</span> Khả năng chạy và chấm điểm tự động toàn bộ luồng End-to-End (E2E).
+        </li>
+        <li>
+          <span className="font-bold text-primary">Sẵn sàng sử dụng:</span> Đã deploy thành công hệ thống lên môi trường thực tế, sẵn sàng cho việc đưa lên máy chủ nội bộ (private server) để đảm bảo bảo mật.
+        </li>
       </ul>
     )
   },
   {
     id: 3,
-    title: 'Tổng quan Giải pháp',
-    subtitle: 'VF QC Copilot: Import dữ liệu, giả lập gọi API/LLM và chấm điểm tự động',
+    title: 'Live Demo',
+    subtitle: 'Import cURL -> Chọn Dataset -> Run -> Realtime Dashboard',
     content: (
-      <div className="grid grid-cols-3 gap-8 mt-12 text-center">
-        <div className="p-8 border rounded-xl bg-card">
-          <h3 className="text-2xl font-bold mb-4">Quản lý Dữ liệu</h3>
-          <p className="text-xl text-muted-foreground">Nhập và chuẩn hoá Dataset</p>
-        </div>
-        <div className="p-8 border rounded-xl bg-card">
-          <h3 className="text-2xl font-bold mb-4">Cấu hình Linh hoạt</h3>
-          <p className="text-xl text-muted-foreground">Target API & Quy tắc Verification</p>
-        </div>
-        <div className="p-8 border rounded-xl bg-card">
-          <h3 className="text-2xl font-bold mb-4">Báo cáo & Thống kê</h3>
-          <p className="text-xl text-muted-foreground">Dashboard & Real-time Metrics</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-full pt-16">
+        <p className="text-5xl font-bold text-primary animate-pulse tracking-widest">[ Trình diễn Live Demo ]</p>
       </div>
     )
   },
   {
     id: 4,
-    title: 'Đã hoàn thành: Cấu hình Test',
+    title: 'Hướng phát triển tiếp theo',
     content: (
-      <ul className="text-2xl space-y-8 list-disc list-inside">
-        <li>Import cURL tự động thiết lập Target API nhanh chóng.</li>
-        <li>Xây dựng bộ quy tắc đánh giá (Assertions): So khớp chuỗi (Chứa, Bằng, Regex...).</li>
-        <li>Tích hợp LLM Judge: Dùng AI chấm điểm AI dựa trên các tiêu chí (Rubrics).</li>
-      </ul>
+      <div className="grid grid-cols-1 gap-8 mt-8">
+        <div className="p-8 border rounded-xl bg-card">
+          <h3 className="text-3xl font-bold mb-6 text-foreground flex items-center gap-3">
+            <span className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary text-xl">1</span>
+            Hỗ trợ đa biến (Multi-input)
+          </h3>
+          <p className="text-2xl text-muted-foreground ml-11">
+            Mở rộng xử lý nhiều tham số đầu vào cho từng bộ dữ liệu (Dataset) thay vì giới hạn 1 input như hiện tại.
+          </p>
+        </div>
+
+        <div className="p-8 border rounded-xl bg-card">
+          <h3 className="text-3xl font-bold mb-6 text-foreground flex items-center gap-3">
+            <span className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary text-xl">2</span>
+            Nâng tầm trải nghiệm (UI/UX)
+          </h3>
+          <p className="text-2xl text-muted-foreground ml-11">
+            Tiếp tục tinh chỉnh giao diện người dùng mượt mà, trực quan và tối ưu trải nghiệm thao tác.
+          </p>
+        </div>
+
+        <div className="p-8 border rounded-xl bg-card">
+          <h3 className="text-3xl font-bold mb-6 text-foreground flex items-center gap-3">
+            <span className="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary text-xl">3</span>
+            Tối ưu hóa Hệ thống
+          </h3>
+          <p className="text-2xl text-muted-foreground ml-11">
+            Nâng cấp kiến trúc, tối ưu hiệu năng để đáp ứng khối lượng dữ liệu test lớn hơn trong tương lai.
+          </p>
+        </div>
+      </div>
     )
   },
   {
     id: 5,
-    title: 'Đã hoàn thành: Trải nghiệm Thực thi',
-    content: (
-      <ul className="text-2xl space-y-8 list-disc list-inside">
-        <li>Chạy test hàng loạt (Batch testing) dưới nền.</li>
-        <li>Bóc tách và tính toán dữ liệu Real-time ngay trên Frontend.</li>
-        <li>Giao diện chi tiết: Tiến độ chạy, Biểu đồ Đạt/Lỗi nhảy số trực tiếp không cần reload.</li>
-      </ul>
-    )
-  },
-  {
-    id: 6,
-    title: 'Đã hoàn thành: Báo cáo & Hiệu chỉnh',
-    content: (
-      <ul className="text-2xl space-y-8 list-disc list-inside">
-        <li>Ghi nhận và thống kê độ trễ (Latency) cho từng API call.</li>
-        <li>Tính năng QC Override: Cho phép chuyên viên can thiệp chấm lại điểm.</li>
-        <li>Lưu vết lịch sử quá trình hiệu chỉnh kết quả hệ thống.</li>
-      </ul>
-    )
-  },
-  {
-    id: 7,
-    title: 'Khó khăn & Cách giải quyết',
-    content: (
-      <div className="space-y-8 text-xl mt-6">
-        <div className="p-6 border rounded-xl bg-card/50">
-          <h3 className="text-2xl font-bold mb-2">1. Cập nhật tiến độ Realtime gây giật lag server</h3>
-          <p className="text-muted-foreground">Giải pháp: Tối ưu Polling 1.5s và tự động tính toán Progress/Score bằng dữ liệu tạm trên Frontend.</p>
-        </div>
-        <div className="p-6 border rounded-xl bg-card/50">
-          <h3 className="text-2xl font-bold mb-2">2. Giao diện Assertions rối mắt khi có nhiều quy tắc</h3>
-          <p className="text-muted-foreground">Giải pháp: Thiết kế layout tối giản, tự động thu gọn và xử lý chống tràn tinh tế.</p>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 8,
-    title: 'Demo Hệ thống',
-    subtitle: 'Import cURL -> Chọn Dataset -> Run -> Realtime Dashboard',
-    content: (
-      <div className="flex flex-col items-center justify-center h-full pt-16">
-        <p className="text-3xl text-muted-foreground animate-pulse">[ Trình diễn Live Demo ]</p>
-      </div>
-    )
-  },
-  {
-    id: 9,
-    title: 'Hướng phát triển tiếp theo',
-    content: (
-      <div className="grid grid-cols-2 gap-8 text-xl mt-12">
-        <div className="p-8 border rounded-xl bg-card">
-          <h3 className="text-2xl font-bold mb-4">Giai đoạn 2 (Ngắn hạn)</h3>
-          <ul className="space-y-4 list-disc list-inside text-muted-foreground">
-            <li>Hỗ trợ đa biến (Multi-variable parsing) từ Dataset.</li>
-            <li>Xuất báo cáo định dạng Excel / PDF chuyên sâu.</li>
-          </ul>
-        </div>
-        <div className="p-8 border rounded-xl bg-card">
-          <h3 className="text-2xl font-bold mb-4">Giai đoạn 3 (Dài hạn)</h3>
-          <ul className="space-y-4 list-disc list-inside text-muted-foreground">
-            <li>Tích hợp trực tiếp vào luồng CI/CD.</li>
-            <li>Biểu đồ thống kê lịch sử xu hướng (Trend analysis) qua nhiều lần chạy.</li>
-          </ul>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 10,
     title: 'Q&A',
     content: (
-      <div className="flex flex-col items-center justify-center h-full space-y-6 pt-16">
-        <p className="text-5xl font-bold">Cảm ơn bạn đã lắng nghe!</p>
-        <p className="text-3xl text-muted-foreground">Mời Mentor đặt câu hỏi.</p>
+      <div className="flex flex-col items-center justify-center h-full space-y-10 pt-10 text-center">
+        <p className="text-5xl font-bold leading-tight">Cảm ơn anh chị đã lắng nghe!</p>
+
+        <div className="space-y-6 max-w-4xl text-2xl text-muted-foreground bg-muted/20 p-10 rounded-2xl border">
+          <p>
+            Nhóm xin gửi lời cảm ơn chân thành tới <strong className="text-foreground">Chị Nguyễn Thị Sao</strong> và <strong className="text-foreground">Anh Nguyễn Văn An</strong> đã tận tình hỗ trợ và định hướng trong suốt thời gian qua.
+          </p>
+          <p>
+            Đặc biệt cảm ơn công ty <strong className="text-primary font-bold text-3xl">Vinsmart Future</strong> đã tạo điều kiện và cơ hội tuyệt vời để nhóm được cọ xát với môi trường làm việc thực tế!
+          </p>
+        </div>
       </div>
     )
   }
@@ -227,15 +191,15 @@ export function PresentationPage() {
       </main>
 
       {/* Invisible Click Areas for Navigation */}
-      <div 
-        className="absolute left-0 top-0 w-1/4 h-full z-0 cursor-w-resize" 
+      <div
+        className="absolute left-0 top-0 w-1/4 h-full z-0 cursor-w-resize"
         onClick={prevSlide}
       />
-      <div 
-        className="absolute right-0 top-0 w-1/4 h-full z-0 cursor-e-resize" 
+      <div
+        className="absolute right-0 top-0 w-1/4 h-full z-0 cursor-e-resize"
         onClick={nextSlide}
       />
-      
+
       {/* Keyboard Hint */}
       <div className="absolute bottom-6 left-0 right-0 text-center text-xs text-muted-foreground/30 pointer-events-none z-10">
         Sử dụng phím mũi tên hoặc click viền màn hình để chuyển slide. Nhấn ESC để thoát.
