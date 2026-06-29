@@ -77,8 +77,8 @@ function AdminNavSidebar({ location }: { location: any }) {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel className="select-none">
-        <ShieldCheck className="mr-1 size-3.5" />
+      <SidebarGroupLabel className="select-none text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
+        <ShieldCheck className="mr-1.5 size-4" />
         Admin
       </SidebarGroupLabel>
       <SidebarGroupContent>
@@ -88,7 +88,7 @@ function AdminNavSidebar({ location }: { location: any }) {
               asChild
               className={cn(
                 "relative transition-all duration-200 select-none",
-                isUsersActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                isUsersActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
               )}
             >
               <Link to="/admin/users">
@@ -99,7 +99,7 @@ function AdminNavSidebar({ location }: { location: any }) {
                 {isUsersActive && (
                   <motion.div
                     layoutId="active-admin-sidebar-pill"
-                    className="absolute inset-0 z-0 rounded-md bg-sidebar-accent"
+                    className="absolute inset-0 z-0 rounded-md bg-primary/10 dark:bg-primary/20"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -148,7 +148,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                 asChild 
                 className={cn(
                   "relative transition-all duration-200 select-none",
-                  isOverviewActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                  isOverviewActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
                 )}
               >
                 <Link to={`/projects/${publicId}`}>
@@ -159,7 +159,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                   {isOverviewActive && (
                     <motion.div
                       layoutId="active-sidebar-pill"
-                      className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                      className="absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/20 z-0"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -173,9 +173,9 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
       <Collapsible defaultOpen={defaultOpen} className="group/collapsible">
         <SidebarGroup>
           <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="hover:text-foreground transition-colors cursor-pointer select-none">
+            <CollapsibleTrigger className="hover:text-foreground transition-colors cursor-pointer select-none text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider py-1.5 h-auto">
               {t('nav.setup')}
-              <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+              <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90 size-3.5" />
             </CollapsibleTrigger>
           </SidebarGroupLabel>
           <CollapsibleContent>
@@ -198,7 +198,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                             asChild 
                             className={cn(
                               "relative transition-all duration-200 select-none",
-                              isActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                              isActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
                             )}
                           >
                             <Link to={item.path} className="flex items-center justify-between">
@@ -220,7 +220,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                               {isActive && (
                                 <motion.div
                                   layoutId="active-sidebar-pill"
-                                  className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                                  className="absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/20 z-0"
                                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                                 />
                               )}
@@ -236,7 +236,9 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
       </Collapsible>
 
       <SidebarGroup>
-        <SidebarGroupLabel className="select-none">{t('nav.execution')}</SidebarGroupLabel>
+        <SidebarGroupLabel className="select-none text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider py-1.5 h-auto">
+          {t('nav.execution')}
+        </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu className="gap-1">
             {executionItems.map((item) => {
@@ -247,7 +249,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                     asChild
                     className={cn(
                       "relative transition-all duration-200 select-none",
-                      isActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+                      isActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
                     )}
                   >
                     <Link to={item.path} className="flex items-center justify-between">
@@ -269,7 +271,7 @@ function ProjectNavSidebar({ publicId, location }: { publicId: string; location:
                       {isActive && (
                         <motion.div
                           layoutId="active-sidebar-pill"
-                          className="absolute inset-0 rounded-md bg-sidebar-accent z-0"
+                          className="absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/20 z-0"
                           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                         />
                       )}

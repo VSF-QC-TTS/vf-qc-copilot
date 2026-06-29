@@ -87,10 +87,10 @@ export function ProjectSwitcher({
               {!isCollapsed && (
                 <>
                   <div className="min-w-0 flex-1 text-left flex flex-col gap-0.5 ml-0.5">
-                    <span className="block truncate text-xs font-semibold text-foreground/90 leading-tight">
+                    <span className="block truncate text-[13px] font-semibold text-foreground/90 leading-tight">
                       {currentProject?.name || t('switcher.selectProject')}
                     </span>
-                    <span className="block truncate text-[10px] font-medium text-muted-foreground/80 leading-normal pb-0.5">
+                    <span className="block truncate text-[11px] font-medium text-muted-foreground/80 leading-normal pb-0.5">
                       {t('switcher.workspaceLabel', 'Không gian QC')}
                     </span>
                   </div>
