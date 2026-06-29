@@ -107,22 +107,26 @@ export function CurlImportCard({ onImport, isPending, initialValue, hasExistingC
               animate={{ height: jsonBody ? 'auto' : 0, opacity: jsonBody ? 1 : 0, marginTop: jsonBody ? 16 : 0 }}
               className="overflow-hidden"
             >
-              <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-[#1e1e1e] text-[#d4d4d4] shadow-md relative">
-                <div className="flex items-center justify-between px-4 py-2 bg-[#252526] border-b border-[#3c3c3c] select-none shrink-0">
-                  <span className="text-[11px] font-mono text-[#cccccc] uppercase tracking-widest font-semibold flex items-center gap-2">
-                    <span className="text-yellow-500">{}</span> JSON Body (Template)
+              <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-100 shadow-md relative">
+                <div className="flex items-center justify-between px-4 py-3 bg-zinc-100/80 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-950 select-none shrink-0">
+                  <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-semibold flex items-center gap-2">
+                    <span className="text-amber-500">{}</span> JSON Body (Template)
                   </span>
                 </div>
-                <div className="absolute top-2 right-4 text-[11px] text-zinc-400 bg-[#252526] px-2 py-0.5 rounded font-mono border border-[#3c3c3c]">
-                  Thay thế giá trị tĩnh thành <span className="text-[#ce9178]">{"{{prompt}}"}</span>
+                <div className="absolute top-2 right-4 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/20 flex items-center gap-1">
+                  ⚠️ Nội dung này sẽ đè lên body của cURL ở trên
                 </div>
                 
-                <InputGroup className="flex-1 border-0 bg-transparent">
+                <div className="px-4 pt-3 text-[13px] text-muted-foreground flex items-center gap-1.5">
+                  Thay thế giá trị tĩnh thành biến <code className="font-mono text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{"{{prompt}}"}</code>
+                </div>
+
+                <InputGroup className="flex-1 border-0 bg-transparent mt-1">
                   <InputGroupTextarea
                     value={jsonBody}
                     onChange={(e) => setJsonBody(e.target.value)}
                     placeholder='{ "message": "{{prompt}}" }'
-                    className="flex-1 resize-y font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[150px] text-[#9cdcfe] placeholder:text-zinc-600 leading-relaxed selection:bg-[#264f78]"
+                    className="flex-1 resize-y font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent px-4 pb-4 min-h-[150px] text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-700 leading-relaxed selection:bg-zinc-200 dark:selection:bg-zinc-800 selection:text-zinc-900 dark:selection:text-zinc-100"
                     style={{ scrollbarWidth: 'thin' }}
                   />
                 </InputGroup>
