@@ -534,7 +534,16 @@ export function DatasetDetailPage() {
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-semibold tracking-tight">{dataset.name}</h1>
             <DatasetStatusBadge value={dataset.status} />
-            {dataset.latestVersion ? <VersionStatusBadge value={dataset.latestVersion.status} /> : null}
+            {selectedVersion ? <VersionStatusBadge value={selectedVersion.status} /> : null}
+            {isSelectedVersionActive ? (
+              <Badge className="bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/10 font-bold text-[10px] py-0.5 px-2">
+                ĐANG HOẠT ĐỘNG (ACTIVE)
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-amber-500/5 text-amber-600 border-amber-500/20 font-bold text-[10px] py-0.5 px-2">
+                BẢN XEM TRƯỚC (PREVIEW)
+              </Badge>
+            )}
           </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {dataset.description ?? 'Import Excel, sinh rows bằng AI hoặc chỉnh dữ liệu thủ công theo schema dự án.'}
@@ -610,12 +619,16 @@ export function DatasetDetailPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {/* View Mode Toggle Buttons */}
-              <div className="flex items-center gap-1 rounded-lg bg-muted p-1 text-xs">
+              <div className="flex items-center gap-1 rounded-lg bg-muted p-1 text-xs select-none">
                 <Button
                   type="button"
-                  variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="sm"
-                  className="h-7 px-2.5 rounded-md text-xs"
+                  className={`h-7 px-2.5 rounded-md text-xs transition-all duration-200 ${
+                    viewMode === 'table'
+                      ? 'bg-background text-foreground shadow-sm font-semibold'
+                      : 'text-muted-foreground hover:bg-background/40 hover:text-foreground'
+                  }`}
                   onClick={() => setViewMode('table')}
                 >
                   <TableProperties className="mr-1.5 size-3.5" />
@@ -623,9 +636,13 @@ export function DatasetDetailPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="sm"
-                  className="h-7 px-2.5 rounded-md text-xs"
+                  className={`h-7 px-2.5 rounded-md text-xs transition-all duration-200 ${
+                    viewMode === 'grid'
+                      ? 'bg-background text-foreground shadow-sm font-semibold'
+                      : 'text-muted-foreground hover:bg-background/40 hover:text-foreground'
+                  }`}
                   onClick={() => setViewMode('grid')}
                 >
                   <LayoutGrid className="mr-1.5 size-3.5" />
@@ -633,9 +650,13 @@ export function DatasetDetailPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant={viewMode === 'library' ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="sm"
-                  className="h-7 px-2.5 rounded-md text-xs"
+                  className={`h-7 px-2.5 rounded-md text-xs transition-all duration-200 ${
+                    viewMode === 'library'
+                      ? 'bg-background text-foreground shadow-sm font-semibold'
+                      : 'text-muted-foreground hover:bg-background/40 hover:text-foreground'
+                  }`}
                   onClick={() => setViewMode('library')}
                 >
                   <BookOpen className="mr-1.5 size-3.5" />
@@ -649,11 +670,23 @@ export function DatasetDetailPage() {
                   <SelectValue placeholder="Chọn version" />
                 </SelectTrigger>
                 <SelectContent>
-                  {dataset.versions.map((version) => (
-                    <SelectItem key={version.publicId} value={version.publicId}>
-                      v{version.versionNumber} · {version.status}
-                    </SelectItem>
-                  ))}
+                  {dataset.versions.map((version) => {
+                    const isVersionActive = dataset.activeVersion?.publicId === version.publicId
+                    return (
+                      <SelectItem key={version.publicId} value={version.publicId}>
+                        <div className="flex items-center gap-1.5 w-full">
+                          <span className="font-medium">v{version.versionNumber}</span>
+                          <span className="text-muted-foreground/50">·</span>
+                          <span className="text-xs">{version.status}</span>
+                          {isVersionActive && (
+                            <span className="ml-1.5 px-1.5 py-0.2 bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 text-[9px] font-bold rounded-full scale-90">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
               

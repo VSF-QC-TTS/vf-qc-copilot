@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useMemo, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AlertCircleIcon, DatabaseIcon, FileSpreadsheetIcon, PlusIcon, TablePropertiesIcon, Target, AlertTriangle } from 'lucide-react'
 
@@ -23,16 +23,34 @@ import { Textarea } from '@/components/ui/textarea'
 import { useCreateDataset, useDatasets } from '../../hooks/use-datasets'
 import { useSetupStatus } from '../../hooks/use-projects'
 import { useProjectSchema } from '../../hooks/use-project-schema'
+import { useVerificationConfig } from '../../hooks/use-verification-config'
 
 export function DatasetListPage() {
   const { publicId } = useParams<{ publicId: string }>()
   const { data, isLoading } = useDatasets(publicId)
   const { data: setupStatus } = useSetupStatus(publicId)
   const { data: schema } = useProjectSchema(publicId)
+  const { data: verificationConfig } = useVerificationConfig(publicId)
   const createMutation = useCreateDataset(publicId)
   const [createOpen, setCreateOpen] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+
+  const evaluatedColumns = useMemo(() => {
+    if (!verificationConfig?.items) return new Set<string>()
+    const columnKeys = new Set<string>()
+    for (const item of verificationConfig.items) {
+      if (item.fieldAssertion?.expectedColumnKey) {
+        columnKeys.add(item.fieldAssertion.expectedColumnKey)
+      }
+      if (item.referenceColumnKeys) {
+        for (const k of item.referenceColumnKeys) {
+          if (k) columnKeys.add(k)
+        }
+      }
+    }
+    return columnKeys
+  }, [verificationConfig])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault()
@@ -173,7 +191,7 @@ export function DatasetListPage() {
                       {schemaColumns.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 border-t border-muted/50 pt-3">
                           {schemaColumns.map((col) => {
-                            const isEvaluated = !!setupStatus?.hasVerification && (col.role?.toUpperCase() === 'EXPECTED' || col.role?.toUpperCase() === 'GROUND_TRUTH')
+                            const isEvaluated = evaluatedColumns.has(col.publicId)
                             return (
                               <Badge
                                 key={col.columnName}
@@ -220,10 +238,14 @@ export function DatasetListPage() {
                       </div>
 
                       <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
-                        <span>Phiên bản active: {dataset.latestVersion ? `v${dataset.latestVersion.versionNumber}` : '-'}</span>
-                        {dataset.latestVersion?.createdAt && (
+                        <span>
+                          Phiên bản active: {dataset.activeVersion ? `v${dataset.activeVersion.versionNumber}` : 'Chưa kích hoạt'}
+                        </span>
+                        {dataset.activeVersion?.createdAt ? (
+                          <span>Kích hoạt: {new Date(dataset.activeVersion.createdAt).toLocaleDateString('vi-VN')}</span>
+                        ) : dataset.latestVersion?.createdAt ? (
                           <span>Cập nhật: {new Date(dataset.latestVersion.createdAt).toLocaleDateString('vi-VN')}</span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </Card>

@@ -273,10 +273,12 @@ export function AiConfigPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <Controller control={control} name="temperature" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="flex items-center gap-1.5">
-                        {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
+                      <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">
+                        <span>
+                          {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
+                        </span>
                         <Tooltip>
-                          <TooltipTrigger asChild><Info className="size-3 text-muted-foreground" /></TooltipTrigger>
+                          <TooltipTrigger asChild><Info className="size-3 text-muted-foreground mb-0.5" /></TooltipTrigger>
                           <TooltipContent><p className="max-w-xs">0.0: Chính xác. 2.0: Sáng tạo.</p></TooltipContent>
                         </Tooltip>
                       </FieldLabel>
@@ -286,7 +288,7 @@ export function AiConfigPage() {
                   )} />
                   <Controller control={control} name="maxTokens" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="flex items-center gap-1.5">
+                      <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">
                         {t('config.judge.maxTokens', { ns: 'project' })} <span className="text-destructive">*</span>
                       </FieldLabel>
                       <Input type="number" {...field} aria-invalid={!!fieldState.error} />
@@ -297,7 +299,7 @@ export function AiConfigPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <Controller control={control} name="retryCount" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="flex items-center gap-1.5">
+                      <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">
                         {t('config.judge.retryCount', { ns: 'project' })} <span className="text-destructive">*</span>
                       </FieldLabel>
                       <Input type="number" min="0" {...field} aria-invalid={!!fieldState.error} />
@@ -306,7 +308,7 @@ export function AiConfigPage() {
                   )} />
                   <Controller control={control} name="timeout" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel>{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
+                      <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
                       <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} />
                       <FieldError errors={[fieldState.error]} />
                     </Field>
