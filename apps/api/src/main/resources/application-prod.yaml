@@ -123,6 +123,11 @@ logging:
     org.telegram: INFO
 
 vfqc:
+  admin:
+    seed:
+      email: ${VFQC_ADMIN_EMAIL}
+      password: ${VFQC_ADMIN_PASSWORD}
+      display-name: ${VFQC_ADMIN_DISPLAY_NAME:Administrator}
   client:
     base-url: ${WEB_BASE_URL}
   server:

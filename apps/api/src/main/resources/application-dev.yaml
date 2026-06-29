@@ -98,6 +98,11 @@ logging:
     org.telegram: INFO
 
 vfqc:
+  admin:
+    seed:
+      email: ${VFQC_ADMIN_EMAIL:admin@vinfast.vn}
+      password: ${VFQC_ADMIN_PASSWORD:Admin@123}
+      display-name: ${VFQC_ADMIN_DISPLAY_NAME:Administrator}
   client:
     base-url: ${WEB_BASE_URL}
   server:
