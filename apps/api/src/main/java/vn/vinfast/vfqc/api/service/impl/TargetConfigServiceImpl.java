@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,8 +63,8 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     ParsedCurlCommand parsed = curlParser.parse(req.curl());
     
     String finalBody = req.bodyTemplate() != null ? req.bodyTemplate() : parsed.body();
-    if (finalBody != null && !finalBody.isBlank() && !finalBody.contains("{{prompt}}")) {
-        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Body template must contain {{prompt}} variable");
+    if (finalBody != null && !finalBody.isBlank() && !Pattern.compile("\\{\\{[A-Za-z0-9_.-]+\\}\\}").matcher(finalBody).find()) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Body template phải chứa ít nhất một biến tham chiếu đến cột Dataset (VD: {{Input}})");
     }
 
     // 1. Scan & encrypt secrets
@@ -117,8 +118,8 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     }
 
     // 4. Execute the HTTP request
-    // We replace {{prompt}} with a dummy text so the external API doesn't fail with syntax error
-    String testBody = finalBody != null ? finalBody.replace("{{prompt}}", "Hello from VFQ") : null;
+    // We replace all variables with a dummy text so the external API doesn't fail with syntax error
+    String testBody = finalBody != null ? finalBody.replaceAll("\\{\\{[A-Za-z0-9_.-]+\\}\\}", "Hello from VFQ") : null;
     ParsedCurlCommand testParsed = new ParsedCurlCommand(
         parsed.method(),
         parsed.url(),
@@ -161,8 +162,8 @@ public class TargetConfigServiceImpl implements TargetConfigService {
     TargetConfig entity = targetConfigRepository.findByProjectId(project.getId())
         .orElseThrow(() -> ResourceException.of(ErrorCode.TARGET_CONFIG_NOT_FOUND));
 
-    if (req.bodyTemplate() != null && !req.bodyTemplate().isBlank() && !req.bodyTemplate().contains("{{prompt}}")) {
-        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Body template must contain {{prompt}} variable");
+    if (req.bodyTemplate() != null && !req.bodyTemplate().isBlank() && !Pattern.compile("\\{\\{[A-Za-z0-9_.-]+\\}\\}").matcher(req.bodyTemplate()).find()) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Body template phải chứa ít nhất một biến tham chiếu đến cột Dataset (VD: {{Input}})");
     }
 
     SecretScanResult secrets = secretManager.scanAndEncrypt(

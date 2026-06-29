@@ -118,14 +118,14 @@ export function CurlImportCard({ onImport, isPending, initialValue, hasExistingC
                 </div>
                 
                 <div className="px-4 pt-3 text-[13px] text-muted-foreground flex items-center gap-1.5">
-                  Thay thế giá trị tĩnh thành biến <code className="font-mono text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{"{{prompt}}"}</code>
+                  Thay thế giá trị tĩnh thành tên cột trong Dataset (VD: <code className="font-mono text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{"{{Input}}"}</code>)
                 </div>
 
                 <InputGroup className="flex-1 border-0 bg-transparent mt-1">
                   <InputGroupTextarea
                     value={jsonBody}
                     onChange={(e) => setJsonBody(e.target.value)}
-                    placeholder='{ "message": "{{prompt}}" }'
+                    placeholder='{ "message": "{{Input}}" }'
                     className="flex-1 resize-y font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent px-4 pb-4 min-h-[150px] text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-700 leading-relaxed selection:bg-zinc-200 dark:selection:bg-zinc-800 selection:text-zinc-900 dark:selection:text-zinc-100"
                     style={{ scrollbarWidth: 'thin' }}
                   />
