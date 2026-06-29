@@ -52,9 +52,9 @@ export function CurlImportCard({ onImport, isPending, initialValue, hasExistingC
         <FieldGroup className="flex-1 flex flex-col">
           <Field className="flex-1 flex flex-col">
             {/* Developer Terminal Box */}
-            <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800 bg-zinc-950 text-zinc-100 shadow-md">
+             <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-md">
               {/* Header macOS-style terminal top bar */}
-              <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/90 border-b border-zinc-900 select-none shrink-0">
+              <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-950 select-none shrink-0">
                 <div className="flex items-center gap-1.5">
                   <span className="size-2.5 rounded-full bg-[#ff5f56]/90 shadow-sm" />
                   <span className="size-2.5 rounded-full bg-[#ffbd2e]/90 shadow-sm" />
@@ -69,7 +69,8 @@ export function CurlImportCard({ onImport, isPending, initialValue, hasExistingC
                   value={curlInput}
                   onChange={handleCurlInputChange}
                   placeholder="Ví dụ:&#10;curl -X POST https://api.atomesus.com/v1/chat/completions \&#10;  -H 'Content-Type: application/json' \&#10;  -H 'Authorization: SECRET_REDACTED' \&#10;  -d '{...}'"
-                  className="flex-1 resize-none font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[180px] text-zinc-200 placeholder:text-zinc-700 leading-relaxed"
+                  className="flex-1 resize-none font-mono text-[13px] border-0 focus-visible:ring-0 bg-transparent p-4 min-h-[180px] text-zinc-200 placeholder:text-zinc-700 leading-relaxed selection:bg-zinc-800 selection:text-zinc-100"
+                  style={{ scrollbarColor: '#3f3f46 transparent', scrollbarWidth: 'thin' }}
                 />
               </InputGroup>
             </div>

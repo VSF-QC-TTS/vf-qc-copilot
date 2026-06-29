@@ -25,23 +25,23 @@ export interface EvalRunRequest {
 export interface TargetConfigPayload {
   method: string;
   url: string;
-  headers: string | null;
-  queryParams: string | null;
-  bodyTemplate: string | null;
-  responsePath: string | null;
-  timeoutMs: number | null;
+  headers?: string | null;
+  queryParams?: string | null;
+  bodyTemplate?: string | null;
+  responsePath?: string | null;
+  timeoutMs?: number | null;
   secrets: Record<string, string>;
 }
 
 export interface AiConfigPayload {
   provider: string;
-  baseUrl: string | null;
+  baseUrl?: string | null;
   evaluationModel: string;
-  temperature: number | null;
-  maxTokens: number | null;
-  timeoutMs: number | null;
-  retryCount: number | null;
-  apiKey: string | null;
+  temperature?: number | null;
+  maxTokens?: number | null;
+  timeoutMs?: number | null;
+  retryCount?: number | null;
+  apiKey?: string | null;
 }
 
 export interface DatasetRowPayload {
@@ -68,10 +68,10 @@ export interface VerificationItemPayload {
   publicId: string;
   internalId: number;
   type: VerificationItemType;
-  targetPaths: string | null;
-  referenceColumnKeys: string | null;
-  rubric: string | null;
-  fieldAssertion: FieldAssertionPayload | null;
+  targetPaths?: string | null;
+  referenceColumnKeys?: string | null;
+  rubric?: string | null;
+  fieldAssertion?: FieldAssertionPayload | null;
 }
 
 export interface FieldAssertionPayload {

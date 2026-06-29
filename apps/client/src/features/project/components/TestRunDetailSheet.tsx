@@ -1,5 +1,6 @@
-import { BanIcon, ClockIcon, ListChecksIcon, TimerIcon, type LucideIcon } from 'lucide-react'
+import { BanIcon, ClockIcon, ListChecksIcon, TimerIcon, AlertTriangle, type LucideIcon } from 'lucide-react'
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -22,6 +23,28 @@ import {
 import { isRunActive, useCancelTestRun, useTestRun, useTestRunEvents, useTestRunResults } from '../hooks/use-test-runs'
 import { CaseStatusBadge, RunStatusBadge } from './RunStatusBadge'
 import type { RunEventResponse, TestResultResponse, TestRunResponse } from '@/types/test-run'
+
+function formatErrorMessage(msg: string | null | undefined): string {
+  if (!msg) return ''
+  if (msg.includes('validation failed:')) {
+    const jsonStart = msg.indexOf('[');
+    if (jsonStart !== -1) {
+      try {
+        const jsonStr = msg.substring(jsonStart);
+        const errors = JSON.parse(jsonStr);
+        if (Array.isArray(errors)) {
+          return 'Lỗi validate dữ liệu đầu vào:\n' + errors.map((err: any) => {
+            const path = err.path ? err.path.join('.') : '';
+            return `- Trường "${path}": ${err.message} (Nhận được: ${err.received}, Kì vọng: ${err.expected})`;
+          }).join('\n');
+        }
+      } catch {
+        // Fallback
+      }
+    }
+  }
+  return msg
+}
 
 interface TestRunDetailSheetProps {
   open: boolean
@@ -71,7 +94,7 @@ export function TestRunDetailSheet({
           </div>
         ) : (
           <div className="grid gap-4 p-4">
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
               <MetricCard icon={ListChecksIcon} label="Cases" value={`${processedCases}/${totalCases}`} />
               <MetricCard icon={ClockIcon} label="Score" value={formatScore(run.score)} />
               <MetricCard icon={TimerIcon} label="Duration" value={formatDuration(run.durationMs)} />
@@ -91,10 +114,21 @@ export function TestRunDetailSheet({
                   <Badge variant="outline">Passed {run.passedCases}</Badge>
                   <Badge variant="outline">Failed {run.failedCases}</Badge>
                   <Badge variant="outline">Error {run.errorCases}</Badge>
-                  {run.errorMessage ? <Badge variant="destructive">{run.errorMessage}</Badge> : null}
                 </div>
               </CardContent>
             </Card>
+
+            {run.errorMessage ? (
+              <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20 rounded-xl">
+                <AlertTriangle className="size-4 text-destructive shrink-0 mt-0.5 animate-pulse" />
+                <div className="flex flex-col gap-1">
+                  <AlertTitle className="font-bold">Lỗi hệ thống</AlertTitle>
+                  <AlertDescription className="text-xs font-mono whitespace-pre-wrap break-all leading-relaxed">
+                    {formatErrorMessage(run.errorMessage)}
+                  </AlertDescription>
+                </div>
+              </Alert>
+            ) : null}
 
             <div className="flex justify-end">
               <Button

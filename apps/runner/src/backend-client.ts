@@ -12,7 +12,7 @@ export class BackendClient {
 
   public async getEvalRequest(runId: string): Promise<EvalRunRequest> {
     const response = await this.request<unknown>(`/internal/runs/${runId}/eval-request`, { method: 'GET' });
-    return parseWithSchema(evalRunRequestSchema, response, 'EvalRunRequest');
+    return parseWithSchema(evalRunRequestSchema, response, 'EvalRunRequest') as EvalRunRequest;
   }
 
   public async reportStarted(runId: string): Promise<void> {

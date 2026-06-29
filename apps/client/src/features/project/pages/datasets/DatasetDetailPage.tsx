@@ -14,6 +14,7 @@ import {
   BookOpen,
   TableProperties,
   AlertTriangle,
+  Info,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -95,6 +96,12 @@ export function DatasetDetailPage() {
 
   const columns = schema?.columns ?? EMPTY_COLUMNS
   const rows = rowsQuery.data?.content ?? EMPTY_ROWS
+  const selectedVersion = useMemo(() => {
+    return dataset?.versions.find((v) => v.publicId === selectedVersionId)
+  }, [dataset?.versions, selectedVersionId])
+
+  const isSelectedVersionActive = dataset?.activeVersion?.publicId === selectedVersionId
+  const canActivate = selectedVersion && selectedVersion.status !== 'ACTIVE' && selectedVersion.status !== 'INVALID'
   const displayColumns = useMemo(() => {
     if (columns.length > 0) {
       return columns.map((column) => column.columnName)
@@ -104,17 +111,30 @@ export function DatasetDetailPage() {
 
   const evaluatedColumns = useMemo(() => {
     const cols = new Set<string>()
+    if (!verificationConfig?.items || verificationConfig.items.length === 0) {
+      return cols
+    }
+
+    const columnMap = new Map<string, string>()
     columns.forEach((col) => {
-      const role = col.role?.toUpperCase()
-      if (role === 'EXPECTED' || role === 'GROUND_TRUTH') {
-        cols.add(col.columnName)
+      if (col.publicId) {
+        columnMap.set(col.publicId, col.columnName)
       }
     })
-    if (verificationConfig?.items) {
-      for (const item of verificationConfig.items) {
-        if (item.referenceColumnKeys) {
-          item.referenceColumnKeys.forEach((key) => cols.add(key))
+
+    for (const item of verificationConfig.items) {
+      if (item.type === 'FIELD_ASSERTION' && item.fieldAssertion?.expectedColumnKey) {
+        const colName = columnMap.get(item.fieldAssertion.expectedColumnKey)
+        if (colName) {
+          cols.add(colName)
         }
+      } else if (item.type === 'LLM_JUDGE' && item.referenceColumnKeys) {
+        item.referenceColumnKeys.forEach((key) => {
+          const colName = columnMap.get(key)
+          if (colName) {
+            cols.add(colName)
+          }
+        })
       }
     }
     return cols
@@ -141,6 +161,8 @@ export function DatasetDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['dataset', datasetId] })
       queryClient.invalidateQueries({ queryKey: ['datasets', publicId] })
       queryClient.invalidateQueries({ queryKey: ['datasetRows', datasetId] })
+      queryClient.invalidateQueries({ queryKey: ['projectSchema', publicId] })
+      queryClient.invalidateQueries({ queryKey: ['projects', publicId, 'setupStatus'] })
       if (event.datasetVersionPublicId) {
         setSelectedVersionId(event.datasetVersionPublicId)
       }
@@ -560,6 +582,25 @@ export function DatasetDetailPage() {
         <MetricCard label="Tổng số phiên bản" value={dataset.versions.length} />
       </div>
 
+      {/* Warnings about inactive versions */}
+      {!dataset.activeVersion ? (
+        <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20 rounded-xl">
+          <AlertTriangle className="size-4 text-destructive animate-pulse" />
+          <AlertTitle className="font-bold">Chưa có phiên bản dữ liệu hoạt động</AlertTitle>
+          <AlertDescription className="text-xs mt-1 leading-relaxed">
+            Dataset này chưa được kích hoạt phiên bản hoạt động nào. QC bắt buộc phải chọn một phiên bản hợp lệ (ví dụ: <strong className="underline">v1</strong>) ở danh sách dưới và nhấn nút <strong className="underline">Kích hoạt (Active version)</strong> để có thể sử dụng dữ liệu này khi <strong>Chạy Test</strong>.
+          </AlertDescription>
+        </Alert>
+      ) : !isSelectedVersionActive ? (
+        <Alert className="bg-amber-500/5 text-amber-600 border-amber-500/20 rounded-xl">
+          <Info className="size-4 text-amber-600" />
+          <AlertTitle className="font-bold">Đang xem phiên bản chưa kích hoạt</AlertTitle>
+          <AlertDescription className="text-xs mt-1 leading-relaxed">
+            Bạn đang xem dữ liệu của phiên bản <strong>v{selectedVersion?.versionNumber}</strong> (chưa kích hoạt). Hệ thống vẫn đang sử dụng phiên bản hoạt động <strong>v{dataset.activeVersion.versionNumber}</strong> để chạy đánh giá. Nhấn nút <strong className="underline">Kích hoạt (Active version)</strong> bên dưới để áp dụng phiên bản này.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <Card className="rounded-xl border border-muted/50 overflow-hidden">
         <CardHeader className="border-b bg-card">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -616,17 +657,34 @@ export function DatasetDetailPage() {
                 </SelectContent>
               </Select>
               
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9"
-                onClick={() => activateMutation.mutate()}
-                disabled={!selectedVersionId || activateMutation.isPending}
-              >
-                {activateMutation.isPending ? <Spinner data-icon="inline-start" /> : <CheckCircle2Icon data-icon="inline-start" />}
-                Active version
-              </Button>
+              {isSelectedVersionActive ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 cursor-default hover:bg-emerald-500/5 hover:text-emerald-600 font-medium"
+                  disabled
+                >
+                  <CheckCircle2Icon className="mr-1.5 size-4" />
+                  Phiên bản đang hoạt động
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  className="h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm transition-all cursor-pointer relative"
+                  onClick={() => activateMutation.mutate()}
+                  disabled={!selectedVersionId || !canActivate || activateMutation.isPending}
+                >
+                  {activateMutation.isPending ? (
+                    <Spinner data-icon="inline-start" />
+                  ) : (
+                    <CheckCircle2Icon data-icon="inline-start" />
+                  )}
+                  Kích hoạt (Active version)
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>

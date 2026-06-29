@@ -265,31 +265,31 @@ export function AiConfigPage() {
 
           {/* Right Column: Parameters & Actions */}
           <div className="lg:col-span-4 flex flex-col gap-6 sticky top-6">
-            <Card className="bg-muted/30 border-border/60">
-              <CardHeader className="pb-3 border-b border-border/40 mb-4 bg-background/50 rounded-t-xl">
+            <Card>
+              <CardHeader className="pb-4 border-b border-border/40 mb-4">
                 <CardTitle className="text-base font-semibold">Tham số chấm</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <Controller control={control} name="temperature" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="flex items-center gap-1.5 text-xs">
+                      <FieldLabel className="flex items-center gap-1.5">
                         {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
                         <Tooltip>
                           <TooltipTrigger asChild><Info className="size-3 text-muted-foreground" /></TooltipTrigger>
                           <TooltipContent><p className="max-w-xs">0.0: Chính xác. 2.0: Sáng tạo.</p></TooltipContent>
                         </Tooltip>
                       </FieldLabel>
-                      <Input type="number" step="0.1" min="0" max="2" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <Input type="number" step="0.1" min="0" max="2" {...field} aria-invalid={!!fieldState.error} />
                       <FieldError errors={[fieldState.error]} />
                     </Field>
                   )} />
                   <Controller control={control} name="maxTokens" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="flex items-center gap-1.5 text-xs">
+                      <FieldLabel className="flex items-center gap-1.5">
                         {t('config.judge.maxTokens', { ns: 'project' })} <span className="text-destructive">*</span>
                       </FieldLabel>
-                      <Input type="number" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <Input type="number" {...field} aria-invalid={!!fieldState.error} />
                       <FieldError errors={[fieldState.error]} />
                     </Field>
                   )} />
@@ -297,17 +297,17 @@ export function AiConfigPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <Controller control={control} name="retryCount" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="flex items-center gap-1.5 text-xs">
+                      <FieldLabel className="flex items-center gap-1.5">
                         {t('config.judge.retryCount', { ns: 'project' })} <span className="text-destructive">*</span>
                       </FieldLabel>
-                      <Input type="number" min="0" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <Input type="number" min="0" {...field} aria-invalid={!!fieldState.error} />
                       <FieldError errors={[fieldState.error]} />
                     </Field>
                   )} />
                   <Controller control={control} name="timeout" render={({ field, fieldState }) => (
                     <Field data-invalid={!!fieldState.error}>
-                      <FieldLabel className="text-xs">{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
-                      <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} className="h-9" />
+                      <FieldLabel>{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
+                      <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} />
                       <FieldError errors={[fieldState.error]} />
                     </Field>
                   )} />
@@ -333,12 +333,16 @@ export function AiConfigPage() {
                     {saveMutation.isPending ? <Spinner data-icon="inline-start" /> : <SaveIcon data-icon="inline-start" />}
                     Lưu cấu hình
                   </Button>
-                  {(hasSaved || hasTested) && (
-                    <Button type="button" variant="outline" onClick={handleOpenTest} disabled={testMutation.isPending} className="w-full bg-background border-primary/20 hover:bg-primary/10 text-primary">
-                      {testMutation.isPending ? <Spinner data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
-                      Chạy thử kết nối
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleOpenTest}
+                    disabled={testMutation.isPending || (!hasSaved && !hasTested)}
+                    className="w-full bg-background border-primary/20 hover:bg-primary/10 text-primary"
+                  >
+                    {testMutation.isPending ? <Spinner data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
+                    Chạy thử kết nối
+                  </Button>
                 </div>
               </CardContent>
             </Card>

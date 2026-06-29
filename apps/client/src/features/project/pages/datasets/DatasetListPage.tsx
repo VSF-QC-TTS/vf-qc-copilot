@@ -173,7 +173,7 @@ export function DatasetListPage() {
                       {schemaColumns.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 border-t border-muted/50 pt-3">
                           {schemaColumns.map((col) => {
-                            const isEvaluated = col.role?.toUpperCase() === 'EXPECTED' || col.role?.toUpperCase() === 'GROUND_TRUTH'
+                            const isEvaluated = !!setupStatus?.hasVerification && (col.role?.toUpperCase() === 'EXPECTED' || col.role?.toUpperCase() === 'GROUND_TRUTH')
                             return (
                               <Badge
                                 key={col.columnName}

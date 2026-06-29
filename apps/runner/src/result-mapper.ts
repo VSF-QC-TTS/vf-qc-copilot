@@ -49,11 +49,11 @@ export class ResultMapper {
     return {
       assertionName: this.assertionName(item),
       assertionType: item.type,
-      responsePath: item.fieldAssertion?.actualPath ?? item.targetPaths,
+      responsePath: (item.fieldAssertion?.actualPath ?? item.targetPaths) ?? null,
       passed: component.pass,
       score: typeof component.score === 'number' ? component.score : component.pass ? 1 : 0,
       reason: component.reason ?? (component.pass ? 'Assertion passed.' : 'Assertion failed.'),
-      expectedValue: item.fieldAssertion ? metadata.expectedValue : item.rubric,
+      expectedValue: (item.fieldAssertion ? metadata.expectedValue : item.rubric) ?? null,
       actualValue: item.fieldAssertion ? metadata.actualValue : this.truncate(outputText),
     };
   }
@@ -66,7 +66,7 @@ export class ResultMapper {
     return {
       assertionName: this.assertionName(item),
       assertionType: item.type,
-      responsePath: item.fieldAssertion?.actualPath ?? item.targetPaths,
+      responsePath: (item.fieldAssertion?.actualPath ?? item.targetPaths) ?? null,
       passed: false,
       score: 0,
       reason,

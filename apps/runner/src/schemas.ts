@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const nullableStringSchema = z.string().nullable();
+const nullableStringSchema = z.string().nullable().optional();
 
 const targetConfigSchema = z.object({
   method: z.string().min(1),
@@ -9,7 +9,7 @@ const targetConfigSchema = z.object({
   queryParams: nullableStringSchema,
   bodyTemplate: nullableStringSchema,
   responsePath: nullableStringSchema,
-  timeoutMs: z.number().int().positive().nullable(),
+  timeoutMs: z.number().int().positive().nullable().optional(),
   secrets: z.record(z.string(), z.string()),
 });
 
@@ -17,10 +17,10 @@ const aiConfigSchema = z.object({
   provider: z.string().min(1),
   baseUrl: nullableStringSchema,
   evaluationModel: z.string().min(1),
-  temperature: z.number().nullable(),
-  maxTokens: z.number().int().positive().nullable(),
-  timeoutMs: z.number().int().positive().nullable(),
-  retryCount: z.number().int().nonnegative().nullable(),
+  temperature: z.number().nullable().optional(),
+  maxTokens: z.number().int().positive().nullable().optional(),
+  timeoutMs: z.number().int().positive().nullable().optional(),
+  retryCount: z.number().int().nonnegative().nullable().optional(),
   apiKey: nullableStringSchema,
 });
 
@@ -61,7 +61,7 @@ const verificationItemSchema = z.object({
   targetPaths: nullableStringSchema,
   referenceColumnKeys: nullableStringSchema,
   rubric: nullableStringSchema,
-  fieldAssertion: fieldAssertionSchema.nullable(),
+  fieldAssertion: fieldAssertionSchema.nullable().optional(),
 });
 
 const verificationSchema = z.object({
@@ -74,7 +74,7 @@ export const evalRunRequestSchema = z.object({
   runId: z.string().min(1),
   internalRunId: z.number(),
   targetConfig: targetConfigSchema,
-  aiConfig: aiConfigSchema.nullable(),
+  aiConfig: aiConfigSchema.nullable().optional(),
   datasetRows: z.array(datasetRowSchema),
   schemaColumns: z.array(schemaColumnSchema),
   verification: verificationSchema,
