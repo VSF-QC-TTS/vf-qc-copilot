@@ -26,6 +26,7 @@ const VerificationConfigPage = lazy(() => import('@/features/project/pages/confi
 const DatasetListPage = lazy(() => import('@/features/project/pages/datasets/DatasetListPage').then(m => ({ default: m.DatasetListPage })))
 const DatasetDetailPage = lazy(() => import('@/features/project/pages/datasets/DatasetDetailPage').then(m => ({ default: m.DatasetDetailPage })))
 const TestRunPage = lazy(() => import('@/features/project/pages/runs/TestRunPage').then(m => ({ default: m.TestRunPage })))
+const TestRunDetailPage = lazy(() => import('@/features/project/pages/runs/TestRunDetailPage').then(m => ({ default: m.TestRunDetailPage })))
 
 // Route-level loading fallback — skeleton
 function RouteFallback() {
@@ -89,6 +90,7 @@ function App() {
                 <Route path="datasets" element={<DatasetListPage />} />
                 <Route path="datasets/:datasetId" element={<DatasetDetailPage />} />
                 <Route path="runs" element={<TestRunPage />} />
+                <Route path="runs/:runId" element={<TestRunDetailPage />} />
                 <Route path="settings" element={<PlaceholderPage title="Project Settings" />} />
               </Route>
             </Route>

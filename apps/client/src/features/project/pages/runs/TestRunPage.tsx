@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ActivityIcon, BarChart3Icon, ClockIcon, PlayIcon, SettingsIcon, type LucideIcon } from 'lucide-react'
 import { motion } from 'motion/react'
 
@@ -17,7 +17,6 @@ import {
 import { cn } from '@/lib/utils'
 import { CreateTestRunDialog } from '../../components/CreateTestRunDialog'
 import { RunStatusBadge } from '../../components/RunStatusBadge'
-import { TestRunDetailSheet } from '../../components/TestRunDetailSheet'
 import { useSetupStatus } from '../../hooks/use-projects'
 import { useTestRuns } from '../../hooks/use-test-runs'
 import type { TestRunResponse } from '@/types/test-run'
@@ -47,12 +46,11 @@ const itemVariants = {
 
 export function TestRunPage() {
   const { publicId } = useParams<{ publicId: string }>()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)
   const runsQuery = useTestRuns(publicId)
   const { data: setupStatus } = useSetupStatus(publicId)
   const runs = runsQuery.data?.content ?? []
-  const selectedRun = runs.find((run) => run.publicId === searchParams.get('run')) ?? null
 
   const isSetupComplete =
     setupStatus?.hasTargetConfig &&
@@ -64,11 +62,11 @@ export function TestRunPage() {
   const summary = summarizeRuns(runs)
 
   function handleSelectRun(run: TestRunResponse): void {
-    setSearchParams({ run: run.publicId })
+    navigate(`/projects/${publicId}/runs/${run.publicId}`)
   }
 
   function handleCreated(run: TestRunResponse): void {
-    setSearchParams({ run: run.publicId })
+    navigate(`/projects/${publicId}/runs/${run.publicId}`)
   }
 
   return (
@@ -193,7 +191,6 @@ export function TestRunPage() {
             </TableHeader>
             <TableBody>
               {runs.map((run, index) => {
-                const isSelected = selectedRun?.publicId === run.publicId;
                 return (
                   <motion.tr
                     key={run.publicId}
@@ -201,13 +198,9 @@ export function TestRunPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.04 }}
                     onClick={() => handleSelectRun(run)}
-                    aria-selected={isSelected}
-                    className={cn(
-                      "cursor-pointer border-b transition-colors hover:bg-muted/30 select-none",
-                      isSelected ? "bg-muted/65 font-medium border-l-2 border-l-primary" : ""
-                    )}
+                    className="cursor-pointer border-b transition-colors hover:bg-muted/30 select-none"
                   >
-                    <TableCell className={cn("max-w-[260px] truncate py-3.5 px-3 font-medium", isSelected ? "text-primary" : "text-foreground")}>
+                    <TableCell className="max-w-[260px] truncate py-3.5 px-3 font-medium text-foreground">
                       {run.name}
                     </TableCell>
                     <TableCell className="py-3.5 px-3">
@@ -266,16 +259,6 @@ export function TestRunPage() {
         onOpenChange={setCreateOpen}
         projectPublicId={publicId}
         onCreated={handleCreated}
-      />
-      <TestRunDetailSheet
-        open={Boolean(selectedRun)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSearchParams({})
-          }
-        }}
-        projectPublicId={publicId}
-        run={selectedRun}
       />
     </motion.div>
   )

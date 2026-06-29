@@ -160,7 +160,7 @@ export function ProjectOverviewPage() {
                 {runs.map((run) => (
                   <Link
                     key={run.publicId}
-                    to={`/projects/${publicId}/runs?run=${run.publicId}`}
+                    to={`/projects/${publicId}/runs/${run.publicId}`}
                     className="flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/40"
                   >
                     <div className="min-w-0">
