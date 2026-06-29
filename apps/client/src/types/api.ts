@@ -41,13 +41,17 @@ export type LoginResponse = {
   user: UserResponse
 }
 
+export type UserRole = 'QC_MEMBER' | 'QC_LEAD' | 'ADMIN'
+
+export type UserStatus = 'PENDING_EMAIL_VERIFICATION' | 'ACTIVE' | 'DISABLED'
+
 export type UserResponse = {
   publicId: string
   email: string
   displayName: string
   avatarUrl: string | null
-  role: 'QC_MEMBER' | 'QC_LEAD' | 'ADMIN'
-  status: 'PENDING_EMAIL_VERIFICATION' | 'ACTIVE' | 'DISABLED'
+  role: UserRole
+  status: UserStatus
   lastLoginAt: string | null
 }
 

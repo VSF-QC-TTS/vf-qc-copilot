@@ -1,0 +1,69 @@
+{
+  "title": {
+    "kicker": "Khu vực quản trị",
+    "users": "Quản trị người dùng"
+  },
+  "users": {
+    "searchPlaceholder": "Tìm email hoặc tên",
+    "empty": "Không có người dùng phù hợp.",
+    "never": "Chưa đăng nhập",
+    "column": {
+      "user": "Người dùng",
+      "role": "Vai trò",
+      "status": "Trạng thái",
+      "lastLogin": "Đăng nhập gần nhất",
+      "actions": "Thao tác"
+    },
+    "action": {
+      "search": "Tìm",
+      "create": "Thêm user",
+      "edit": "Sửa",
+      "resetPassword": "Đặt mật khẩu",
+      "disable": "Vô hiệu hóa"
+    },
+    "dialog": {
+      "createTitle": "Thêm người dùng",
+      "editTitle": "Cập nhật người dùng",
+      "passwordTitle": "Đặt lại mật khẩu"
+    },
+    "field": {
+      "email": "Email",
+      "password": "Mật khẩu",
+      "newPassword": "Mật khẩu mới",
+      "displayName": "Tên hiển thị",
+      "avatarUrl": "Avatar URL",
+      "role": "Vai trò",
+      "status": "Trạng thái"
+    },
+    "role": {
+      "QC_MEMBER": "QC Member",
+      "QC_LEAD": "QC Lead",
+      "ADMIN": "Admin"
+    },
+    "status": {
+      "PENDING_EMAIL_VERIFICATION": "Chờ xác minh",
+      "ACTIVE": "Hoạt động",
+      "DISABLED": "Đã khóa"
+    },
+    "confirm": {
+      "disable": "Vô hiệu hóa tài khoản {{email}}?"
+    },
+    "toast": {
+      "created": "Đã tạo người dùng.",
+      "updated": "Đã cập nhật người dùng.",
+      "passwordReset": "Đã đặt lại mật khẩu.",
+      "disabled": "Đã vô hiệu hóa người dùng."
+    },
+    "error": {
+      "loadFailed": "Không tải được danh sách người dùng.",
+      "saveFailed": "Không lưu được người dùng.",
+      "passwordFailed": "Không đặt lại được mật khẩu.",
+      "disableFailed": "Không vô hiệu hóa được người dùng."
+    },
+    "pagination": {
+      "total": "{{count}} người dùng",
+      "previous": "Trước",
+      "next": "Tiếp"
+    }
+  }
+}

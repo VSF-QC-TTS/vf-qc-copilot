@@ -2,6 +2,8 @@ package vn.vinfast.vfqc.api.repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import vn.vinfast.vfqc.api.model.user.User;
 
@@ -34,4 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
    * @return {@link Optional} containing the matching {@link User} when present
    */
   Optional<User> findByPublicId(UUID publicId);
+
+  Page<User> findByEmailContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(
+      String email, String displayName, Pageable pageable);
 }

@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { GuestGuard } from '@/features/auth/guards/GuestGuard'
 import { AuthGuard } from '@/features/auth/guards/AuthGuard'
+import { AdminGuard } from '@/features/auth/guards/AdminGuard'
 import { AuthLayout } from '@/features/auth/layouts/AuthLayout'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AppLayout } from '@/features/dashboard/layouts/AppLayout'
@@ -27,6 +28,7 @@ const DatasetListPage = lazy(() => import('@/features/project/pages/datasets/Dat
 const DatasetDetailPage = lazy(() => import('@/features/project/pages/datasets/DatasetDetailPage').then(m => ({ default: m.DatasetDetailPage })))
 const TestRunPage = lazy(() => import('@/features/project/pages/runs/TestRunPage').then(m => ({ default: m.TestRunPage })))
 const TestRunDetailPage = lazy(() => import('@/features/project/pages/runs/TestRunDetailPage').then(m => ({ default: m.TestRunDetailPage })))
+const AdminUsersPage = lazy(() => import('@/features/admin/pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
 
 // Route-level loading fallback — skeleton
 function RouteFallback() {
@@ -81,6 +83,7 @@ function App() {
             <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
               <Route path="/" element={<Navigate to="/projects" replace />} />
               <Route path="/projects" element={<ProjectListPage />} />
+              <Route path="/admin/users" element={<AdminGuard><AdminUsersPage /></AdminGuard>} />
               <Route path="/projects/:publicId" element={<ProjectLayout />}>
                 <Route index element={<ProjectOverviewPage />} />
                 <Route path="config/target" element={<TargetConfigPage />} />

@@ -1,0 +1,69 @@
+{
+  "title": {
+    "kicker": "Admin area",
+    "users": "User management"
+  },
+  "users": {
+    "searchPlaceholder": "Search email or name",
+    "empty": "No matching users.",
+    "never": "Never",
+    "column": {
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "actions": "Actions"
+    },
+    "action": {
+      "search": "Search",
+      "create": "Add user",
+      "edit": "Edit",
+      "resetPassword": "Set password",
+      "disable": "Disable"
+    },
+    "dialog": {
+      "createTitle": "Add user",
+      "editTitle": "Update user",
+      "passwordTitle": "Reset password"
+    },
+    "field": {
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "displayName": "Display name",
+      "avatarUrl": "Avatar URL",
+      "role": "Role",
+      "status": "Status"
+    },
+    "role": {
+      "QC_MEMBER": "QC Member",
+      "QC_LEAD": "QC Lead",
+      "ADMIN": "Admin"
+    },
+    "status": {
+      "PENDING_EMAIL_VERIFICATION": "Pending verification",
+      "ACTIVE": "Active",
+      "DISABLED": "Disabled"
+    },
+    "confirm": {
+      "disable": "Disable account {{email}}?"
+    },
+    "toast": {
+      "created": "User created.",
+      "updated": "User updated.",
+      "passwordReset": "Password reset.",
+      "disabled": "User disabled."
+    },
+    "error": {
+      "loadFailed": "Could not load users.",
+      "saveFailed": "Could not save user.",
+      "passwordFailed": "Could not reset password.",
+      "disableFailed": "Could not disable user."
+    },
+    "pagination": {
+      "total": "{{count}} users",
+      "previous": "Previous",
+      "next": "Next"
+    }
+  }
+}

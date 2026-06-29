@@ -10,6 +10,8 @@ import {
   LayoutDashboard,
   ChevronRight,
   Database,
+  ShieldCheck,
+  Users,
 } from 'lucide-react'
 import { motion } from 'motion/react'
 
@@ -25,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ProjectSwitcher } from './ProjectSwitcher'
 import { UserNav } from './UserNav'
 import { useSetupStatus } from '@/features/project/hooks/use-projects'
+import { useAuth } from '@/features/auth/auth-session'
 import { cn } from '@/lib/utils'
 
 export function AppSidebar() {
@@ -32,8 +35,10 @@ export function AppSidebar() {
   const { publicId } = useParams<{ publicId: string }>()
   const location = useLocation()
   const { state } = useSidebar()
+  const { user } = useAuth()
 
   const isProjectListMode = !publicId
+  const isAdmin = user?.role === 'ADMIN'
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/50">
@@ -56,6 +61,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        {isAdmin ? <AdminNavSidebar location={location} /> : null}
         {isProjectListMode ? null : <ProjectNavSidebar publicId={publicId} location={location} />}
       </SidebarContent>
 
@@ -63,6 +69,46 @@ export function AppSidebar() {
         <UserNav />
       </SidebarFooter>
     </Sidebar>
+  )
+}
+
+function AdminNavSidebar({ location }: { location: any }) {
+  const isUsersActive = location.pathname === '/admin/users'
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="select-none">
+        <ShieldCheck className="mr-1 size-3.5" />
+        Admin
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu className="gap-1">
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className={cn(
+                "relative transition-all duration-200 select-none",
+                isUsersActive ? "font-medium text-sidebar-accent-foreground" : "text-muted-foreground/80 hover:text-foreground"
+              )}
+            >
+              <Link to="/admin/users">
+                <div className="z-10 flex items-center gap-2">
+                  <Users />
+                  <span>Users</span>
+                </div>
+                {isUsersActive && (
+                  <motion.div
+                    layoutId="active-admin-sidebar-pill"
+                    className="absolute inset-0 z-0 rounded-md bg-sidebar-accent"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
   )
 }
 
