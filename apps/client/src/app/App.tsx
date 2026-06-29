@@ -29,6 +29,7 @@ const DatasetDetailPage = lazy(() => import('@/features/project/pages/datasets/D
 const TestRunPage = lazy(() => import('@/features/project/pages/runs/TestRunPage').then(m => ({ default: m.TestRunPage })))
 const TestRunDetailPage = lazy(() => import('@/features/project/pages/runs/TestRunDetailPage').then(m => ({ default: m.TestRunDetailPage })))
 const AdminUsersPage = lazy(() => import('@/features/admin/pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
+const PresentationPage = lazy(() => import('@/features/presentation/pages/PresentationPage').then(m => ({ default: m.PresentationPage })))
 
 // Route-level loading fallback — skeleton
 function RouteFallback() {
@@ -70,6 +71,9 @@ function App() {
       <div className={loading ? 'invisible h-0 overflow-hidden' : ''}>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
+            {/* Presentation standalone route */}
+            <Route path="/presentation" element={<PresentationPage />} />
+
             {/* Guest-only auth routes — shared AuthLayout (no remount on navigate) */}
             <Route element={<GuestGuard><AuthLayout /></GuestGuard>}>
               <Route path="/login" element={<LoginPage />} />
