@@ -133,12 +133,25 @@ export function TestRunDetailPage() {
 
   const toggleCase = (id: string) => {
     const newExpanded = new Set(expandedCases)
+    let isExpanding = false
     if (newExpanded.has(id)) {
       newExpanded.delete(id)
     } else {
       newExpanded.add(id)
+      isExpanding = true
     }
     setExpandedCases(newExpanded)
+
+    if (isExpanding) {
+      // Đợi animation (0.2s) chạy xong rồi cuộn mượt mà
+      setTimeout(() => {
+        const el = document.getElementById(`test-case-row-${id}`)
+        if (el) {
+          const y = el.getBoundingClientRect().top + window.scrollY - 80 // Offset 80px để không bị dính sát mép trên
+          window.scrollTo({ top: y, behavior: 'smooth' })
+        }
+      }, 250)
+    }
   }
 
   const expandAll = () => {
@@ -493,9 +506,10 @@ export function TestRunDetailPage() {
             <div className="divide-y divide-border/50">
               {filteredCases.map((item) => {
                 const isExpanded = expandedCases.has(item.publicId)
-                const hasAssertions = item.assertions.length > 0
+                const hasAssertions = item.assertions && item.assertions.length > 0
+
                 return (
-                  <div key={item.publicId} className="transition-all hover:bg-muted/5">
+                  <div key={item.publicId} id={`test-case-row-${item.publicId}`} className="flex flex-col border-b border-[#EAEAEA] last:border-0 hover:bg-[#FAFAFA] transition-colors">
                     {/* Compact row summary */}
                     {(() => {
                       const displayStatus = item.override ? item.override.overriddenStatus : item.status
