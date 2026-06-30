@@ -127,7 +127,7 @@ export function TestRunDetailPage() {
 
   const { metrics, latencyStats, radialProps } = useTestRunMetrics(run, resultsList, isRunning, resultsQuery.data?.totalElements)
   const { totalCases, processedCases, passedCases, failedCases, errorCases, computedScore, progress } = metrics
-  
+
   const { filteredCases } = useTestRunFilters(resultsList, searchQuery, statusFilter as any, sortBy as any)
 
   const toggleCase = (id: string) => {
@@ -175,7 +175,7 @@ export function TestRunDetailPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="font-serif text-[clamp(2.5rem,4vw,4rem)] leading-[1.1] tracking-[-0.03em] text-[#111111] mb-6">
+            <h1 className="font-sans font-semibold text-3xl md:text-4xl tracking-tight text-[#111111] mb-4">
               {run?.name ?? 'Chi tiết lượt chạy'}
             </h1>
             <div className="flex items-center gap-3 font-mono text-xs text-[#787774]">
@@ -423,11 +423,10 @@ export function TestRunDetailPage() {
                     key={status}
                     type="button"
                     variant="ghost"
-                    className={`h-8 px-3 rounded-[3px] text-xs transition-all duration-200 ${
-                      statusFilter === status
-                        ? 'bg-white text-[#111111] shadow-[0_1px_3px_rgb(0,0,0,0.05)] font-bold'
-                        : 'text-[#787774] hover:bg-[#EAEAEA]/50 hover:text-[#111111]'
-                    }`}
+                    className={`h-8 px-3 rounded-[3px] text-xs transition-all duration-200 ${statusFilter === status
+                      ? 'bg-white text-[#111111] shadow-[0_1px_3px_rgb(0,0,0,0.05)] font-bold'
+                      : 'text-[#787774] hover:bg-[#EAEAEA]/50 hover:text-[#111111]'
+                      }`}
                     onClick={() => setStatusFilter(status)}
                   >
                     {label}
@@ -441,11 +440,10 @@ export function TestRunDetailPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className={`h-8 px-3 rounded-[3px] text-xs transition-all duration-200 ${
-                  sortBy === 'index'
-                    ? 'bg-white text-[#111111] shadow-[0_1px_3px_rgb(0,0,0,0.05)] font-bold'
-                    : 'text-[#787774] hover:bg-[#EAEAEA]/50 hover:text-[#111111]'
-                }`}
+                className={`h-8 px-3 rounded-[3px] text-xs transition-all duration-200 ${sortBy === 'index'
+                  ? 'bg-white text-[#111111] shadow-[0_1px_3px_rgb(0,0,0,0.05)] font-bold'
+                  : 'text-[#787774] hover:bg-[#EAEAEA]/50 hover:text-[#111111]'
+                  }`}
                 onClick={() => setSortBy('index')}
               >
                 Sắp xếp: Case ID
@@ -453,11 +451,10 @@ export function TestRunDetailPage() {
               <Button
                 type="button"
                 variant="ghost"
-                className={`h-8 px-3 rounded-[3px] text-xs transition-all duration-200 ${
-                  sortBy === 'latency'
-                    ? 'bg-white text-[#111111] shadow-[0_1px_3px_rgb(0,0,0,0.05)] font-bold'
-                    : 'text-[#787774] hover:bg-[#EAEAEA]/50 hover:text-[#111111]'
-                }`}
+                className={`h-8 px-3 rounded-[3px] text-xs transition-all duration-200 ${sortBy === 'latency'
+                  ? 'bg-white text-[#111111] shadow-[0_1px_3px_rgb(0,0,0,0.05)] font-bold'
+                  : 'text-[#787774] hover:bg-[#EAEAEA]/50 hover:text-[#111111]'
+                  }`}
                 onClick={() => setSortBy('latency')}
               >
                 Sắp xếp: Độ trễ
@@ -519,16 +516,17 @@ export function TestRunDetailPage() {
                               {customColumns && customColumns.length > 0 && (
                                 <div
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex flex-wrap items-center gap-3 mt-1.5 pt-1 border-t border-border/20"
+                                  className="flex flex-wrap items-center gap-2 mt-2"
                                 >
                                   {customColumns.map((col) => {
                                     const cellVal = item.customValues?.find((v: any) => v.customColumnPublicId === col.publicId)?.value ?? ''
                                     return (
-                                      <div key={col.publicId} className="flex items-center gap-1">
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{col.columnName}:</span>
+                                      <div key={col.publicId} className="flex items-center gap-1.5 bg-[#F7F6F3] border border-[#EAEAEA] rounded px-1.5 py-1 transition-colors hover:bg-white focus-within:bg-white focus-within:border-[#111111] focus-within:ring-1 focus-within:ring-[#111111]">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest select-none">{col.columnName}:</span>
                                         <input
                                           type="text"
-                                          className="w-28 h-6 px-1.5 text-[10px] rounded border bg-background/50 focus:bg-background focus:ring-1 focus:ring-ring focus:outline-none transition-all"
+                                          placeholder="..."
+                                          className="w-24 h-5 px-1 text-[11px] font-mono bg-transparent border-none p-0 focus:outline-none focus:ring-0 text-[#111111]"
                                           defaultValue={cellVal}
                                           onBlur={(e) => {
                                             const val = e.target.value
@@ -586,31 +584,227 @@ export function TestRunDetailPage() {
                           transition={{ duration: 0.2 }}
                           className="overflow-hidden bg-muted/15 border-t border-border/30"
                         >
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-5">
-                            {/* Left Column: API Inputs & Responses */}
-                            <div className="flex flex-col gap-4">
-                              <div>
-                                <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Thông tin đầu vào (Input variables)</h4>
-                                <div className="rounded-lg border bg-background/80 p-3 text-sm font-mono whitespace-pre-wrap leading-relaxed shadow-sm">
+                          <div className="flex flex-col xl:flex-row gap-6 p-6 border-t border-border/10 bg-[#FBFBFA]">
+                            {/* Left Side: Assertions & QC Override (The WHY) */}
+                            <div className="flex flex-col gap-6 w-full xl:w-7/12">
+                              
+                              {/* Assertions */}
+                              <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Lý do & Tiêu chí đánh giá</h4>
+                                  {hasAssertions && (
+                                    <div className="flex gap-2">
+                                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground bg-[#EAEAEA]/50 hover:bg-[#EAEAEA]" onClick={expandAllAssertions}>Mở hết</Button>
+                                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 text-muted-foreground hover:text-foreground bg-[#EAEAEA]/50 hover:bg-[#EAEAEA]" onClick={collapseAllAssertions}>Thu hết</Button>
+                                    </div>
+                                  )}
+                                </div>
+                                {!hasAssertions ? (
+                                  <div className="rounded border bg-white p-4 text-center text-xs text-muted-foreground italic shadow-sm">
+                                    Không có quy tắc kiểm tra (assertions) nào được cấu hình cho case này.
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col gap-3">
+                                    {item.assertions.map((assertion: any) => {
+                                      const isLlmJudge = assertion.assertionType === 'LLM_JUDGE'
+                                      const isAssertionsListExpanded = expandedAssertions[item.publicId] ?? (item.assertions.length <= 1)
+
+                                      return (
+                                        <div
+                                          key={assertion.assertionName}
+                                          className="rounded-lg border border-[#EAEAEA] bg-white p-4 shadow-sm transition-all"
+                                        >
+                                          <div
+                                            className="flex items-start justify-between gap-3 cursor-pointer select-none group"
+                                            onClick={() => setExpandedAssertions(prev => ({ ...prev, [item.publicId]: !isAssertionsListExpanded }))}
+                                          >
+                                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                                              <Badge variant={assertion.passed ? 'outline' : 'destructive'} className={`shrink-0 mt-0.5 text-[10px] uppercase font-bold tracking-wider rounded px-1.5 ${assertion.passed ? 'bg-[#EDF3EC] text-[#346538] border-[#346538]/20' : 'bg-[#FDEBEC] text-[#9F2F2D] border-[#9F2F2D]/20'}`}>
+                                                {assertion.passed ? 'Pass' : 'Fail'}
+                                              </Badge>
+                                              <div className="flex flex-col gap-1 min-w-0">
+                                                <span className="font-semibold text-sm text-[#111111] break-words leading-tight">{assertion.assertionName}</span>
+                                                <span className="text-[10px] text-muted-foreground font-mono bg-[#F7F6F3] px-1.5 py-0.5 rounded w-fit">
+                                                  {assertion.assertionType}
+                                                </span>
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 shrink-0">
+                                              <span className="font-mono text-sm font-bold text-[#111111]">{formatScore(assertion.score)}</span>
+                                              <div className="p-1 rounded bg-[#F7F6F3] text-muted-foreground group-hover:text-[#111111] transition-colors">
+                                                {isAssertionsListExpanded ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          <AnimatePresence>
+                                            {isAssertionsListExpanded && (
+                                              <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden"
+                                              >
+                                                <div className="pt-4 mt-3 border-t border-[#EAEAEA] flex flex-col gap-4">
+                                                  {assertion.reason && (
+                                                    <div>
+                                                      <span className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${assertion.passed ? 'text-[#346538]' : 'text-[#9F2F2D]'}`}>
+                                                        Chi tiết phản hồi
+                                                      </span>
+                                                      <div className="text-[13px] leading-relaxed text-[#111111] font-sans bg-[#F7F6F3] p-3 rounded-md border border-[#EAEAEA]">
+                                                        {assertion.reason}
+                                                      </div>
+                                                    </div>
+                                                  )}
+
+                                                  {!isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
+                                                    <div className="grid grid-cols-2 gap-px bg-[#EAEAEA] rounded-md overflow-hidden border border-[#EAEAEA]">
+                                                      <div className="bg-white p-3">
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">Kì vọng</span>
+                                                        <div className="font-mono text-xs text-[#111111] break-words">{assertion.expectedValue ?? 'null'}</div>
+                                                      </div>
+                                                      <div className="bg-white p-3">
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">Thực tế</span>
+                                                        <div className="font-mono text-xs text-[#111111] break-words">{assertion.actualValue ?? 'null'}</div>
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                  
+                                                  {assertion.responsePath && (
+                                                    <div className="text-[10px] text-muted-foreground font-mono">
+                                                      JSON Path: <strong className="text-[#111111]">{assertion.responsePath}</strong>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                              </motion.div>
+                                            )}
+                                          </AnimatePresence>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* QC Override Panel */}
+                              <div className="rounded-lg border border-[#EAEAEA] bg-white p-5 shadow-sm">
+                                <div className="flex items-center justify-between border-b border-[#EAEAEA] pb-3 mb-4">
+                                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Hiệu chỉnh kết quả (QC)</h4>
+                                  {item.override ? (
+                                    <Badge className="bg-[#EDF3EC] text-[#346538] border-[#346538]/20 gap-1 font-bold text-[10px] uppercase py-0.5 px-2 rounded-sm shadow-none hover:bg-[#EDF3EC]">
+                                      <Check data-icon="inline-start" className="size-3" />
+                                      Đã sửa ({item.override.correctedByUserEmail})
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-muted-foreground text-[10px] uppercase py-0.5 px-2 rounded-sm border-[#EAEAEA] bg-[#F7F6F3]">Chưa hiệu chỉnh</Badge>
+                                  )}
+                                </div>
+
+                                <form onSubmit={(e) => {
+                                  e.preventDefault()
+                                  const form = e.currentTarget
+                                  const status = (form.elements.namedItem('status') as HTMLInputElement | RadioNodeList)
+                                  const statusVal = (status as RadioNodeList).value || (status as HTMLInputElement).value
+                                  const score = parseFloat((form.elements.namedItem('score') as HTMLInputElement).value) / 100
+                                  const reason = (form.elements.namedItem('reason') as HTMLTextAreaElement).value
+
+                                  overrideMutation.mutate({
+                                    resultPublicId: item.publicId,
+                                    data: {
+                                      overriddenStatus: statusVal as TestCaseStatus,
+                                      overriddenScore: score,
+                                      correctedReason: reason,
+                                    }
+                                  })
+                                }}>
+                                  <div className="flex flex-col gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      {/* Segmented Control for Status */}
+                                      <div className="flex flex-col gap-1.5">
+                                        <span className="text-[11px] font-bold text-muted-foreground tracking-wider">TRẠNG THÁI</span>
+                                        <fieldset className="flex items-center gap-1 rounded bg-[#F7F6F3] p-1 border border-[#EAEAEA]">
+                                          <label className="flex-1 cursor-pointer">
+                                            <input type="radio" name="status" value="PASSED" className="peer sr-only" defaultChecked={(item.override?.overriddenStatus ?? item.status) === 'PASSED'} />
+                                            <div className="text-center text-xs py-1.5 rounded transition-all font-semibold peer-checked:bg-white peer-checked:shadow-sm peer-checked:border peer-checked:border-[#EAEAEA] peer-checked:text-[#346538] text-[#787774] hover:bg-[#EAEAEA]/50">Đạt</div>
+                                          </label>
+                                          <label className="flex-1 cursor-pointer">
+                                            <input type="radio" name="status" value="FAILED" className="peer sr-only" defaultChecked={(item.override?.overriddenStatus ?? item.status) === 'FAILED'} />
+                                            <div className="text-center text-xs py-1.5 rounded transition-all font-semibold peer-checked:bg-white peer-checked:shadow-sm peer-checked:border peer-checked:border-[#EAEAEA] peer-checked:text-[#9F2F2D] text-[#787774] hover:bg-[#EAEAEA]/50">Lỗi</div>
+                                          </label>
+                                          <label className="flex-1 cursor-pointer">
+                                            <input type="radio" name="status" value="ERROR" className="peer sr-only" defaultChecked={(item.override?.overriddenStatus ?? item.status) === 'ERROR'} />
+                                            <div className="text-center text-xs py-1.5 rounded transition-all font-semibold peer-checked:bg-white peer-checked:shadow-sm peer-checked:border peer-checked:border-[#EAEAEA] peer-checked:text-[#956400] text-[#787774] hover:bg-[#EAEAEA]/50">Hỏng</div>
+                                          </label>
+                                        </fieldset>
+                                      </div>
+
+                                      <div className="flex flex-col gap-1.5">
+                                        <span className="text-[11px] font-bold text-muted-foreground tracking-wider">ĐIỂM SỐ (%)</span>
+                                        <Input
+                                          type="number"
+                                          name="score"
+                                          min="0"
+                                          max="100"
+                                          defaultValue={Math.round((item.override?.overriddenScore ?? item.score ?? 0) * 100)}
+                                          placeholder="0-100"
+                                          className="h-8 text-xs rounded border-[#EAEAEA] bg-white focus-visible:ring-1 focus-visible:ring-[#111111]"
+                                          required
+                                        />
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1.5">
+                                      <span className="text-[11px] font-bold text-muted-foreground tracking-wider">LÝ DO / BUG ID</span>
+                                      <textarea
+                                        name="reason"
+                                        rows={2}
+                                        defaultValue={item.override?.correctedReason ?? ''}
+                                        className="flex min-h-[60px] w-full rounded border border-[#EAEAEA] bg-white px-3 py-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#111111] transition-colors resize-y"
+                                        placeholder="Nhập bug ID hoặc lý do đổi điểm..."
+                                      />
+                                    </div>
+
+                                    <div className="flex justify-end pt-2 border-t border-[#EAEAEA] mt-1">
+                                      <Button
+                                        type="submit"
+                                        size="sm"
+                                        disabled={overrideMutation.isPending}
+                                        className="h-8 px-4 text-xs font-semibold rounded bg-[#111111] hover:bg-[#333333] text-white shadow-none transition-transform hover:scale-[0.98]"
+                                      >
+                                        {overrideMutation.isPending && <Spinner data-icon="inline-start" />}
+                                        Lưu thay đổi
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </form>
+                              </div>
+
+                            </div>
+
+                            {/* Right Side: Inputs & Outputs (The DATA) */}
+                            <div className="flex flex-col gap-4 w-full xl:w-5/12">
+                              <div className="flex flex-col gap-3">
+                                <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Dữ liệu đầu vào</h4>
+                                <div className="rounded-lg border border-[#EAEAEA] bg-white p-4 text-xs font-mono text-[#111111] whitespace-pre-wrap break-words leading-relaxed shadow-sm max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted">
                                   {item.inputData}
                                 </div>
                               </div>
 
-                              <div>
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Kết quả phản hồi thực tế (API Output)</h4>
+                              <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Phản hồi API</h4>
                                   {item.actualOutput && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-7 text-xs px-2.5 text-primary hover:bg-primary/5"
+                                      className="h-6 text-[10px] px-2 text-[#111111] bg-[#EAEAEA]/50 hover:bg-[#EAEAEA] rounded"
                                       onClick={() => handleCopy(item.actualOutput!, 'API Output')}
                                     >
-                                      <CopyIcon className="size-3 mr-1" /> Copy JSON
+                                      <CopyIcon className="size-3 mr-1.5" /> Copy JSON
                                     </Button>
                                   )}
                                 </div>
-                                <pre className="rounded-lg border bg-background text-foreground p-4 text-sm font-mono max-h-[300px] overflow-y-auto leading-relaxed shadow-sm select-text selection:bg-primary/20">
+                                <pre className="rounded-lg border border-[#EAEAEA] bg-[#111111] text-[#FBFBFA] p-4 text-[11px] font-mono max-h-[500px] overflow-y-auto leading-[1.6] shadow-sm select-text scrollbar-thin scrollbar-thumb-white/20 hover:scrollbar-thumb-white/40">
                                   {item.actualOutput ? (
                                     (() => {
                                       try {
@@ -621,188 +815,9 @@ export function TestRunDetailPage() {
                                       }
                                     })()
                                   ) : (
-                                    <span className="text-zinc-500 italic">Không có dữ liệu trả về</span>
+                                    <span className="text-white/40 italic">Không có dữ liệu</span>
                                   )}
                                 </pre>
-                              </div>
-                            </div>
-
-                            {/* Right Column: Assertions & Rubrics Check Details */}
-                            <div className="flex flex-col gap-4">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Chi tiết các quy tắc xác thực (Assertions)</h4>
-                                {hasAssertions && (
-                                  <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm" className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground" onClick={expandAllAssertions}>Mở hết</Button>
-                                    <Button variant="ghost" size="sm" className="h-7 text-xs px-2.5 text-muted-foreground hover:text-foreground" onClick={collapseAllAssertions}>Thu hết</Button>
-                                  </div>
-                                )}
-                              </div>
-                              {!hasAssertions ? (
-                                <div className="rounded-lg border bg-background/30 p-4 text-center text-sm text-muted-foreground italic">
-                                  Không có quy tắc kiểm tra (assertions) nào được cấu hình cho case này.
-                                </div>
-                              ) : (
-                                <div className="flex flex-col gap-3">
-                                  {item.assertions.map((assertion: any) => {
-                                    const isLlmJudge = assertion.assertionType === 'LLM_JUDGE'
-                                    const isAssertionsListExpanded = expandedAssertions[item.publicId] ?? (item.assertions.length <= 1)
-
-                                    return (
-                                      <div
-                                        key={assertion.assertionName}
-                                        className="rounded-lg border border-border bg-background p-4 shadow-sm transition-all"
-                                      >
-                                        <div 
-                                          className="flex items-start justify-between gap-2.5 cursor-pointer select-none"
-                                          onClick={() => setExpandedAssertions(prev => ({ ...prev, [item.publicId]: !isAssertionsListExpanded }))}
-                                        >
-                                          <div className="flex flex-wrap items-center gap-2">
-                                            <Badge variant={assertion.passed ? 'outline' : 'destructive'} className={`text-xs font-bold ${assertion.passed ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : ''}`}>
-                                              {assertion.passed ? 'Pass' : 'Fail'}
-                                            </Badge>
-                                            <span className="font-semibold text-sm text-foreground">{assertion.assertionName}</span>
-                                            <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-                                              {assertion.assertionType}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-mono text-sm font-bold text-foreground">{formatScore(assertion.score)}</span>
-                                            {isAssertionsListExpanded ? <ChevronUpIcon className="size-4 text-muted-foreground" /> : <ChevronDownIcon className="size-4 text-muted-foreground" />}
-                                          </div>
-                                        </div>
-
-                                        <AnimatePresence>
-                                          {isAssertionsListExpanded && (
-                                            <motion.div
-                                              initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                                              animate={{ height: 'auto', opacity: 1, marginTop: 8 }}
-                                              exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                                              className="overflow-hidden"
-                                            >
-                                              {/* Assertion comparison path details */}
-                                              {assertion.responsePath && (
-                                                <div className="text-xs text-muted-foreground font-mono mt-1">
-                                                  JSON Path: <strong className="text-foreground">{assertion.responsePath}</strong>
-                                                </div>
-                                              )}
-
-                                              {/* Expected vs Actual logic */}
-                                              {!isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
-                                                <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-border/40 text-xs font-mono leading-relaxed bg-muted/20 p-2.5 rounded-md">
-                                                  <div>
-                                                    <span className="text-muted-foreground block mb-1">Kì vọng:</span>
-                                                    <span className="text-foreground font-semibold break-all">{assertion.expectedValue ?? 'null'}</span>
-                                                  </div>
-                                                  <div>
-                                                    <span className="text-muted-foreground block mb-1">Thực tế:</span>
-                                                    <span className="text-foreground font-semibold break-all">{assertion.actualValue ?? 'null'}</span>
-                                                  </div>
-                                                </div>
-                                              )}
-
-                                              {/* Assertion feedback / reason */}
-                                              {assertion.reason && (
-                                                <div className="mt-3 p-3 rounded-lg border border-border/50 text-sm leading-relaxed bg-muted/30">
-                                                  <strong className={`font-semibold block mb-1 ${assertion.passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
-                                                    Lý do chấm điểm:
-                                                  </strong>
-                                                  <p className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground/80">{assertion.reason}</p>
-                                                </div>
-                                              )}
-                                            </motion.div>
-                                          )}
-                                        </AnimatePresence>
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              )}
-
-                              {/* QC Override Panel */}
-                              <div className="rounded-lg border bg-background p-5 shadow-sm mt-2">
-                                <div className="flex items-center justify-between border-b pb-3 mb-4">
-                                  <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">Hiệu chỉnh kết quả (QC Override)</h4>
-                                  {item.override ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 gap-1 font-bold text-xs py-0.5 px-2">
-                                      <Check data-icon="inline-start" />
-                                      Đã hiệu chỉnh bởi {item.override.correctedByUserEmail}
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="text-muted-foreground text-xs py-0.5 px-2">Chưa hiệu chỉnh</Badge>
-                                  )}
-                                </div>
-
-                                <form onSubmit={(e) => {
-                                  e.preventDefault()
-                                  const form = e.currentTarget
-                                  const status = (form.elements.namedItem('status') as HTMLSelectElement).value as TestCaseStatus
-                                  const score = parseFloat((form.elements.namedItem('score') as HTMLInputElement).value) / 100
-                                  const reason = (form.elements.namedItem('reason') as HTMLTextAreaElement).value
-                                  
-                                  overrideMutation.mutate({
-                                    resultPublicId: item.publicId,
-                                    data: {
-                                      overriddenStatus: status,
-                                      overriddenScore: score,
-                                      correctedReason: reason,
-                                    }
-                                  })
-                                }}>
-                                  <FieldGroup className="gap-4">
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <Field>
-                                        <FieldLabel className="text-xs font-semibold">Trạng thái QC</FieldLabel>
-                                        <select
-                                          name="status"
-                                          className="flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-ring"
-                                          defaultValue={item.override?.overriddenStatus ?? item.status}
-                                        >
-                                          <option value="PASSED">Đạt (PASSED)</option>
-                                          <option value="FAILED">Không đạt (FAILED)</option>
-                                          <option value="ERROR">Lỗi (ERROR)</option>
-                                        </select>
-                                      </Field>
-
-                                      <Field>
-                                        <FieldLabel className="text-xs font-semibold">Điểm số QC (%)</FieldLabel>
-                                        <Input
-                                          type="number"
-                                          name="score"
-                                          min="0"
-                                          max="100"
-                                          defaultValue={Math.round((item.override?.overriddenScore ?? item.score ?? 0) * 100)}
-                                          placeholder="0-100"
-                                          className="h-9 text-xs rounded-lg"
-                                          required
-                                        />
-                                      </Field>
-                                    </div>
-
-                                    <Field>
-                                      <FieldLabel className="text-xs font-semibold">Lý do hiệu chỉnh</FieldLabel>
-                                      <textarea
-                                        name="reason"
-                                        rows={2}
-                                        defaultValue={item.override?.correctedReason ?? ''}
-                                        className="flex min-h-[60px] w-full rounded-lg border border-input bg-background px-3 py-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-ring transition-colors"
-                                        placeholder="Nhập lý do hoặc bug ID..."
-                                      />
-                                    </Field>
-
-                                    <div className="flex justify-end">
-                                      <Button
-                                        type="submit"
-                                        size="sm"
-                                        disabled={overrideMutation.isPending}
-                                        className="h-8 text-xs rounded-lg"
-                                      >
-                                        {overrideMutation.isPending && <Spinner data-icon="inline-start" />}
-                                        Lưu hiệu chỉnh
-                                      </Button>
-                                    </div>
-                                  </FieldGroup>
-                                </form>
                               </div>
                             </div>
                           </div>
