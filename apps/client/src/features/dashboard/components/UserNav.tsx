@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ChevronsUpDown, LogOut, Moon, Sun, User, ShieldCheck } from 'lucide-react'
+import { ChevronsUpDown, LogOut, User, ShieldCheck } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -27,10 +27,6 @@ export function UserNav() {
     .map((n: string) => n[0])
     .join('')
     .toUpperCase()
-
-  const toggleTheme = () => {
-    document.documentElement.classList.toggle('dark')
-  }
 
   return (
     <SidebarMenu>
@@ -70,11 +66,6 @@ export function UserNav() {
                   <User className="mr-2 h-4 w-4" />
                   {t('user.profile', 'Hồ sơ cá nhân')}
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer hover:bg-slate-100 rounded-md transition-colors focus:bg-slate-100 py-2 px-3">
-                <Sun className="mr-2 h-4 w-4 dark:hidden" />
-                <Moon className="mr-2 h-4 w-4 hidden dark:block" />
-                {t('user.toggleTheme', 'Đổi giao diện')}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             {user.role === 'ADMIN' && (
