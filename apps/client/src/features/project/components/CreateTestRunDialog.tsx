@@ -134,18 +134,17 @@ export function CreateTestRunDialog({
 
             {compareConfigs && compareConfigs.length > 0 && (
               <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/10">
-                <div 
-                  className="flex items-center justify-between cursor-pointer select-none group"
-                  onClick={() => setIsComparison(!isComparison)}
-                >
+                <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <FieldLabel className="text-base cursor-pointer group-hover:text-primary transition-colors">So sánh LLM (A/B Testing)</FieldLabel>
+                    <FieldLabel htmlFor="compare-switch" className="text-base cursor-pointer hover:text-primary transition-colors">
+                      So sánh LLM (A/B Testing)
+                    </FieldLabel>
                     <p className="text-xs text-muted-foreground">
                       Chạy song song dataset này với các mô hình AI khác để so sánh kết quả.
                     </p>
                   </div>
                   <Switch
-                    className="pointer-events-none"
+                    id="compare-switch"
                     checked={isComparison}
                     onCheckedChange={setIsComparison}
                   />
@@ -166,33 +165,40 @@ export function CreateTestRunDialog({
                     
                     <div>
                       <p className="text-sm font-medium mb-2">Chọn các mô hình để so sánh (tối đa 3):</p>
-                    <div className="grid grid-cols-1 gap-2">
-                      {compareConfigs.map(config => {
-                        const isSelected = selectedCompareConfigs.includes(config.publicId)
-                        return (
-                          <div 
-                            key={config.publicId}
-                            onClick={() => toggleCompareConfig(config.publicId)}
-                            className={cn(
-                              "flex items-center justify-between p-3 rounded-md border cursor-pointer transition-colors",
-                              isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
-                            )}
-                          >
-                            <div>
-                              <p className="text-sm font-medium leading-none mb-1">{config.name}</p>
-                              <p className="text-xs text-muted-foreground">{config.provider} - {config.evaluationModel}</p>
-                            </div>
-                            <div className={cn(
-                              "size-4 rounded-full border flex items-center justify-center [&>svg]:size-3",
-                              isSelected ? "border-primary bg-primary text-primary-foreground" : "border-input"
-                            )}>
-                              {isSelected && <Check />}
-                            </div>
-                          </div>
-                        )
-                      })}
+                      <div className="grid grid-cols-1 gap-2">
+                        {compareConfigs.map(config => {
+                          const isSelected = selectedCompareConfigs.includes(config.publicId)
+                          return (
+                            <label 
+                              key={config.publicId}
+                              className={cn(
+                                "flex items-center justify-between p-3 rounded-md border cursor-pointer transition-colors",
+                                isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                              )}
+                            >
+                              <div>
+                                <p className="text-sm font-medium leading-none mb-1">{config.name}</p>
+                                <p className="text-xs text-muted-foreground">{config.provider} - {config.evaluationModel}</p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  className="peer sr-only"
+                                  checked={isSelected}
+                                  onChange={() => toggleCompareConfig(config.publicId)}
+                                />
+                                <div className={cn(
+                                  "size-4 rounded-full border flex items-center justify-center [&>svg]:size-3",
+                                  isSelected ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                                )}>
+                                  {isSelected && <Check />}
+                                </div>
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
                   </div>
                 )}
               </div>
