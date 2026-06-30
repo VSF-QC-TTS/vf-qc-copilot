@@ -133,25 +133,12 @@ export function TestRunDetailPage() {
 
   const toggleCase = (id: string) => {
     const newExpanded = new Set(expandedCases)
-    let isExpanding = false
     if (newExpanded.has(id)) {
       newExpanded.delete(id)
     } else {
       newExpanded.add(id)
-      isExpanding = true
     }
     setExpandedCases(newExpanded)
-
-    if (isExpanding) {
-      // Đợi animation (0.2s) chạy xong rồi cuộn mượt mà
-      setTimeout(() => {
-        const el = document.getElementById(`test-case-row-${id}`)
-        if (el) {
-          const y = el.getBoundingClientRect().top + window.scrollY - 80 // Offset 80px để không bị dính sát mép trên
-          window.scrollTo({ top: y, behavior: 'smooth' })
-        }
-      }, 250)
-    }
   }
 
   const expandAll = () => {
@@ -506,10 +493,9 @@ export function TestRunDetailPage() {
             <div className="divide-y divide-border/50">
               {filteredCases.map((item) => {
                 const isExpanded = expandedCases.has(item.publicId)
-                const hasAssertions = item.assertions && item.assertions.length > 0
-
+                const hasAssertions = item.assertions.length > 0
                 return (
-                  <div key={item.publicId} id={`test-case-row-${item.publicId}`} className="flex flex-col border-b border-[#EAEAEA] last:border-0 hover:bg-[#FAFAFA] transition-colors">
+                  <div key={item.publicId} className="transition-all hover:bg-muted/5">
                     {/* Compact row summary */}
                     {(() => {
                       const displayStatus = item.override ? item.override.overriddenStatus : item.status
@@ -606,7 +592,7 @@ export function TestRunDetailPage() {
                           <div className="flex flex-col xl:flex-row gap-6 p-6 border-t border-border/10 bg-[#FBFBFA]">
                             {/* Left Side: Assertions & QC Override (The WHY) */}
                             <div className="flex flex-col gap-6 w-full xl:w-7/12">
-                              
+
                               {/* Assertions */}
                               <div className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
@@ -697,7 +683,7 @@ export function TestRunDetailPage() {
                                                       </div>
                                                     )
                                                   )}
-                                                  
+
                                                   {assertion.responsePath && (
                                                     <div className="text-[10px] text-muted-foreground font-mono">
                                                       JSON Path: <strong className="text-[#111111]">{assertion.responsePath}</strong>
