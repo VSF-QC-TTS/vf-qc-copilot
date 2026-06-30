@@ -18,7 +18,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import vn.vinfast.vfqc.api.model.ai.AiConfig;
+import vn.vinfast.vfqc.api.model.ai.AiConfigType;
 import vn.vinfast.vfqc.api.model.dataset.Dataset;
 import vn.vinfast.vfqc.api.model.dataset.DatasetSource;
 import vn.vinfast.vfqc.api.model.dataset.DatasetStatus;
@@ -83,6 +85,7 @@ class TestRunServiceImplTest {
   @Mock private JpaTestRunJobRepository testRunJobRepository;
   @Mock private Executor taskExecutor;
   @Mock private TransactionTemplate transactionTemplate;
+  @Mock private ObjectMapper objectMapper;
 
   private TestRunServiceImpl service;
   private UUID projectPublicId;
@@ -110,7 +113,8 @@ class TestRunServiceImplTest {
             testResultOverrideRepository,
             testRunJobRepository,
             taskExecutor,
-            transactionTemplate);
+            transactionTemplate,
+            objectMapper);
 
     projectPublicId = UUID.randomUUID();
     datasetPublicId = UUID.randomUUID();
@@ -151,7 +155,7 @@ class TestRunServiceImplTest {
             });
 
     TestRunResponse response =
-        service.create(projectPublicId, new CreateTestRunRequest("Smoke run", datasetPublicId), "qc@example.com");
+        service.create(projectPublicId, new CreateTestRunRequest("Smoke run", datasetPublicId, false, null, null), "qc@example.com");
 
     assertThat(response.publicId()).isEqualTo(runPublicId);
     assertThat(response.status()).isEqualTo(TestRunStatus.QUEUED);
@@ -174,7 +178,7 @@ class TestRunServiceImplTest {
     when(datasetRepository.findByProjectIdAndDeletedAtIsNullOrderByCreatedAtDesc(1L))
         .thenReturn(List.of());
 
-    assertThatThrownBy(() -> service.create(projectPublicId, new CreateTestRunRequest(null, null), "qc@example.com"))
+    assertThatThrownBy(() -> service.create(projectPublicId, new CreateTestRunRequest(null, null, false, null, null), "qc@example.com"))
         .isInstanceOf(ResourceException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MISSING_DATASET);
   }
@@ -198,10 +202,10 @@ class TestRunServiceImplTest {
                     .version(5)
                     .mode(VerificationMode.LLM_JUDGE)
                     .build()));
-    when(aiConfigRepository.findByProjectId(1L)).thenReturn(Optional.empty());
+    when(aiConfigRepository.findByProjectIdAndType(1L, AiConfigType.JUDGE)).thenReturn(Optional.empty());
 
     assertThatThrownBy(
-            () -> service.create(projectPublicId, new CreateTestRunRequest(null, datasetPublicId), "qc@example.com"))
+            () -> service.create(projectPublicId, new CreateTestRunRequest(null, datasetPublicId, false, null, null), "qc@example.com"))
         .isInstanceOf(ResourceException.class)
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.MISSING_AI_CONFIG);
   }

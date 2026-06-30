@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import vn.vinfast.vfqc.api.mapper.VerificationConfigMapper;
 import vn.vinfast.vfqc.api.model.project.Project;
+import vn.vinfast.vfqc.api.model.ai.AiConfigType;
 import vn.vinfast.vfqc.api.model.schema.ProjectSchema;
 import vn.vinfast.vfqc.api.model.schema.SchemaColumn;
 import vn.vinfast.vfqc.api.model.verification.CheckOperator;
@@ -142,7 +143,7 @@ class VerificationConfigServiceImplTest {
   @Test
   void save_CombinedConfig_ReturnsCompactItems() {
     when(verificationConfigRepository.findByProjectId(1L)).thenReturn(Optional.empty());
-    when(aiConfigRepository.existsByProjectId(1L)).thenReturn(true);
+    when(aiConfigRepository.existsByProjectIdAndType(1L, AiConfigType.JUDGE)).thenReturn(true);
 
     VerificationConfigResponse response = service.save(projectPublicId, combinedRequest());
 
@@ -158,7 +159,7 @@ class VerificationConfigServiceImplTest {
 
   @Test
   void save_LlmJudgeWithoutAiConfig_ThrowsMissingAiConfig() {
-    when(aiConfigRepository.existsByProjectId(1L)).thenReturn(false);
+    when(aiConfigRepository.existsByProjectIdAndType(1L, AiConfigType.JUDGE)).thenReturn(false);
 
     assertThatThrownBy(() -> service.save(projectPublicId, combinedRequest()))
         .isInstanceOf(ResourceException.class)
@@ -191,7 +192,7 @@ class VerificationConfigServiceImplTest {
 
   @Test
   void save_LlmJudgeWithoutPrompt_ThrowsBadRequest() {
-    when(aiConfigRepository.existsByProjectId(1L)).thenReturn(true);
+    when(aiConfigRepository.existsByProjectIdAndType(1L, AiConfigType.JUDGE)).thenReturn(true);
 
     SaveVerificationRequest request =
         new SaveVerificationRequest(
