@@ -70,9 +70,24 @@ const verificationSchema = z.object({
   items: z.array(verificationItemSchema),
 });
 
+const compareAiConfigEntrySchema = z.object({
+  id: z.number().int(),
+  name: z.string().min(1),
+  provider: z.string().min(1),
+  model: z.string().min(1),
+  apiKey: nullableStringSchema,
+});
+
+const compareTestRunDataSchema = z.object({
+  promptTemplate: z.string().min(1),
+  configs: z.array(compareAiConfigEntrySchema),
+});
+
 export const evalRunRequestSchema = z.object({
   runId: z.string().min(1),
   internalRunId: z.number(),
+  runType: z.enum(['EVALUATION', 'COMPARISON']).default('EVALUATION'),
+  compareData: compareTestRunDataSchema.nullable().optional(),
   targetConfig: targetConfigSchema,
   aiConfig: aiConfigSchema.nullable().optional(),
   datasetRows: z.array(datasetRowSchema),
