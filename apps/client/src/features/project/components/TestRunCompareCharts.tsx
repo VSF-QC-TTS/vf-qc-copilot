@@ -123,8 +123,8 @@ export function TestRunCompareCharts({ results }: TestRunCompareChartsProps) {
         <div className="p-6 pb-2 border-b border-[#EAEAEA]">
           <h3 className="text-xs font-bold text-[#787774] uppercase tracking-widest">Biểu đồ so sánh điểm số</h3>
         </div>
-        <div className="p-6 h-[300px] flex-1">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="p-6 h-[300px] w-full">
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData.barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <XAxis dataKey="name" tick={{ fill: '#787774', fontSize: 11, fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: '#787774', fontSize: 11, fontFamily: 'monospace' }} axisLine={false} tickLine={false} domain={[0, 100]} />
@@ -145,8 +145,8 @@ export function TestRunCompareCharts({ results }: TestRunCompareChartsProps) {
         <div className="p-6 pb-2 border-b border-[#EAEAEA]">
           <h3 className="text-xs font-bold text-[#787774] uppercase tracking-widest">Phân tích đa chiều</h3>
         </div>
-        <div className="p-6 h-[300px] flex-1">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="p-6 h-[300px] w-full">
+          <ResponsiveContainer width="100%" height={280}>
             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData.radarData}>
               <PolarGrid stroke="#EAEAEA" />
               <PolarAngleAxis dataKey="metric" tick={{ fill: '#111111', fontSize: 11, fontWeight: 'bold' }} />
