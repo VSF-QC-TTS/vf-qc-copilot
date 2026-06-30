@@ -25,6 +25,7 @@ export interface CreateTestRunRequest {
   datasetPublicId?: string | null
   isComparison?: boolean
   compareAiConfigPublicIds?: string[] | null
+  comparePromptTemplate?: string | null
 }
 
 export interface TestRunResponse {

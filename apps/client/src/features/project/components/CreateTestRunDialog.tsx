@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { useDatasets } from '@/features/project/hooks/use-datasets'
@@ -40,6 +41,7 @@ export function CreateTestRunDialog({
   const [datasetPublicId, setDatasetPublicId] = useState('')
   const [isComparison, setIsComparison] = useState(false)
   const [selectedCompareConfigs, setSelectedCompareConfigs] = useState<string[]>([])
+  const [comparePromptTemplate, setComparePromptTemplate] = useState('')
   const { data: datasetsData, isLoading: isDatasetsLoading } = useDatasets(projectPublicId)
   const { data: compareConfigs } = useCompareConfigs(projectPublicId)
   const createRun = useCreateTestRun(projectPublicId)
@@ -66,12 +68,14 @@ export function CreateTestRunDialog({
         datasetPublicId: datasetPublicId || null,
         isComparison,
         compareAiConfigPublicIds: isComparison ? selectedCompareConfigs : null,
+        comparePromptTemplate: isComparison ? comparePromptTemplate : null,
       },
       {
         onSuccess: (run) => {
           setName('')
           setIsComparison(false)
           setSelectedCompareConfigs([])
+          setComparePromptTemplate('')
           onOpenChange(false)
           onCreated?.(run)
         },
@@ -130,22 +134,38 @@ export function CreateTestRunDialog({
 
             {compareConfigs && compareConfigs.length > 0 && (
               <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/10">
-                <div className="flex items-center justify-between">
+                <div 
+                  className="flex items-center justify-between cursor-pointer select-none group"
+                  onClick={() => setIsComparison(!isComparison)}
+                >
                   <div className="space-y-0.5">
-                    <FieldLabel className="text-base">So sánh LLM (A/B Testing)</FieldLabel>
+                    <FieldLabel className="text-base cursor-pointer group-hover:text-primary transition-colors">So sánh LLM (A/B Testing)</FieldLabel>
                     <p className="text-xs text-muted-foreground">
                       Chạy song song dataset này với các mô hình AI khác để so sánh kết quả.
                     </p>
                   </div>
                   <Switch
+                    className="pointer-events-none"
                     checked={isComparison}
                     onCheckedChange={setIsComparison}
                   />
                 </div>
                 
                 {isComparison && (
-                  <div className="flex flex-col gap-2 pt-2 border-t">
-                    <p className="text-sm font-medium">Chọn các mô hình để so sánh (tối đa 3):</p>
+                  <div className="flex flex-col gap-4 pt-4 border-t">
+                    <Field>
+                      <FieldLabel className="text-sm font-medium">Prompt cho LLM so sánh</FieldLabel>
+                      <Textarea
+                        value={comparePromptTemplate}
+                        onChange={(e) => setComparePromptTemplate(e.target.value)}
+                        placeholder="vd: Bạn là một trợ lý AI. Hãy trả lời câu hỏi sau: {{question}}"
+                        rows={3}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Sử dụng {'{{variable}}'} để map với các cột trong dataset.</p>
+                    </Field>
+                    
+                    <div>
+                      <p className="text-sm font-medium mb-2">Chọn các mô hình để so sánh (tối đa 3):</p>
                     <div className="grid grid-cols-1 gap-2">
                       {compareConfigs.map(config => {
                         const isSelected = selectedCompareConfigs.includes(config.publicId)
@@ -172,6 +192,7 @@ export function CreateTestRunDialog({
                         )
                       })}
                     </div>
+                  </div>
                   </div>
                 )}
               </div>
