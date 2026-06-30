@@ -8,12 +8,19 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import vn.vinfast.vfqc.api.model.ai.AiProvider;
 import vn.vinfast.vfqc.api.model.ai.KeySource;
+import java.util.UUID;
 
 /**
  * @author nghlong3004 (Long Nguyen Hoang)
  * @since 6/27/2026
  */
 public record SaveAiConfigRequest(
+    @Schema(description = "ID of the config to update (for COMPARE)")
+        UUID configId,
+    @Schema(description = "Type of AI Config (JUDGE or COMPARE)")
+        vn.vinfast.vfqc.api.model.ai.AiConfigType type,
+    @Schema(description = "Name for COMPARE config")
+        String name,
     @Schema(description = "The AI Provider") @NotNull(message = "validation.not-null")
         AiProvider provider,
     @Schema(description = "Optional base URL to override provider's default (e.g. for Azure)")

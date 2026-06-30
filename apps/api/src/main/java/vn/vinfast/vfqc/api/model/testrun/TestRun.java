@@ -17,6 +17,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 
 @Entity
 @Table(name = "test_runs")
@@ -40,6 +43,11 @@ public class TestRun {
 
   @Column(name = "name", nullable = false, length = 255)
   private String name;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "run_type", nullable = false, length = 30)
+  @Builder.Default
+  private TestRunType runType = TestRunType.EVALUATION;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false, length = 30)
@@ -78,6 +86,10 @@ public class TestRun {
 
   @Column(name = "verification_config_version", nullable = false)
   private Integer verificationConfigVersion;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "compare_ai_configs", columnDefinition = "jsonb")
+  private String compareAiConfigs;
 
   @Column(name = "total_cases", nullable = false)
   @Builder.Default

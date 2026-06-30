@@ -458,7 +458,7 @@ public class DatasetServiceImpl {
         List<SchemaColumn> columns = currentColumns(dataset.getProjectId());
         AiConfig aiConfig =
             aiConfigRepository
-                .findByProjectId(dataset.getProjectId())
+                .findByProjectIdAndType(dataset.getProjectId(), vn.vinfast.vfqc.api.model.ai.AiConfigType.JUDGE)
                 .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_AI_CONFIG));
         String apiKey = secretManager.decryptForOwner("AI_CONFIG", dataset.getProjectId()).get("API_KEY");
         if (!StringUtils.hasText(apiKey)) {

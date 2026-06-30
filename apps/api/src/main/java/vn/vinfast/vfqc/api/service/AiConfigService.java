@@ -28,12 +28,22 @@ public interface AiConfigService {
   AiConfigResponse save(UUID projectPublicId, @Valid SaveAiConfigRequest req);
 
   /**
-   * Retrieves the current AI configuration for a project.
+   * Retrieves the current JUDGE AI configuration for a project.
    *
    * @param projectPublicId the public ID of the project
    * @return the AI configuration
    */
   AiConfigResponse get(UUID projectPublicId);
+
+  /**
+   * Retrieves the COMPARE AI configurations for a project.
+   */
+  java.util.List<AiConfigResponse> listCompare(UUID projectPublicId);
+
+  /**
+   * Deletes a COMPARE AI configuration.
+   */
+  void delete(UUID projectPublicId, UUID configPublicId);
 
   /**
    * Executes a test of the saved AI configuration using sample prompts. Uses the configured AI

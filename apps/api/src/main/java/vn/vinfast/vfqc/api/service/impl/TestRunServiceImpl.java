@@ -31,6 +31,8 @@ import vn.vinfast.vfqc.api.model.testrun.AssertionResult;
 import vn.vinfast.vfqc.api.model.testrun.TestResult;
 import vn.vinfast.vfqc.api.model.testrun.TestRun;
 import vn.vinfast.vfqc.api.model.testrun.TestRunStatus;
+import vn.vinfast.vfqc.api.model.testrun.TestRunType;
+import vn.vinfast.vfqc.api.model.testrun.CompareTestRunData;
 import vn.vinfast.vfqc.api.model.testrun.request.AddCustomColumnRequest;
 import vn.vinfast.vfqc.api.model.testrun.request.CreateTestRunRequest;
 import vn.vinfast.vfqc.api.model.testrun.request.OverrideResultRequest;
@@ -75,6 +77,7 @@ import vn.vinfast.vfqc.api.shared.error.ResourceException;
 
 @Slf4j
 @Service
+@lombok.RequiredArgsConstructor
 public class TestRunServiceImpl implements TestRunService {
 
   private final ProjectRepository projectRepository;
@@ -96,48 +99,8 @@ public class TestRunServiceImpl implements TestRunService {
   private final JpaTestRunJobRepository testRunJobRepository;
   private final Executor taskExecutor;
   private final TransactionTemplate transactionTemplate;
+  private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-  @Autowired
-  public TestRunServiceImpl(
-      ProjectRepository projectRepository,
-      UserRepository userRepository,
-      TargetConfigRepository targetConfigRepository,
-      JpaAiConfigRepository aiConfigRepository,
-      JpaProjectSchemaRepository schemaRepository,
-      JpaDatasetRepository datasetRepository,
-      JpaDatasetVersionRepository datasetVersionRepository,
-      JpaVerificationConfigRepository verificationConfigRepository,
-      JpaTestRunRepository testRunRepository,
-      EvalJobPublisher evalJobPublisher,
-      JpaTestResultRepository testResultRepository,
-      JpaRunEventRepository runEventRepository,
-      JpaAssertionResultRepository assertionResultRepository,
-      JpaTestRunCustomColumnRepository testRunCustomColumnRepository,
-      JpaTestResultCustomValueRepository testResultCustomValueRepository,
-      JpaTestResultOverrideRepository testResultOverrideRepository,
-      JpaTestRunJobRepository testRunJobRepository,
-      Executor taskExecutor,
-      TransactionTemplate transactionTemplate) {
-    this.projectRepository = projectRepository;
-    this.userRepository = userRepository;
-    this.targetConfigRepository = targetConfigRepository;
-    this.aiConfigRepository = aiConfigRepository;
-    this.schemaRepository = schemaRepository;
-    this.datasetRepository = datasetRepository;
-    this.datasetVersionRepository = datasetVersionRepository;
-    this.verificationConfigRepository = verificationConfigRepository;
-    this.testRunRepository = testRunRepository;
-    this.evalJobPublisher = evalJobPublisher;
-    this.testResultRepository = testResultRepository;
-    this.runEventRepository = runEventRepository;
-    this.assertionResultRepository = assertionResultRepository;
-    this.testRunCustomColumnRepository = testRunCustomColumnRepository;
-    this.testResultCustomValueRepository = testResultCustomValueRepository;
-    this.testResultOverrideRepository = testResultOverrideRepository;
-    this.testRunJobRepository = testRunJobRepository;
-    this.taskExecutor = taskExecutor;
-    this.transactionTemplate = transactionTemplate;
-  }
 
 
   @Override
@@ -173,10 +136,49 @@ public class TestRunServiceImpl implements TestRunService {
     Optional<AiConfig> aiConfig = resolveAiConfig(projectId, verificationConfig);
     User user = getUser(email);
 
+    TestRunType runType = TestRunType.EVALUATION;
+    String compareAiConfigsJson = null;
+
+    if (Boolean.TRUE.equals(request.isComparison())) {
+      runType = TestRunType.COMPARISON;
+      if (request.compareAiConfigPublicIds() == null || request.compareAiConfigPublicIds().isEmpty()) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Cần chọn ít nhất 1 LLM để so sánh");
+      }
+      if (request.comparePromptTemplate() == null || request.comparePromptTemplate().isBlank()) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Prompt cho LLM so sánh không được để trống");
+      }
+
+      List<AiConfig> compareConfigs = aiConfigRepository.findAllByProjectIdAndType(projectId, vn.vinfast.vfqc.api.model.ai.AiConfigType.COMPARE)
+          .stream()
+          .filter(c -> request.compareAiConfigPublicIds().contains(c.getPublicId()))
+          .toList();
+
+      if (compareConfigs.isEmpty()) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Không tìm thấy cấu hình LLM hợp lệ");
+      }
+
+      CompareTestRunData compareData = CompareTestRunData.builder()
+          .promptTemplate(request.comparePromptTemplate())
+          .configs(compareConfigs.stream().map(c -> CompareTestRunData.CompareAiConfigEntry.builder()
+              .id(c.getId())
+              .name(c.getName())
+              .provider(c.getProvider().name())
+              .model(c.getGenerationModel() != null ? c.getGenerationModel() : c.getEvaluationModel())
+              .build()).toList())
+          .build();
+
+      try {
+        compareAiConfigsJson = objectMapper.writeValueAsString(compareData);
+      } catch (Exception e) {
+        throw ResourceException.of(ErrorCode.INTERNAL_SERVER_ERROR, "Lỗi khi xử lý cấu hình so sánh");
+      }
+    }
+
     TestRun run =
         TestRun.builder()
             .projectId(projectId)
             .name(resolveRunName(request))
+            .runType(runType)
             .status(TestRunStatus.QUEUED)
             .targetConfigId(targetConfig.getId())
             .targetConfigVersion(targetConfig.getVersion())
@@ -189,6 +191,7 @@ public class TestRunServiceImpl implements TestRunService {
             .datasetVersionNumber(datasetVersion.getVersionNumber())
             .verificationConfigId(verificationConfig.getId())
             .verificationConfigVersion(verificationConfig.getVersion())
+            .compareAiConfigs(compareAiConfigsJson)
             .totalCases(datasetVersion.getTotalRows())
             .createdBy(user.getId())
             .build();
@@ -311,7 +314,7 @@ public class TestRunServiceImpl implements TestRunService {
     if (requiresAi(verificationConfig)) {
       return Optional.of(
           aiConfigRepository
-              .findByProjectId(projectId)
+              .findByProjectIdAndType(projectId, vn.vinfast.vfqc.api.model.ai.AiConfigType.JUDGE)
               .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_AI_CONFIG)));
     }
     return Optional.empty();
@@ -351,6 +354,7 @@ public class TestRunServiceImpl implements TestRunService {
     return new TestRunResponse(
         run.getPublicId(),
         run.getName(),
+        run.getRunType(),
         run.getStatus(),
         run.getProjectId(),
         run.getTargetConfigId(),
@@ -364,6 +368,7 @@ public class TestRunServiceImpl implements TestRunService {
         run.getDatasetVersionNumber(),
         run.getVerificationConfigId(),
         run.getVerificationConfigVersion(),
+        run.getCompareAiConfigs(),
         run.getTotalCases(),
         run.getPassedCases(),
         run.getFailedCases(),

@@ -117,7 +117,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     return new ProjectSetupStatus(
         targetConfigRepository.existsByProjectId(projectId),
-        aiConfigRepository.existsByProjectId(projectId),
+        aiConfigRepository.existsByProjectIdAndType(projectId, vn.vinfast.vfqc.api.model.ai.AiConfigType.JUDGE),
         projectSchemaRepository.existsByProjectId(projectId),
         verificationConfigRepository.existsByProjectId(projectId),
         datasetRepository.existsByProjectId(projectId),

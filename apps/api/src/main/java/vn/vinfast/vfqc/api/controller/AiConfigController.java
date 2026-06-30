@@ -49,6 +49,22 @@ public class AiConfigController {
   }
 
   @Operation(
+      summary = "List Compare AI Configs",
+      description = "Gets all AI configurations used for comparison.")
+  @GetMapping("/compare")
+  public java.util.List<AiConfigResponse> listCompare(@PathVariable UUID publicId) {
+    return aiConfigService.listCompare(publicId);
+  }
+
+  @Operation(
+      summary = "Delete Compare AI Config",
+      description = "Deletes an AI configuration used for comparison.")
+  @org.springframework.web.bind.annotation.DeleteMapping("/compare/{configId}")
+  public void delete(@PathVariable UUID publicId, @PathVariable UUID configId) {
+    aiConfigService.delete(publicId, configId);
+  }
+
+  @Operation(
       summary = "Test AI Config",
       description = "Tests the AI connection with sample prompts.")
   @PostMapping("/test")

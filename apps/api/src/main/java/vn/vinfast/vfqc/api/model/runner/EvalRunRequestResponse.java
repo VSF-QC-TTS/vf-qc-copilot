@@ -12,6 +12,8 @@ import vn.vinfast.vfqc.api.model.verification.VerificationMode;
 public record EvalRunRequestResponse(
     UUID runId,
     Long internalRunId,
+    vn.vinfast.vfqc.api.model.testrun.TestRunType runType,
+    vn.vinfast.vfqc.api.model.testrun.CompareTestRunData compareData,
     TargetConfigPayload targetConfig,
     AiConfigPayload aiConfig,
     List<DatasetRowPayload> datasetRows,

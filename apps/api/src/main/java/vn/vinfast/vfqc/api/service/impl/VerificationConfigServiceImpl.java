@@ -112,7 +112,7 @@ public class VerificationConfigServiceImpl implements VerificationConfigService 
             .findByProjectId(projectId)
             .orElseThrow(() -> ResourceException.of(ErrorCode.MISSING_DATASET_SCHEMA));
 
-    if (requiresAi(request) && !aiConfigRepository.existsByProjectId(projectId)) {
+    if (requiresAi(request) && !aiConfigRepository.existsByProjectIdAndType(projectId, vn.vinfast.vfqc.api.model.ai.AiConfigType.JUDGE)) {
       throw ResourceException.of(ErrorCode.MISSING_AI_CONFIG);
     }
     return schema;

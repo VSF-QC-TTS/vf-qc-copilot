@@ -12,6 +12,8 @@ import vn.vinfast.vfqc.api.model.ai.KeySource;
  * @since 6/27/2026
  */
 public record AiConfigResponse(
+    @Schema(description = "Type of AI Config") vn.vinfast.vfqc.api.model.ai.AiConfigType type,
+    @Schema(description = "Name for COMPARE config") String name,
     @Schema(description = "Public ID of the AI config") UUID publicId,
     @Schema(description = "Current version number") Integer version,
     @Schema(description = "The AI Provider") AiProvider provider,

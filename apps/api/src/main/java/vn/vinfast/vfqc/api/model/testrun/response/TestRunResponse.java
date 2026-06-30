@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import vn.vinfast.vfqc.api.model.testrun.TestRunStatus;
+import vn.vinfast.vfqc.api.model.testrun.TestRunType;
 
 public record TestRunResponse(
     UUID publicId,
     String name,
+    TestRunType runType,
     TestRunStatus status,
     Long projectId,
     Long targetConfigId,
@@ -21,6 +23,7 @@ public record TestRunResponse(
     Integer datasetVersionNumber,
     Long verificationConfigId,
     Integer verificationConfigVersion,
+    String compareAiConfigs,
     Integer totalCases,
     Integer passedCases,
     Integer failedCases,

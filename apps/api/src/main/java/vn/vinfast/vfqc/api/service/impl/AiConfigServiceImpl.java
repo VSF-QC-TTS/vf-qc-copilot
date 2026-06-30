@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.vinfast.vfqc.api.model.ai.AiConfig;
+import vn.vinfast.vfqc.api.model.ai.AiConfigType;
 import vn.vinfast.vfqc.api.model.ai.AiUseCase;
 import vn.vinfast.vfqc.api.shared.ai.AiExecutionResult;
 import vn.vinfast.vfqc.api.shared.ai.AiProviderFactory;
@@ -46,25 +47,28 @@ public class AiConfigServiceImpl implements AiConfigService {
     log.info("Saving AI config for project: {}", projectPublicId);
     Project project = getProjectOrThrow(projectPublicId);
 
-    AiConfig entity =
-        aiConfigRepository
-            .findByProjectId(project.getId())
-            .orElseGet(() -> AiConfig.builder().projectId(project.getId()).build());
+    AiConfigType type = req.type() != null ? req.type() : AiConfigType.JUDGE;
 
-    // Update API Key if provided
-    if (req.apiKey() != null
-        && !req.apiKey().isBlank()
-        && !req.apiKey().equals("SECRET_REDACTED")) {
-      secretManager.replaceSecrets(
-          "AI_CONFIG",
-          project.getId(),
-          java.util.List.of(
-              secretManager.encryptSingleSecret(
-                  project.getId(), "AI_CONFIG", project.getId(), "API_KEY", req.apiKey())));
+    AiConfig entity;
+    if (req.configId() != null) {
+      entity = aiConfigRepository.findByPublicIdAndProjectId(req.configId(), project.getId())
+          .orElseThrow(() -> ResourceException.of(ErrorCode.AI_CONFIG_NOT_FOUND));
+    } else if (type == AiConfigType.JUDGE) {
+      entity = aiConfigRepository.findByProjectIdAndType(project.getId(), type)
+          .orElseGet(() -> AiConfig.builder().projectId(project.getId()).type(type).build());
+    } else {
+      if (req.name() == null || req.name().isBlank()) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Tên model không được để trống khi so sánh");
+      }
+      entity = aiConfigRepository.findByProjectIdAndTypeAndName(project.getId(), type, req.name())
+          .orElseGet(() -> AiConfig.builder().projectId(project.getId()).type(type).name(req.name()).build());
     }
+
+    // Secrets will be saved after entity is saved to get ID
 
     // Update entity
     entity.setProvider(req.provider());
+    entity.setName(req.name());
     entity.setBaseUrl(entity.requiresCustomBaseUrl() ? req.baseUrl() : null);
     entity.setKeySource(req.keySource());
     entity.setEvaluationModel(req.evaluationModel());
@@ -79,6 +83,19 @@ public class AiConfigServiceImpl implements AiConfigService {
     }
 
     AiConfig saved = aiConfigRepository.save(entity);
+
+    // Update API Key if provided
+    if (req.apiKey() != null
+        && !req.apiKey().isBlank()
+        && !req.apiKey().equals("SECRET_REDACTED")) {
+      secretManager.replaceSecrets(
+          "AI_CONFIG",
+          saved.getId(),
+          java.util.List.of(
+              secretManager.encryptSingleSecret(
+                  project.getId(), "AI_CONFIG", saved.getId(), "API_KEY", req.apiKey())));
+    }
+
     return mapToResponse(saved, project.getId());
   }
 
@@ -89,10 +106,31 @@ public class AiConfigServiceImpl implements AiConfigService {
     Project project = getProjectOrThrow(projectPublicId);
     AiConfig entity =
         aiConfigRepository
-            .findByProjectId(project.getId())
+            .findByProjectIdAndType(project.getId(), AiConfigType.JUDGE)
             .orElseThrow(() -> ResourceException.of(ErrorCode.AI_CONFIG_NOT_FOUND));
 
     return mapToResponse(entity, project.getId());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public java.util.List<AiConfigResponse> listCompare(UUID projectPublicId) {
+    Project project = getProjectOrThrow(projectPublicId);
+    return aiConfigRepository.findAllByProjectIdAndType(project.getId(), AiConfigType.COMPARE)
+        .stream().map(e -> mapToResponse(e, project.getId())).toList();
+  }
+
+  @Override
+  @Transactional
+  public void delete(UUID projectPublicId, UUID configPublicId) {
+    Project project = getProjectOrThrow(projectPublicId);
+    AiConfig entity = aiConfigRepository.findByPublicIdAndProjectId(configPublicId, project.getId())
+        .orElseThrow(() -> ResourceException.of(ErrorCode.AI_CONFIG_NOT_FOUND));
+    if (entity.getType() == AiConfigType.JUDGE) {
+        throw ResourceException.of(ErrorCode.BAD_REQUEST, "Không thể xoá cấu hình JUDGE");
+    }
+    secretManager.replaceSecrets("AI_CONFIG", entity.getId(), java.util.List.of());
+    aiConfigRepository.delete(entity);
   }
 
   @Override
@@ -102,11 +140,14 @@ public class AiConfigServiceImpl implements AiConfigService {
     Project project = getProjectOrThrow(projectPublicId);
     AiConfig entity =
         aiConfigRepository
-            .findByProjectId(project.getId())
+            .findByProjectIdAndType(project.getId(), AiConfigType.JUDGE)
             .orElseThrow(() -> ResourceException.of(ErrorCode.AI_CONFIG_NOT_FOUND));
 
     Map<String, String> decryptedSecrets =
-        secretManager.decryptForOwner("AI_CONFIG", project.getId());
+        secretManager.decryptForOwner("AI_CONFIG", entity.getId());
+    if (decryptedSecrets.isEmpty()) {
+      decryptedSecrets = secretManager.decryptForOwner("AI_CONFIG", project.getId());
+    }
     String apiKey = decryptedSecrets.get("API_KEY");
     if (apiKey == null || apiKey.isBlank()) {
       throw ResourceException.of(
@@ -139,9 +180,14 @@ public class AiConfigServiceImpl implements AiConfigService {
 
   private AiConfigResponse mapToResponse(AiConfig entity, Long projectId) {
     AiConfigResponse res = aiConfigMapper.toResponse(entity);
-    boolean hasApiKey = secretManager.hasSecrets("AI_CONFIG", projectId);
+    boolean hasApiKey = secretManager.hasSecrets("AI_CONFIG", entity.getId());
+    if (!hasApiKey) {
+      hasApiKey = secretManager.hasSecrets("AI_CONFIG", projectId);
+    }
 
     return new AiConfigResponse(
+        res.type(),
+        res.name(),
         res.publicId(),
         res.version(),
         res.provider(),

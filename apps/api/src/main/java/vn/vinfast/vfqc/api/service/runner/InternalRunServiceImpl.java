@@ -53,7 +53,9 @@ import vn.vinfast.vfqc.api.repository.TargetConfigRepository;
 import vn.vinfast.vfqc.api.shared.crypto.SecretManager;
 import vn.vinfast.vfqc.api.shared.error.ErrorCode;
 import vn.vinfast.vfqc.api.shared.error.ResourceException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InternalRunServiceImpl implements InternalRunService {
@@ -87,9 +89,29 @@ public class InternalRunServiceImpl implements InternalRunService {
             .findById(run.getVerificationConfigId())
             .orElseThrow(() -> ResourceException.of(ErrorCode.VERIFICATION_CONFIG_NOT_FOUND));
 
+    vn.vinfast.vfqc.api.model.testrun.CompareTestRunData compareData = null;
+    if (run.getCompareAiConfigs() != null) {
+      try {
+        compareData = objectMapper.readValue(run.getCompareAiConfigs(), vn.vinfast.vfqc.api.model.testrun.CompareTestRunData.class);
+        if (compareData != null && compareData.getConfigs() != null) {
+          for (vn.vinfast.vfqc.api.model.testrun.CompareTestRunData.CompareAiConfigEntry config : compareData.getConfigs()) {
+            Map<String, String> secrets = secretManager.decryptForOwner("AI_CONFIG", config.getId());
+            if (secrets.isEmpty()) {
+              secrets = secretManager.decryptForOwner("AI_CONFIG", run.getProjectId());
+            }
+            config.setApiKey(secrets.get("API_KEY"));
+          }
+        }
+      } catch (JsonProcessingException e) {
+        log.error("Failed to parse compareAiConfigs", e);
+      }
+    }
+
     return new EvalRunRequestResponse(
         run.getPublicId(),
         run.getId(),
+        run.getRunType(),
+        compareData,
         toTargetPayload(run, targetConfig),
         toAiPayload(run),
         datasetRowRepository.findByDatasetVersionIdOrderByRowIndexAsc(run.getDatasetVersionId()).stream()
@@ -223,6 +245,10 @@ public class InternalRunServiceImpl implements InternalRunService {
         aiConfigRepository
             .findById(run.getAiConfigId())
             .orElseThrow(() -> ResourceException.of(ErrorCode.AI_CONFIG_NOT_FOUND));
+    Map<String, String> secrets = secretManager.decryptForOwner("AI_CONFIG", aiConfig.getId());
+    if (secrets.isEmpty()) {
+      secrets = secretManager.decryptForOwner("AI_CONFIG", run.getProjectId());
+    }
     return new AiConfigPayload(
         aiConfig.getProvider(),
         aiConfig.getBaseUrl(),
@@ -231,7 +257,7 @@ public class InternalRunServiceImpl implements InternalRunService {
         aiConfig.getMaxTokens(),
         aiConfig.getTimeoutMs(),
         aiConfig.getRetryCount(),
-        secretManager.decryptForOwner("AI_CONFIG", run.getProjectId()).get("API_KEY"));
+        secrets.get("API_KEY"));
   }
 
   private SchemaColumnPayload toColumnPayload(SchemaColumn column) {

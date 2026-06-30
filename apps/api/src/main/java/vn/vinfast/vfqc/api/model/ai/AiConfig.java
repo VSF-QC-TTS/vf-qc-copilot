@@ -42,8 +42,16 @@ public class AiConfig {
   @Builder.Default
   private UUID publicId = UUID.randomUUID();
 
-  @Column(name = "project_id", nullable = false, unique = true)
+  @Column(name = "project_id", nullable = false)
   private Long projectId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "type", nullable = false, length = 30)
+  @Builder.Default
+  private AiConfigType type = AiConfigType.JUDGE;
+
+  @Column(name = "name", length = 255)
+  private String name;
 
   @Column(name = "version", nullable = false)
   @Builder.Default
