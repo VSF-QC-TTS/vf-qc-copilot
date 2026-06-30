@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { PlayIcon, TablePropertiesIcon } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -201,12 +201,13 @@ export function CreateTestRunDialog({
 
           <DialogFooter>
             {!hasRunnableDataset && projectPublicId ? (
-              <Button asChild type="button" variant="outline">
-                <Link to={`/projects/${projectPublicId}/datasets`}>
-                  <TablePropertiesIcon data-icon="inline-start" />
-                  Mở Datasets
-                </Link>
-              </Button>
+              <Link 
+                to={`/projects/${projectPublicId}/datasets`}
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
+                <TablePropertiesIcon data-icon="inline-start" />
+                Mở Datasets
+              </Link>
             ) : null}
             <Button
               type="submit"
