@@ -8,6 +8,7 @@ describe('AssertionEvaluator', () => {
     const request: EvalRunRequest = {
       runId: 'run-1',
       internalRunId: 1,
+      runType: 'EVALUATION',
       targetConfig: {
         method: 'POST',
         url: 'http://localhost',
@@ -84,8 +85,9 @@ describe('AssertionEvaluator', () => {
 
 function llmProviderFor(mapper: VerificationMapper, provider: string): unknown {
   const request: EvalRunRequest = {
-    runId: 'run-1',
+    runId: 'run1',
     internalRunId: 1,
+    runType: 'EVALUATION',
     targetConfig: {
       method: 'POST',
       url: 'http://localhost',
@@ -135,8 +137,9 @@ function llmProviderFor(mapper: VerificationMapper, provider: string): unknown {
 
 function llmRequestWithRubric(): EvalRunRequest {
   return {
-    runId: 'run-1',
-    internalRunId: 1,
+    runId: 'run3',
+    internalRunId: 3,
+    runType: 'EVALUATION',
     targetConfig: {
       method: 'POST',
       url: 'http://localhost',

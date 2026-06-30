@@ -37,17 +37,45 @@ export class PromptfooExecutor {
       showProgressBar: false,
     });
     const summary = await evalRecord.toEvaluateSummary();
-    const result = (summary.results?.[0] ?? null) as EvaluateResult | null;
+    
+    // The first result is typically the target provider unless it failed to initialize.
+    // We explicitly find it by label:
+    const targetResultObj = summary.results?.find(r => r.provider.label === 'vfqc-target-provider') ?? summary.results?.[0] ?? null;
     const targetResult = builtSuite.getTargetResult();
 
-    this.throwIfTargetFailed(result, targetResult);
+    this.throwIfTargetFailed(targetResultObj as EvaluateResult | null, targetResult);
 
-    const output = targetResult?.output ?? result?.response?.output ?? {};
+    const output = targetResult?.output ?? targetResultObj?.response?.output ?? {};
+    
+    // Normal assertions for the target provider
+    const assertions = this.resultMapper.mapAssertions(targetResultObj as EvaluateResult | null, request.verification.items, output);
+
+    // If it's a comparison run, extract the other providers' results as well
+    if (request.runType === 'COMPARISON' && summary.results) {
+      const compareEvals = summary.results.filter(r => r.provider.label !== 'vfqc-target-provider');
+      for (const evalRes of compareEvals) {
+        const outStr = typeof evalRes.response?.output === 'string' 
+          ? evalRes.response.output 
+          : JSON.stringify(evalRes.response?.output ?? '');
+          
+        assertions.push({
+          assertionName: evalRes.provider.label || evalRes.provider.id || 'Unknown LLM',
+          assertionType: 'LLM_COMPARE',
+          responsePath: null,
+          passed: !evalRes.error && evalRes.success,
+          score: evalRes.score || 0,
+          reason: evalRes.error || 'Comparison completed',
+          expectedValue: null,
+          actualValue: outStr,
+        });
+      }
+    }
+
     return {
       output,
-      rawResponse: targetResult?.rawResponse ?? result?.response?.raw ?? output,
-      latencyMs: targetResult?.latencyMs ?? result?.latencyMs ?? 0,
-      assertions: this.resultMapper.mapAssertions(result, request.verification.items, output),
+      rawResponse: targetResult?.rawResponse ?? targetResultObj?.response?.raw ?? output,
+      latencyMs: targetResult?.latencyMs ?? targetResultObj?.latencyMs ?? 0,
+      assertions,
     };
   }
 

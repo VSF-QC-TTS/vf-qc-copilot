@@ -15,6 +15,8 @@ export type CheckOperator =
 export interface EvalRunRequest {
   runId: string;
   internalRunId: number;
+  runType: 'EVALUATION' | 'COMPARISON';
+  compareData?: CompareTestRunData | null;
   targetConfig: TargetConfigPayload;
   aiConfig: AiConfigPayload | null;
   datasetRows: DatasetRowPayload[];
@@ -103,4 +105,17 @@ export interface RunnerCaseResult {
   latencyMs: number;
   rawTargetResponse: string;
   assertions: RunnerAssertionResult[];
+}
+
+export interface CompareTestRunData {
+  promptTemplate: string;
+  configs: CompareAiConfigEntry[];
+}
+
+export interface CompareAiConfigEntry {
+  id: number;
+  name: string;
+  provider: string;
+  model: string;
+  apiKey?: string | null;
 }

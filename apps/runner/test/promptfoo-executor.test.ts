@@ -59,6 +59,7 @@ function createRequest(): EvalRunRequest {
   return {
     runId: 'run-1',
     internalRunId: 1,
+    runType: 'EVALUATION',
     targetConfig: {
       method: 'POST',
       url: 'http://localhost',

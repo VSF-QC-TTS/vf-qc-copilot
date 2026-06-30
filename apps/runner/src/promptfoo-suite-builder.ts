@@ -1,4 +1,4 @@
-import type { CallApiFunction, EvaluateTestSuite, ProviderResponse } from 'promptfoo';
+import type { CallApiFunction, EvaluateTestSuite, ProviderResponse, ProviderOptions } from 'promptfoo';
 import type { EvalRunRequest } from './types.js';
 import type { TargetCaller, TargetCallResult } from './target-client.js';
 import { stringifyJson } from './json.js';
@@ -35,10 +35,39 @@ export class PromptfooSuiteBuilder {
     };
     provider.label = 'vfqc-target-provider';
 
+    const providers: (CallApiFunction | ProviderOptions)[] = [provider];
+    let prompts = ['{{__vfqc_input}}'];
+
+    if (request.runType === 'COMPARISON' && request.compareData?.configs) {
+      prompts = [request.compareData.promptTemplate];
+      for (const config of request.compareData.configs) {
+        let providerId = '';
+        if (config.provider === 'OPENAI') {
+          providerId = `openai:chat:${config.model}`;
+        } else if (config.provider === 'GEMINI') {
+          providerId = `gemini:${config.model}`;
+        } else if (config.provider === 'ANTHROPIC') {
+          providerId = `anthropic:messages:${config.model}`;
+        } else if (config.provider === 'AZURE_OPENAI') {
+          providerId = `azureopenai:chat:${config.model}`;
+        } else {
+          providerId = `${config.provider.toLowerCase()}:${config.model}`;
+        }
+
+        providers.push({
+          id: providerId,
+          label: config.name,
+          config: {
+            apiKey: config.apiKey,
+          },
+        });
+      }
+    }
+
     return {
       suite: {
-        prompts: ['{{__vfqc_input}}'],
-        providers: [provider],
+        prompts,
+        providers,
         tests: [
           {
             vars: {
