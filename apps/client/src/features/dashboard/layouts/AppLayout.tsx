@@ -8,7 +8,7 @@ export function AppLayout() {
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset className="bg-background">
+        <SidebarInset className="bg-slate-50">
           <Outlet />
         </SidebarInset>
       </SidebarProvider>

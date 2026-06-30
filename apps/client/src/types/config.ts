@@ -95,6 +95,8 @@ export interface TestTargetConfigRequest {
 export interface AiConfigResponse {
   publicId: string
   version: number
+  type: 'JUDGE' | 'COMPARE'
+  name: string | null
   provider: AiProvider
   baseUrl: string | null
   keySource: KeySource
@@ -112,6 +114,9 @@ export interface AiConfigResponse {
 }
 
 export interface SaveAiConfigRequest {
+  configId?: string | null
+  type?: 'JUDGE' | 'COMPARE'
+  name?: string | null
   provider: AiProvider
   baseUrl?: string | null
   apiKey?: string | null       // Send "SECRET_REDACTED" to keep existing key

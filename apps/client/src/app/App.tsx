@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AppLayout } from '@/features/dashboard/layouts/AppLayout'
 import { ProjectLayout } from '@/features/dashboard/layouts/ProjectLayout'
 import { VinFastPreloader } from '@/components/VinFastPreloader'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // Lazy-loaded auth pages — code-split per route
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -22,6 +23,7 @@ const PlaceholderPage = lazy(() => import('@/features/project/pages/PlaceholderP
 
 const TargetConfigPage = lazy(() => import('@/features/project/pages/config/TargetConfigPage').then(m => ({ default: m.TargetConfigPage })))
 const AiConfigPage = lazy(() => import('@/features/project/pages/config/AiConfigPage').then(m => ({ default: m.AiConfigPage })))
+const CompareConfigPage = lazy(() => import('@/features/project/pages/config/CompareConfigPage').then(m => ({ default: m.CompareConfigPage })))
 const ProjectSchemaPage = lazy(() => import('@/features/project/pages/config/ProjectSchemaPage').then(m => ({ default: m.ProjectSchemaPage })))
 const VerificationConfigPage = lazy(() => import('@/features/project/pages/config/VerificationConfigPage').then(m => ({ default: m.VerificationConfigPage })))
 const DatasetListPage = lazy(() => import('@/features/project/pages/datasets/DatasetListPage').then(m => ({ default: m.DatasetListPage })))
@@ -69,8 +71,9 @@ function App() {
         />
       )}
       <div className={loading ? 'invisible h-0 overflow-hidden' : ''}>
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
             {/* Presentation standalone route */}
             <Route path="/presentation" element={<PresentationPage />} />
 
@@ -92,6 +95,7 @@ function App() {
                 <Route index element={<ProjectOverviewPage />} />
                 <Route path="config/target" element={<TargetConfigPage />} />
                 <Route path="config/ai" element={<AiConfigPage />} />
+                <Route path="config/compare" element={<CompareConfigPage />} />
                 <Route path="config/schema" element={<ProjectSchemaPage />} />
                 <Route path="config/verification" element={<VerificationConfigPage />} />
                 <Route path="datasets" element={<DatasetListPage />} />
@@ -103,8 +107,9 @@ function App() {
             </Route>
             
             <Route path="*" element={<Navigate to="/projects" replace />} />
-          </Routes>
-        </Suspense>
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </>
   )

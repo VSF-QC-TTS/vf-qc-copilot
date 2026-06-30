@@ -8,7 +8,6 @@ import {
   ListChecksIcon,
   PlusIcon,
   SaveIcon,
-  ShieldCheckIcon,
   TrashIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -173,16 +172,7 @@ export function VerificationConfigPage(): ReactElement {
     <form onSubmit={handleSubmit} className="mx-auto flex w-full max-w-[1320px] flex-col gap-4 p-4 lg:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-4 border-border/65">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-foreground text-background font-normal py-0.5 px-2">
-              <ShieldCheckIcon data-icon="inline-start" />
-              Verification
-            </Badge>
-            <Badge variant="outline" className="font-normal py-0.5 px-2">
-              {modeLabel(mode, t)}
-            </Badge>
-          </div>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">{t('config.verification.title')}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('config.verification.title')}</h1>
           <div className="mt-2.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
             <Badge variant="secondary" className="font-normal py-0.5 px-2">
               {fieldItems.length} {t('config.verification.fieldMatchTab').toLowerCase()}
@@ -399,16 +389,6 @@ function deriveMode(items: VerificationItemRequest[], fallback: VerificationMode
     return 'FIELD_CHECKS'
   }
   return fallback
-}
-
-function modeLabel(mode: VerificationMode, t: (key: string) => string): string {
-  if (mode === 'COMBINED') {
-    return t('config.verification.modeHybrid')
-  }
-  if (mode === 'LLM_JUDGE') {
-    return t('config.verification.modeOverallRubric')
-  }
-  return t('config.verification.modeFieldChecks')
 }
 
 function makeOperator(

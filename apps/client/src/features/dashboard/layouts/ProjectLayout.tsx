@@ -7,7 +7,7 @@ export function ProjectLayout() {
     <TooltipProvider>
       <div className="flex min-h-screen flex-col">
         <ProjectToolbar />
-        <main className="flex-1 overflow-auto bg-muted/20">
+        <main className="flex-1 overflow-auto bg-slate-50">
           <Outlet />
         </main>
       </div>

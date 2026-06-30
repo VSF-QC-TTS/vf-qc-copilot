@@ -23,11 +23,15 @@ export type RunEventType =
 export interface CreateTestRunRequest {
   name?: string | null
   datasetPublicId?: string | null
+  isComparison?: boolean
+  compareAiConfigPublicIds?: string[] | null
 }
 
 export interface TestRunResponse {
   publicId: string
   name: string
+  runType?: 'EVALUATION' | 'COMPARISON'
+  compareAiConfigs?: any | null
   status: TestRunStatus
   projectId: number
   targetConfigId: number | null

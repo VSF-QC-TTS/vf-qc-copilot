@@ -17,7 +17,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Spinner } from '@/components/ui/spinner'
 import { useDatasets } from '@/features/project/hooks/use-datasets'
 import { useCreateTestRun } from '@/features/project/hooks/use-test-runs'
+import { useCompareConfigs } from '@/features/project/hooks/use-ai-config'
 import type { TestRunResponse } from '@/types/test-run'
+import { Switch } from '@/components/ui/switch'
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CreateTestRunDialogProps {
   open: boolean
@@ -34,7 +38,10 @@ export function CreateTestRunDialog({
 }: CreateTestRunDialogProps) {
   const [name, setName] = useState('')
   const [datasetPublicId, setDatasetPublicId] = useState('')
+  const [isComparison, setIsComparison] = useState(false)
+  const [selectedCompareConfigs, setSelectedCompareConfigs] = useState<string[]>([])
   const { data: datasetsData, isLoading: isDatasetsLoading } = useDatasets(projectPublicId)
+  const { data: compareConfigs } = useCompareConfigs(projectPublicId)
   const createRun = useCreateTestRun(projectPublicId)
 
   const runnableDatasets = useMemo(
@@ -57,14 +64,24 @@ export function CreateTestRunDialog({
       {
         name: name.trim() || null,
         datasetPublicId: datasetPublicId || null,
+        isComparison,
+        compareAiConfigPublicIds: isComparison ? selectedCompareConfigs : null,
       },
       {
         onSuccess: (run) => {
           setName('')
+          setIsComparison(false)
+          setSelectedCompareConfigs([])
           onOpenChange(false)
           onCreated?.(run)
         },
       },
+    )
+  }
+
+  const toggleCompareConfig = (id: string) => {
+    setSelectedCompareConfigs(prev => 
+      prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
     )
   }
 
@@ -110,6 +127,55 @@ export function CreateTestRunDialog({
                 </div>
               )}
             </Field>
+
+            {compareConfigs && compareConfigs.length > 0 && (
+              <div className="flex flex-col gap-3 rounded-lg border p-4 bg-muted/10">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <FieldLabel className="text-base">So sánh LLM (A/B Testing)</FieldLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Chạy song song dataset này với các mô hình AI khác để so sánh kết quả.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isComparison}
+                    onCheckedChange={setIsComparison}
+                  />
+                </div>
+                
+                {isComparison && (
+                  <div className="flex flex-col gap-2 pt-2 border-t">
+                    <p className="text-sm font-medium">Chọn các mô hình để so sánh (tối đa 3):</p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {compareConfigs.map(config => {
+                        const isSelected = selectedCompareConfigs.includes(config.publicId)
+                        return (
+                          <div 
+                            key={config.publicId}
+                            onClick={() => toggleCompareConfig(config.publicId)}
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded-md border cursor-pointer transition-colors",
+                              isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                            )}
+                          >
+                            <div>
+                              <p className="text-sm font-medium leading-none mb-1">{config.name}</p>
+                              <p className="text-xs text-muted-foreground">{config.provider} - {config.evaluationModel}</p>
+                            </div>
+                            <div className={cn(
+                              "size-4 rounded-full border flex items-center justify-center [&>svg]:size-3",
+                              isSelected ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                            )}>
+                              {isSelected && <Check />}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>

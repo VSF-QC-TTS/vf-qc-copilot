@@ -78,6 +78,16 @@ export async function testAiConfig(publicId: string, data: TestAiConfigRequest):
   })
 }
 
+export async function listCompareConfigs(publicId: string): Promise<AiConfigResponse[]> {
+  return apiClient(`/projects/${publicId}/config/ai/compare`)
+}
+
+export async function deleteCompareConfig(publicId: string, configId: string): Promise<void> {
+  return apiClient(`/projects/${publicId}/config/ai/compare/${configId}`, {
+    method: 'DELETE',
+  })
+}
+
 // ==========================================
 // Project Schema API (replaces Dataset Schema)
 // ==========================================

@@ -74,7 +74,7 @@ export function AiConfigPage() {
   const { control, handleSubmit, watch } = form
   const provider = watch('provider')
   const keySource = watch('keySource')
-  
+
   const showBaseUrl = provider === 'CUSTOM'
   const isPersonalKey = keySource === 'PERSONAL'
 
@@ -88,15 +88,15 @@ export function AiConfigPage() {
 
   const onSubmit = (values: FormData) => {
     saveMutation.mutate({
-      provider: values.provider as AiProvider, 
+      provider: values.provider as AiProvider,
       keySource: values.keySource as KeySource,
       evaluationModel: values.evaluationModel,
       generationModel: values.generationModel || null,
-      apiKey: values.apiKey || null, 
+      apiKey: values.apiKey || null,
       baseUrl: values.provider === 'CUSTOM' ? (values.baseUrl || null) : null,
       temperature: values.temperature,
-      maxTokens: values.maxTokens, 
-      timeoutMs: values.timeout * 1000, 
+      maxTokens: values.maxTokens,
+      timeoutMs: values.timeout * 1000,
       retryCount: values.retryCount,
     })
   }
@@ -149,11 +149,11 @@ export function AiConfigPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: hasTested ? 0.1 : 0 }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mt-6 relative"
         >
           {/* Left Column: Main Configuration */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-            <Card>
+          <div className="lg:col-span-8 flex flex-col">
+            <Card className="flex-1 flex flex-col">
               <CardHeader className="pb-4 border-b border-border/40 mb-4">
                 <CardTitle className="text-base font-semibold">Cấu hình kết nối</CardTitle>
               </CardHeader>
@@ -162,7 +162,7 @@ export function AiConfigPage() {
                   {/* Provider & Key Source */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Controller control={control} name="provider" render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
+                      <Field data-invalid={!!fieldState.error} className="justify-end">
                         <FieldLabel>AI Provider <span className="text-destructive">*</span></FieldLabel>
                         <Select value={field.value} onValueChange={(val) => {
                           field.onChange(val)
@@ -183,7 +183,7 @@ export function AiConfigPage() {
                       </Field>
                     )} />
                     <Controller control={control} name="keySource" render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
+                      <Field data-invalid={!!fieldState.error} className="justify-end">
                         <FieldLabel>Key Source <span className="text-destructive">*</span></FieldLabel>
                         <Select value={field.value || undefined} onValueChange={field.onChange}>
                           <SelectTrigger className="w-full" aria-invalid={!!fieldState.error}><SelectValue placeholder="Nguồn API Key" /></SelectTrigger>
@@ -232,7 +232,7 @@ export function AiConfigPage() {
                   {/* Models */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <Controller control={control} name="evaluationModel" render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
+                      <Field data-invalid={!!fieldState.error} className="justify-end">
                         <FieldLabel className="flex items-center gap-1.5">
                           Evaluation Model <span className="text-destructive">*</span>
                           <Tooltip>
@@ -245,7 +245,7 @@ export function AiConfigPage() {
                       </Field>
                     )} />
                     <Controller control={control} name="generationModel" render={({ field, fieldState }) => (
-                      <Field data-invalid={!!fieldState.error}>
+                      <Field data-invalid={!!fieldState.error} className="justify-end">
                         <FieldLabel className="flex items-center gap-1.5">
                           Generation Model
                           <Tooltip>
@@ -264,15 +264,15 @@ export function AiConfigPage() {
           </div>
 
           {/* Right Column: Parameters & Actions */}
-          <div className="lg:col-span-4 flex flex-col gap-6 sticky top-6">
-            <Card>
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <Card className="flex-1 flex flex-col">
               <CardHeader className="pb-4 border-b border-border/40 mb-4">
                 <CardTitle className="text-base font-semibold">Tham số chấm</CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <Controller control={control} name="temperature" render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
+                    <Field data-invalid={!!fieldState.error} className="justify-end">
                       <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">
                         <span>
                           {t('config.judge.temperature', { ns: 'project' })} <span className="text-destructive">*</span>
@@ -287,7 +287,7 @@ export function AiConfigPage() {
                     </Field>
                   )} />
                   <Controller control={control} name="maxTokens" render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
+                    <Field data-invalid={!!fieldState.error} className="justify-end">
                       <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">
                         {t('config.judge.maxTokens', { ns: 'project' })} <span className="text-destructive">*</span>
                       </FieldLabel>
@@ -298,7 +298,7 @@ export function AiConfigPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Controller control={control} name="retryCount" render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
+                    <Field data-invalid={!!fieldState.error} className="justify-end">
                       <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">
                         {t('config.judge.retryCount', { ns: 'project' })} <span className="text-destructive">*</span>
                       </FieldLabel>
@@ -307,7 +307,7 @@ export function AiConfigPage() {
                     </Field>
                   )} />
                   <Controller control={control} name="timeout" render={({ field, fieldState }) => (
-                    <Field data-invalid={!!fieldState.error}>
+                    <Field data-invalid={!!fieldState.error} className="justify-end">
                       <FieldLabel className="flex items-end gap-1.5 min-h-[2.5rem] pb-1.5">{t('config.judge.timeoutMs', { ns: 'project' })} <span className="text-destructive">*</span></FieldLabel>
                       <Input type="number" min="1" {...field} aria-invalid={!!fieldState.error} />
                       <FieldError errors={[fieldState.error]} />

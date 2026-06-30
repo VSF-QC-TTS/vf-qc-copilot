@@ -1,288 +1,30 @@
-import { Link, useLocation, useParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import {
-  Settings,
-  Globe,
-  CheckSquare,
-  Table,
-  Check,
-  BarChart,
-  LayoutDashboard,
-  ChevronRight,
-  Database,
-  ShieldCheck,
-  Users,
-} from 'lucide-react'
-import { motion } from 'motion/react'
-
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
-import { useSidebar } from '@/components/ui/sidebar-context'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ProjectSwitcher } from './ProjectSwitcher'
+import { useLocation, useParams } from 'react-router-dom'
+import { Sidebar, SidebarFooter } from '@/components/ui/sidebar'
 import { UserNav } from './UserNav'
-import { useSetupStatus } from '@/features/project/hooks/use-projects'
-import { useAuth } from '@/features/auth/auth-session'
-import { cn } from '@/lib/utils'
+import { AdminSidebar } from './AdminSidebar'
+import { ProjectSidebar } from './ProjectSidebar'
+import { GlobalSidebar } from './GlobalSidebar'
 
 export function AppSidebar() {
-  const { t } = useTranslation('project')
   const { publicId } = useParams<{ publicId: string }>()
   const location = useLocation()
-  const { state } = useSidebar()
-  const { user } = useAuth()
 
-  const isProjectListMode = !publicId
-  const isAdmin = user?.role === 'ADMIN'
+  const isAdminRoute = location.pathname.startsWith('/admin')
+  const isProjectRoute = Boolean(publicId) && !isAdminRoute
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
-      <SidebarHeader>
-        <div className="flex flex-col gap-2.5 pt-3 select-none">
-          {state !== 'collapsed' ? (
-            <div className="flex h-10 items-center justify-center gap-2.5 px-4">
-              <img src="/logo.png" className="sidebar-logo" alt="VinFast Logo" />
-              <span className="font-bold text-foreground/95 tracking-tight text-[15px] flex items-center">
-                {t('app.name')}
-              </span>
-            </div>
-          ) : (
-            <div className="flex h-10 items-center justify-center">
-              <img src="/logo.png" className="sidebar-logo" alt="VinFast Logo" />
-            </div>
-          )}
-          <ProjectSwitcher />
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent>
-        {isAdmin ? <AdminNavSidebar location={location} /> : null}
-        {isProjectListMode ? null : <ProjectNavSidebar publicId={publicId} location={location} />}
-      </SidebarContent>
+    <Sidebar collapsible="icon" className="border-r border-slate-200 bg-white">
+      {isAdminRoute ? (
+        <AdminSidebar />
+      ) : isProjectRoute ? (
+        <ProjectSidebar publicId={publicId as string} />
+      ) : (
+        <GlobalSidebar />
+      )}
 
       <SidebarFooter>
         <UserNav />
       </SidebarFooter>
     </Sidebar>
-  )
-}
-
-function AdminNavSidebar({ location }: { location: any }) {
-  const isUsersActive = location.pathname === '/admin/users'
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="select-none text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
-        <ShieldCheck className="mr-1.5 size-4" />
-        Admin
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu className="gap-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className={cn(
-                "relative transition-all duration-200 select-none",
-                isUsersActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
-              )}
-            >
-              <Link to="/admin/users">
-                <div className="z-10 flex items-center gap-2">
-                  <Users />
-                  <span>Users</span>
-                </div>
-                {isUsersActive && (
-                  <motion.div
-                    layoutId="active-admin-sidebar-pill"
-                    className="absolute inset-0 z-0 rounded-md bg-primary/10 dark:bg-primary/20"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  )
-}
-
-function ProjectNavSidebar({ publicId, location }: { publicId: string; location: any }) {
-  const { t } = useTranslation('project')
-  const { data: status, isLoading } = useSetupStatus(publicId)
-
-  const setupItems = [
-    { name: t('nav.apiConfig'), path: `/projects/${publicId}/config/target`, icon: Globe, done: status?.hasTargetConfig },
-    { name: t('nav.llmJudge'), path: `/projects/${publicId}/config/ai`, icon: Settings, done: status?.hasAiConfig },
-    { name: t('nav.datasetSchema'), path: `/projects/${publicId}/config/schema`, icon: Table, done: status?.hasProjectSchema },
-    { name: t('nav.verification'), path: `/projects/${publicId}/config/verification`, icon: CheckSquare, done: status?.hasVerification },
-  ]
-
-  const executionItems = [
-    { name: t('nav.datasets'), path: `/projects/${publicId}/datasets`, icon: Database, done: status?.hasDatasets },
-    { name: t('nav.testRuns'), path: `/projects/${publicId}/runs`, icon: BarChart },
-  ]
-
-  const isSetupComplete = 
-    status?.hasTargetConfig && 
-    status?.hasAiConfig && 
-    status?.hasProjectSchema && 
-    status?.hasVerification &&
-    status?.hasDatasets
-  const defaultOpen = !isSetupComplete
-
-  const isOverviewActive = location.pathname === `/projects/${publicId}`
-
-  return (
-    <>
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu className="gap-1">
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                asChild 
-                className={cn(
-                  "relative transition-all duration-200 select-none",
-                  isOverviewActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
-                )}
-              >
-                <Link to={`/projects/${publicId}`}>
-                  <div className="flex items-center gap-2 z-10">
-                    <LayoutDashboard />
-                    <span>{t('nav.overview')}</span>
-                  </div>
-                  {isOverviewActive && (
-                    <motion.div
-                      layoutId="active-sidebar-pill"
-                      className="absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/20 z-0"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-
-      <Collapsible defaultOpen={defaultOpen} className="group/collapsible">
-        <SidebarGroup>
-          <SidebarGroupLabel asChild>
-            <CollapsibleTrigger className="hover:text-foreground transition-colors cursor-pointer select-none text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider py-1.5 h-auto">
-              {t('nav.setup')}
-              <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90 size-3.5" />
-            </CollapsibleTrigger>
-          </SidebarGroupLabel>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1">
-                {isLoading
-                  ? Array.from({ length: 4 }).map((_, i) => (
-                      <SidebarMenuItem key={i}>
-                        <div className="flex items-center gap-2 px-2 py-1.5">
-                          <Skeleton className="h-4 w-4 rounded" />
-                          <Skeleton className="h-4 flex-1 rounded" />
-                        </div>
-                      </SidebarMenuItem>
-                    ))
-                  : setupItems.map((item) => {
-                      const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-                      return (
-                        <SidebarMenuItem key={item.path}>
-                          <SidebarMenuButton 
-                            asChild 
-                            className={cn(
-                              "relative transition-all duration-200 select-none",
-                              isActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
-                            )}
-                          >
-                            <Link to={item.path} className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 z-10">
-                                <item.icon />
-                                <span>{item.name}</span>
-                              </div>
-                              {item.done !== undefined && (
-                                <div className="z-10 shrink-0">
-                                  {item.done ? (
-                                    <span className="flex size-4 items-center justify-center rounded-full bg-success-500/10 text-success-500">
-                                      <Check className="size-2.5" />
-                                    </span>
-                                  ) : (
-                                    <span className="flex size-4 items-center justify-center rounded-full border border-muted-foreground/15 bg-muted/10 text-transparent" />
-                                  )}
-                                </div>
-                              )}
-                              {isActive && (
-                                <motion.div
-                                  layoutId="active-sidebar-pill"
-                                  className="absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/20 z-0"
-                                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                                />
-                              )}
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )
-                    })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-
-      <SidebarGroup>
-        <SidebarGroupLabel className="select-none text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider py-1.5 h-auto">
-          {t('nav.execution')}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
-          <SidebarMenu className="gap-1">
-            {executionItems.map((item) => {
-              const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-              return (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton 
-                    asChild
-                    className={cn(
-                      "relative transition-all duration-200 select-none",
-                      isActive ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground font-medium"
-                    )}
-                  >
-                    <Link to={item.path} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 z-10">
-                        <item.icon />
-                        <span>{item.name}</span>
-                      </div>
-                      {item.done !== undefined && (
-                        <div className="z-10 shrink-0">
-                          {item.done ? (
-                            <span className="flex size-4 items-center justify-center rounded-full bg-success-500/10 text-success-500">
-                              <Check className="size-2.5" />
-                            </span>
-                          ) : (
-                            <span className="flex size-4 items-center justify-center rounded-full border border-muted-foreground/15 bg-muted/10 text-transparent" />
-                          )}
-                        </div>
-                      )}
-                      {isActive && (
-                        <motion.div
-                          layoutId="active-sidebar-pill"
-                          className="absolute inset-0 rounded-md bg-primary/10 dark:bg-primary/20 z-0"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                        />
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </>
   )
 }
