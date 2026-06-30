@@ -45,11 +45,11 @@ export class PromptfooSuiteBuilder {
         if (config.provider === 'OPENAI') {
           providerId = `openai:chat:${config.model}`;
         } else if (config.provider === 'GEMINI') {
-          providerId = `gemini:${config.model}`;
+          providerId = `google:${config.model}`;
         } else if (config.provider === 'ANTHROPIC') {
           providerId = `anthropic:messages:${config.model}`;
         } else if (config.provider === 'AZURE_OPENAI') {
-          providerId = `azureopenai:chat:${config.model}`;
+          providerId = `azure:chat:${config.model}`;
         } else {
           providerId = `${config.provider.toLowerCase()}:${config.model}`;
         }

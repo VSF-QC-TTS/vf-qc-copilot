@@ -52,12 +52,16 @@ export function useCreateTestRun(projectPublicId: string | undefined) {
   })
 }
 
-export function useTestRun(runPublicId: string | undefined, poll = false) {
+export function useTestRun(runPublicId: string | undefined, forcePoll = false) {
   return useQuery({
     queryKey: ['testRun', runPublicId],
     queryFn: () => getTestRun(runPublicId!),
     enabled: Boolean(runPublicId),
-    refetchInterval: poll ? 1500 : false,
+    refetchInterval: (query) => {
+      if (forcePoll) return 1500
+      const run = query.state.data as TestRunResponse | undefined
+      return isRunActive(run) ? 1500 : false
+    },
   })
 }
 

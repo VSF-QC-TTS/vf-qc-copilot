@@ -82,7 +82,7 @@ function formatErrorMessage(msg: string | null | undefined): string {
 
 export function TestRunDetailPage() {
   const { publicId, runId } = useParams<{ publicId: string; runId: string }>()
-  const runQuery = useTestRun(runId, true)
+  const runQuery = useTestRun(runId)
   const run = runQuery.data
   const poll = isRunActive(run)
   const resultsQuery = useTestRunResults(runId, poll, 0, 100) // fetch up to 100 cases
@@ -657,17 +657,26 @@ export function TestRunDetailPage() {
                                                     </div>
                                                   )}
 
-                                                  {!isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
-                                                    <div className="grid grid-cols-2 gap-px bg-[#EAEAEA] rounded-md overflow-hidden border border-[#EAEAEA]">
-                                                      <div className="bg-white p-3">
-                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">Kì vọng</span>
-                                                        <div className="font-mono text-xs text-[#111111] break-words">{assertion.expectedValue ?? 'null'}</div>
-                                                      </div>
-                                                      <div className="bg-white p-3">
-                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">Thực tế</span>
-                                                        <div className="font-mono text-xs text-[#111111] break-words">{assertion.actualValue ?? 'null'}</div>
-                                                      </div>
+                                                  {assertion.assertionType === 'LLM_COMPARE' && assertion.actualValue !== null ? (
+                                                    <div className="bg-white border border-[#EAEAEA] p-3 rounded-md mt-2">
+                                                      <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-2">Phản hồi của {assertion.assertionName}</span>
+                                                      <pre className="font-mono text-[11px] text-[#111111] break-words whitespace-pre-wrap leading-[1.6] bg-[#FAFAFA] p-3 rounded border border-[#EAEAEA]">
+                                                        {assertion.actualValue}
+                                                      </pre>
                                                     </div>
+                                                  ) : (
+                                                    !isLlmJudge && (assertion.expectedValue !== null || assertion.actualValue !== null) && (
+                                                      <div className="grid grid-cols-2 gap-px bg-[#EAEAEA] rounded-md overflow-hidden border border-[#EAEAEA]">
+                                                        <div className="bg-white p-3">
+                                                          <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">Kì vọng</span>
+                                                          <div className="font-mono text-[11px] text-[#111111] break-words whitespace-pre-wrap">{assertion.expectedValue ?? 'null'}</div>
+                                                        </div>
+                                                        <div className="bg-white p-3">
+                                                          <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-1">Thực tế</span>
+                                                          <div className="font-mono text-[11px] text-[#111111] break-words whitespace-pre-wrap">{assertion.actualValue ?? 'null'}</div>
+                                                        </div>
+                                                      </div>
+                                                    )
                                                   )}
                                                   
                                                   {assertion.responsePath && (
@@ -804,7 +813,7 @@ export function TestRunDetailPage() {
                                     </Button>
                                   )}
                                 </div>
-                                <pre className="rounded-lg border border-[#EAEAEA] bg-[#111111] text-[#FBFBFA] p-4 text-[11px] font-mono max-h-[500px] overflow-y-auto leading-[1.6] shadow-sm select-text scrollbar-thin scrollbar-thumb-white/20 hover:scrollbar-thumb-white/40">
+                                <pre className="rounded-lg border border-[#EAEAEA] bg-[#FAFAFA] text-[#111111] p-4 text-[11px] font-mono max-h-[500px] overflow-y-auto leading-[1.6] shadow-sm select-text scrollbar-thin scrollbar-thumb-black/10 hover:scrollbar-thumb-black/20">
                                   {item.actualOutput ? (
                                     (() => {
                                       try {
