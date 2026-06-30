@@ -390,7 +390,7 @@ export function TestRunDetailPage() {
         <TestRunCompareCharts results={resultsList} />
       )}
 
-      {run?.runType === 'STANDARD' && resultsList && resultsList.length > 0 && (
+      {run?.runType === 'EVALUATION' && resultsList && resultsList.length > 0 && (
         <TestRunStandardCharts results={resultsList} />
       )}
 

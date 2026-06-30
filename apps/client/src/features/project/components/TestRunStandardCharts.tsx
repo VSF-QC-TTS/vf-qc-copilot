@@ -106,7 +106,7 @@ export function TestRunStandardCharts({ results }: TestRunStandardChartsProps) {
               <Tooltip
                 cursor={{ fill: '#F7F6F3' }}
                 contentStyle={{ borderRadius: '6px', border: '1px solid #EAEAEA', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', fontSize: '12px', padding: '10px 14px' }}
-                formatter={(value: number) => [`${value} ms`, 'Độ trễ']}
+                formatter={(value: any) => [`${value} ms`, 'Độ trễ']}
               />
               <Bar dataKey="latency" radius={[3, 3, 0, 0]} maxBarSize={20}>
                 {chartData.latencyData.map((entry, index) => (

@@ -10,7 +10,6 @@ import {
   Scatter,
   ScatterChart,
   CartesianGrid,
-  Cell,
   ReferenceLine,
 } from 'recharts'
 
