@@ -45,6 +45,7 @@ import { useTestRunMetrics } from '../../hooks/useTestRunMetrics'
 import { useTestRunFilters } from '../../hooks/useTestRunFilters'
 import { RunStatusBadge, CaseStatusBadge } from '../../components/RunStatusBadge'
 import { TestRunJobProgressDialog } from '../../components/TestRunJobProgressDialog'
+import { TestRunStandardCharts } from '../../components/TestRunStandardCharts'
 import { TestRunCompareCharts } from '../../components/TestRunCompareCharts'
 import { downloadTestRunExcel } from '@/lib/test-run-api'
 import type { TestCaseStatus } from '@/types/test-run'
@@ -387,6 +388,10 @@ export function TestRunDetailPage() {
 
       {run?.runType === 'COMPARISON' && resultsList && resultsList.length > 0 && (
         <TestRunCompareCharts results={resultsList} />
+      )}
+
+      {run?.runType === 'STANDARD' && resultsList && resultsList.length > 0 && (
+        <TestRunStandardCharts results={resultsList} />
       )}
 
       {/* Main Results Table & Filters Card */}
